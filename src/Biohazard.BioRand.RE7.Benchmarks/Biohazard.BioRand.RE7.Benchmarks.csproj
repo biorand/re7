@@ -10,7 +10,7 @@
 
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.16.0-preview.1" />
-    <PackageReference Include="IntelOrca.Biohazard.REE" Version="1.4.7" />
+    <PackageReference Include="IntelOrca.Biohazard.REE" Version="1.5.3" />
   </ItemGroup>
 
   <ItemGroup>
