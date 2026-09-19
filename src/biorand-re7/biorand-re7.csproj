@@ -12,7 +12,7 @@
     <ProjectReference Include="..\Biohazard.BioRand.RE7\Biohazard.BioRand.RE7.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="IntelOrca.Biohazard.REE" Version="1.4.7" />
+    <PackageReference Include="IntelOrca.Biohazard.REE" Version="1.5.3" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.55.1-alpha.0.7" />
   </ItemGroup>
 </Project>
