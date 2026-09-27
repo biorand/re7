@@ -52,6 +52,7 @@ function StaticMia:keys(controller, game_object)
 end
 
 function StaticMia:is_killed(controller, game_object)
+    if next(self.killed) == nil then return false end
     if not self:is_static(game_object) then
         return false
     end
@@ -86,6 +87,7 @@ end
 function StaticMia:install()
     local game = self.context.game
     local function suppress(args)
+        if next(self.killed) == nil then return end
         local controller = game:object(args[2])
         if self:suppress(controller, self:controller_game_object(controller)) then
             return sdk.PreHookResult.SKIP_ORIGINAL

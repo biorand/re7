@@ -152,6 +152,7 @@ return function()
         get_Folder = constant(nil),
     })
     local static_mia = context.features.static_mia
+    assert(not static_mia:is_killed({}, {}), "No reflection is needed until a static Mia has died")
     local keys = static_mia:keys(mia_controller, mia)
     assert(#keys == 2 and keys[1] == "guid:spawner:01234567-89ab-cdef-0123-456789abcdef")
     assert(keys[2] == "fallback::BioRandExtraEnemyStatic_Em2000_1:-112:200:300")

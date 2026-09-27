@@ -1,6 +1,7 @@
 return function()
     local Game = require("BioRand7/game")
     local Em3300Explosions = require("BioRand7/em3300_explosions")
+    local list = dofile("tests/lua/helpers.lua").list
     local now = 0
     local warnings, bombs, explosions, effects, destroyed = {}, 0, 0, 0, 0
     local player, object_manager, shell_manager
@@ -32,14 +33,6 @@ return function()
                 error("Unexpected GameObject method: " .. method)
             end,
         }
-    end
-
-    local function list(items, count)
-        return { call = function(_, method, index)
-            if method == "get_Count" then return count end
-            assert(method == "get_Item")
-            return items[index]
-        end }
     end
 
     local methods = {
@@ -77,6 +70,11 @@ return function()
         find_type_definition = function(name)
             return {
                 get_method = function(_, signature)
+                    if name == "via.GameObject" and signature ~= "destroy(via.GameObject)" then
+                        assert(signature == "get_Valid" or signature == "get_Name" or signature == "get_Tag"
+                            or signature == "getComponent(System.Type)", signature)
+                        return { call = function(_, object, ...) return object:call(signature, ...) end }
+                    end
                     local method = assert(methods[name .. ":" .. signature], signature)
                     return { call = function(_, ...) return method(...) end }
                 end,
@@ -166,4 +164,38 @@ return function()
     object_manager = nil
     feature:update()
     assert(game:player() == nil, "Do not reuse a singleton from a previous scene")
+
+    local calls, maximum = 0, 0
+    local props = {}
+    for index = 0, 935 do
+        local prop = object(100 + index, "Prop" .. index, "", {})
+        local call = prop.call
+        prop.call = function(...)
+            calls = calls + 1
+            return call(...)
+        end
+        props[index] = prop
+    end
+    groups = list({ [0] = list(props, 936) }, 1)
+    object_manager = { get_field = function() return groups end }
+    feature:reset()
+    now = 0
+    for frame = 0, 59 do
+        now = frame / 60
+        local before = calls
+        feature:update()
+        maximum = math.max(maximum, calls - before)
+        assert(next(feature.states) == nil)
+    end
+    assert(maximum <= 64 * 4, "Discovery must stay within its per-frame budget")
+    assert(calls < 9000, "An idle scene must not perform a full scan every frame")
+    print(("  936-object Eveline scan: %d calls/60 frames, peak %d/frame (previously 224640+)")
+        :format(calls, maximum))
+
+    local hooks = {}
+    game.hook = function(_, _, signature, before) hooks[signature] = before end
+    feature:install()
+    local update = hooks["update(via.fsm.ActionArg)"]
+    update({ [2] = {} })
+    assert(next(feature.states) == nil, "Idle think hooks must not resolve unrelated actions")
 end

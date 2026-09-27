@@ -1,4 +1,5 @@
 local Rng = require("BioRand7/rng")
+local ObjectCache = require("BioRand7/object_cache")
 
 local Em3300Explosions = {}
 Em3300Explosions.__index = Em3300Explosions
@@ -8,7 +9,11 @@ local MARKER_TAG = "BioRandExplosiveEm3300"
 local PROXIMITY_SQUARED = 25
 
 function Em3300Explosions.new(context)
-    return setmetatable({ context = context, states = {} }, Em3300Explosions)
+    local self = setmetatable({ context = context, states = {} }, Em3300Explosions)
+    self.objects = ObjectCache.new(context.game, function(object)
+        if self:is_target(object) then return object end
+    end)
+    return self
 end
 
 function Em3300Explosions:enabled()
@@ -17,16 +22,19 @@ function Em3300Explosions:enabled()
 end
 
 function Em3300Explosions:is_target(game_object)
-    if game_object == nil or not game_object:call("get_Valid") then
+    local game = self.context.game
+    if not game:valid(game_object) then
         return false
     end
 
-    local name = game_object:call("get_Name")
-    local marked = game_object:call("get_Tag") == MARKER_TAG or name:lower() == "em3300_static"
+    self.name_method = self.name_method or game:method("via.GameObject", "get_Name")
+    self.tag_method = self.tag_method or game:method("via.GameObject", "get_Tag")
+    local name = self.name_method:call(game_object):lower()
+    local marked = self.tag_method:call(game_object) == MARKER_TAG or name == "em3300_static"
     if not marked then
         return false
     end
-    if name:lower() == "em3300" or name:lower():sub(1, 7) == "em3300_" then
+    if name == "em3300" or name:sub(1, 7) == "em3300_" then
         return true
     end
     local enemy_id = self.context.game:method("app.ObjectManager", "getEnemyID(via.GameObject)")
@@ -176,24 +184,20 @@ end
 
 function Em3300Explosions:update()
     if not self:enabled() then
+        if self.objects.manager ~= nil or next(self.objects.values) ~= nil then self:reset() end
         return
     end
-    local active = {}
     local game = self.context.game
-    local object_manager = game:singleton("app.ObjectManager")
-    if object_manager == nil then return end
-    local groups = object_manager:get_field("ManagedObjects")
-    for group in game:list(groups) do
-        for game_object in game:list(group) do
-            if self:is_target(game_object) then
-                local address = game:address(game_object)
-                active[address] = true
-                self:update_object(game_object)
-            end
+    local objects = self.objects:update(os.clock())
+    for address, object in pairs(objects) do
+        if game:valid(object) then
+            self:update_object(object)
+        else
+            objects[address] = nil
         end
     end
     for address in pairs(self.states) do
-        if not active[address] then
+        if objects[address] == nil then
             self.states[address] = nil
         end
     end
@@ -211,6 +215,7 @@ function Em3300Explosions:install()
         end
         local enemy_object = self:game_object(action, game:object(args[3]))
         if self:is_target(enemy_object) then
+            self.objects:register(enemy_object)
             local state = self.states[game:address(enemy_object)]
             if state ~= nil and state.despawned then
                 self.states[game:address(enemy_object)] = nil
@@ -219,7 +224,7 @@ function Em3300Explosions:install()
     end)
 
     game:hook("app.fsm.EnemyThinkAction", "update(via.fsm.ActionArg)", function(args)
-        if not self:enabled() then
+        if not self:enabled() or next(self.objects.values) == nil then
             return
         end
         local action = game:object(args[2])
@@ -227,7 +232,8 @@ function Em3300Explosions:install()
             return
         end
         local enemy_object = self:game_object(action, game:object(args[3]))
-        if self:is_target(enemy_object) and self:update_object(enemy_object) then
+        if enemy_object ~= nil and self.objects.values[game:address(enemy_object)] == enemy_object
+            and self:update_object(enemy_object) then
             return sdk.PreHookResult.SKIP_ORIGINAL
         end
     end)
@@ -235,6 +241,7 @@ end
 
 function Em3300Explosions:reset()
     self.states = {}
+    self.objects:reset()
 end
 
 return Em3300Explosions
