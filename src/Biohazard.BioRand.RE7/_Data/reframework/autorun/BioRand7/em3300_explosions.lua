@@ -11,7 +11,7 @@ local PROXIMITY_SQUARED = 25
 function Em3300Explosions.new(context)
     local self = setmetatable({ context = context, states = {} }, Em3300Explosions)
     self.objects = ObjectCache.new(context.game, function(object)
-        if self:is_target(object) then return object end
+        if self:is_marked(object) then return object end
     end)
     return self
 end
@@ -22,11 +22,11 @@ function Em3300Explosions:enabled()
 end
 
 function Em3300Explosions:is_target(game_object)
-    local game = self.context.game
-    if not game:valid(game_object) then
-        return false
-    end
+    return self.context.game:valid(game_object) and self:is_marked(game_object)
+end
 
+function Em3300Explosions:is_marked(game_object)
+    local game = self.context.game
     self.name_method = self.name_method or game:method("via.GameObject", "get_Name")
     self.tag_method = self.tag_method or game:method("via.GameObject", "get_Tag")
     local name = self.name_method:call(game_object):lower()
@@ -153,7 +153,7 @@ function Em3300Explosions:update_object(enemy_object)
     local address = self.context.game:address(enemy_object)
     local state = self.states[address]
     if state == nil then
-        state = { started = nil, delay = self:delay(enemy_object), exploded = nil, despawned = false }
+        state = { started = nil, exploded = nil, despawned = false }
         self.states[address] = state
     end
     if state.despawned then
@@ -170,6 +170,7 @@ function Em3300Explosions:update_object(enemy_object)
     end
     if state.started == nil then
         if self:near_player(enemy_object) then
+            state.delay = self:delay(enemy_object)
             state.started = now
         end
         return false
@@ -189,6 +190,7 @@ function Em3300Explosions:update()
     end
     local game = self.context.game
     local objects = self.objects:update(os.clock())
+    if next(objects) ~= nil then self:install_update_hook() end
     for address, object in pairs(objects) do
         if game:valid(object) then
             self:update_object(object)
@@ -214,15 +216,20 @@ function Em3300Explosions:install()
             return
         end
         local enemy_object = self:game_object(action, game:object(args[3]))
-        if self:is_target(enemy_object) then
-            self.objects:register(enemy_object)
-            local state = self.states[game:address(enemy_object)]
+        self.objects:register(enemy_object)
+        if enemy_object ~= nil then
+            local address = game:address(enemy_object)
+            local state = self.states[address]
             if state ~= nil and state.despawned then
-                self.states[game:address(enemy_object)] = nil
+                self.states[address] = nil
             end
         end
     end)
+end
 
+function Em3300Explosions:install_update_hook()
+    if self.update_hooked then return end
+    local game = self.context.game
     game:hook("app.fsm.EnemyThinkAction", "update(via.fsm.ActionArg)", function(args)
         if not self:enabled() or next(self.objects.values) == nil then
             return
@@ -237,6 +244,7 @@ function Em3300Explosions:install()
             return sdk.PreHookResult.SKIP_ORIGINAL
         end
     end)
+    self.update_hooked = true
 end
 
 function Em3300Explosions:reset()

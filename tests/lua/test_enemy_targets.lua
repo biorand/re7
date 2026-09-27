@@ -1,7 +1,7 @@
 return function()
     local RandomEvents = require("BioRand7/random_events")
     local list = dofile("tests/lua/helpers.lua").list
-    local now, lookups, positions, writes = 0, 0, 0, 0
+    local now, lookups, positions, writes, damage_lookups = 0, 0, 0, 0, 0
     os.clock = function() return now end
     local function object(address, x)
         local value = { address = address, valid = true, x = x, scale = 1 }
@@ -19,7 +19,10 @@ return function()
                 self.scale = argument
                 return
             end
-            if method == "get_enemyDamageController" then return nil end
+            if method == "get_enemyDamageController" then
+                damage_lookups = damage_lookups + 1
+                return nil
+            end
             error(method)
         end
         return value
@@ -64,20 +67,25 @@ return function()
     assert(lookups < 2000 and positions < 20, "Target discovery and sorting must not run every frame")
     assert(first.scale == 2 and second.scale == 1, "Equal distances must use the address tie-breaker")
     assert(#events.targets == 1 and events.targets[1].game_object == first)
+    assert(damage_lookups == 0, "Speed events do not need damage controllers")
+
+    now = 1.05
+    events:apply_enemies({ kind = "enemy_strong", enemy_health = 2.25 })
+    assert(damage_lookups == 1, "Only resolve damage for selected health-event targets")
 
     first.x = 100
-    now = 1.1
+    now = 1.31
     events:apply_enemies(event)
     assert(second.scale == 2 and events.targets[1].game_object == second,
         "Moving targets must be ranked again using current positions and radius")
     second.valid = false
     local before = writes
-    now = 1.11
+    now = 1.32
     events:apply_enemies(event)
     assert(writes == before, "Discard destroyed cached targets between ranking refreshes")
     second.valid = true
     manager = nil
-    now = 1.12
+    now = 1.33
     events:apply_enemies(event)
     assert(writes == before and #events.targets == 0, "Scene unload must invalidate cached target selection")
     events:restore()

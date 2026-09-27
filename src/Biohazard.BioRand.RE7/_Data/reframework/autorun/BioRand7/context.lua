@@ -30,4 +30,12 @@ function Context:reset()
     end
 end
 
+function Context:reload_config()
+    self.config:reload()
+    self.log.verbose = self.config:get("verbose-reframework-plugin-logging", self.log.verbose)
+    for _, feature in pairs(self.features) do
+        if feature.on_config_changed ~= nil then feature:on_config_changed() end
+    end
+end
+
 return Context

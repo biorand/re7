@@ -9,6 +9,7 @@ local suites = {
     "test_enemy_drops",
     "test_rng",
     "test_random_events",
+    "test_performance",
 }
 
 local failures = 0

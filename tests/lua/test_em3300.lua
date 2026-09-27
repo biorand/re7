@@ -7,6 +7,11 @@ return function()
     local player, object_manager, shell_manager
     local enemy_id_value = 7
     local game = Game.new()
+    local hooks = {}
+    game.hook = function(_, _, signature, before)
+        assert(hooks[signature] == nil, "Hooks must not be registered twice")
+        hooks[signature] = before
+    end
     local config = { ["biorand-seed"] = 35825 }
     local context = {
         game = game,
@@ -55,6 +60,8 @@ return function()
         end,
     }
     sdk = {
+        to_managed_object = function(value) return value end,
+        PreHookResult = { SKIP_ORIGINAL = "skip" },
         typeof = function(name) return name end,
         get_managed_singleton = function(name)
             if name == "app.ObjectManager" then return object_manager end
@@ -121,8 +128,12 @@ return function()
     assert(game:difficulty() == 2)
     assert(game:list(nil)() == nil)
     local feature = Em3300Explosions.new(context)
+    feature:install()
+    assert(hooks["update(via.fsm.ActionArg)"] == nil, "No global think-update hook before discovery")
     feature:update()
+    assert(hooks["update(via.fsm.ActionArg)"] ~= nil, "Discovery must enable think suppression")
     assert(feature.states[2].started == nil)
+    assert(feature.states[2].delay == nil, "Build the random stream only when the countdown starts")
     assert(feature.states[3] == nil, "Vanilla Eveline must not explode")
     player_position.x = 4
     feature:update()
@@ -136,6 +147,13 @@ return function()
     feature:update()
     feature:update()
     assert(bombs == 1 and explosions == 1 and destroyed == 0)
+    local action = { call = function(_, method)
+        if method == "get_enemyID" then return 7 end
+        assert(method == "get_gameObj")
+        return enemy
+    end }
+    assert(hooks["update(via.fsm.ActionArg)"]({ [2] = action }) == "skip",
+        "The deferred hook must still suppress exploded Eveline's native think action")
     now = now + 0.26
     feature:update()
     assert(destroyed == 1 and enemy.active == false)
@@ -187,14 +205,11 @@ return function()
         maximum = math.max(maximum, calls - before)
         assert(next(feature.states) == nil)
     end
-    assert(maximum <= 64 * 4, "Discovery must stay within its per-frame budget")
-    assert(calls < 9000, "An idle scene must not perform a full scan every frame")
+    assert(maximum <= 64 * 3, "Validate each entry once, then read its name and tag")
+    assert(calls < 6000, "An idle scene must not perform a full scan every frame")
     print(("  936-object Eveline scan: %d calls/60 frames, peak %d/frame (previously 224640+)")
         :format(calls, maximum))
 
-    local hooks = {}
-    game.hook = function(_, _, signature, before) hooks[signature] = before end
-    feature:install()
     local update = hooks["update(via.fsm.ActionArg)"]
     update({ [2] = {} })
     assert(next(feature.states) == nil, "Idle think hooks must not resolve unrelated actions")

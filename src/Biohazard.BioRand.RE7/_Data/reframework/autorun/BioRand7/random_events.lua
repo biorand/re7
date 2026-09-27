@@ -47,6 +47,7 @@ local STATUS_DELTAS = {
 
 local INFINITE_AMMO_DELTA = { label = "infinite ammo", infinity = 1 }
 local TARGET_REFRESH_INTERVAL = 0.25
+local PASSIVE_REFRESH_INTERVAL = 0.25
 
 local MOVEMENT_FIELDS = {
     "ExternalWalkSpeedRate", "ExternalJogSpeedRate", "ExternalDyingWalkSpeedRate",
@@ -142,6 +143,7 @@ end
 
 function RandomEvents:start(kind, from_ui, status)
     self:restore()
+    if kind:sub(1, 7) == "weapon_" then self:install_weapon_hooks() end
     local event = self:create(kind, os.clock(), status)
     self.active = event
     self.started_from_ui = from_ui == true
@@ -219,13 +221,18 @@ function RandomEvents:apply_passive_delta(manager, delta, direction)
         ReloadSpeedChangeRate = delta.reload or 0,
     }
     for field, change in pairs(changes) do
-        manager:set_field(field, manager:get_field(field) + change * direction)
+        if change ~= 0 then manager:set_field(field, manager:get_field(field) + change * direction) end
     end
-    local infinity = manager:get_field("BulletStackNumInfinityCount") + (delta.infinity or 0) * direction
-    manager:set_field("BulletStackNumInfinityCount", math.max(0, infinity))
+    if delta.infinity ~= nil then
+        local infinity = manager:get_field("BulletStackNumInfinityCount") + delta.infinity * direction
+        manager:set_field("BulletStackNumInfinityCount", math.max(0, infinity))
+    end
 end
 
 function RandomEvents:apply_passive(delta)
+    local now = os.clock()
+    if self.next_passive_at ~= nil and now < self.next_passive_at then return end
+    self.next_passive_at = now + PASSIVE_REFRESH_INTERVAL
     local manager = self:passive_manager()
     if manager == nil then
         return
@@ -293,13 +300,14 @@ function RandomEvents:apply_scale(event)
     local state = self.scale_states[address]
     if state == nil then
         state = { player = player, scale = transform:call("get_LocalScale") }
+        state.target_scale = Vector3f.new(
+            state.scale.x * event.scale, state.scale.y * event.scale, state.scale.z * event.scale)
         self.scale_states[address] = state
     end
-    transform:call("set_LocalScale", Vector3f.new(
-        state.scale.x * event.scale, state.scale.y * event.scale, state.scale.z * event.scale))
+    transform:call("set_LocalScale", state.target_scale)
 end
 
-function RandomEvents:enemy_targets()
+function RandomEvents:enemy_targets(event)
     local game = self.context.game
     local now = os.clock()
     local enemies = self.enemy_cache:update(now)
@@ -332,8 +340,7 @@ function RandomEvents:enemy_targets()
                     targets[#targets + 1] = {
                         game_object = game_object,
                         address = address,
-                        damage = controller:call("get_enemyDamageController")
-                            or game:component(game_object, "app.EnemyDamageController"),
+                        controller = controller,
                         distance = distance,
                     }
                 end
@@ -349,11 +356,17 @@ function RandomEvents:enemy_targets()
     while #targets > maximum do
         table.remove(targets)
     end
+    if event.kind == "enemy_weak" or event.kind == "enemy_strong" then
+        for _, target in ipairs(targets) do
+            target.damage = target.controller:call("get_enemyDamageController")
+                or game:component(target.game_object, "app.EnemyDamageController")
+        end
+    end
     return targets
 end
 
 function RandomEvents:apply_enemies(event)
-    for _, target in ipairs(self:enemy_targets()) do
+    for _, target in ipairs(self:enemy_targets(event)) do
         local object = target.game_object
         if self.context.game:valid(object) then
             self:apply_enemy(event, target)
@@ -419,6 +432,7 @@ function RandomEvents:restore_states(name, restore)
 end
 
 function RandomEvents:restore()
+    self.next_passive_at = nil
     self.enemy_cache:reset()
     self.enemies = nil
     self.targets = {}
@@ -536,6 +550,7 @@ function RandomEvents:request_explosive_bomb(gun)
 end
 
 function RandomEvents:install_weapon_hooks()
+    if self.weapon_hooked then return end
     local game = self.context.game
     game:hook("app.WeaponGun", "expendBullet()", function(args)
         local storage = thread.get_hook_storage()
@@ -582,10 +597,10 @@ function RandomEvents:install_weapon_hooks()
             self:request_explosive_bomb(game:object(args[2]))
         end
     end)
+    self.weapon_hooked = true
 end
 
 function RandomEvents:install()
-    self:install_weapon_hooks()
 end
 
 function RandomEvents:reset()

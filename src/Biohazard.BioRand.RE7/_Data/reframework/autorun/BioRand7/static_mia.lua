@@ -25,29 +25,30 @@ function StaticMia:controller_game_object(controller)
     return controller:call("get_GameObject")
 end
 
-function StaticMia:keys(controller, game_object)
-    local keys = {}
-    controller = controller or self.context.game:component(game_object, "app.EnemyActionController")
-    if controller ~= nil then
-        local spawner_guid = controller:get_field("SpawnerGuid"):call("ToString()")
-        local actual_guid = controller:get_field("ActualUsingGuid"):call("ToString()")
-        if spawner_guid ~= EMPTY_GUID then
-            keys[#keys + 1] = "guid:spawner:" .. spawner_guid
-        end
-        if actual_guid ~= EMPTY_GUID then
-            keys[#keys + 1] = "guid:actual:" .. actual_guid
-        end
-    end
-
+function StaticMia:fallback_key(game_object)
     local folder = game_object:call("get_Folder")
     local folder_path = folder == nil and "" or folder:call("get_Path")
     local position = game_object:call("get_Transform"):call("get_Position")
-    keys[#keys + 1] = ("fallback:%s:%s:%d:%d:%d"):format(
+    return ("fallback:%s:%s:%d:%d:%d"):format(
         folder_path,
         game_object:call("get_Name"),
         round(position.x * 100),
         round(position.y * 100),
         round(position.z * 100))
+end
+
+function StaticMia:guid_key(controller, field, prefix)
+    if controller == nil then return nil end
+    local guid = controller:get_field(field):call("ToString()")
+    if guid ~= EMPTY_GUID then return prefix .. guid end
+end
+
+function StaticMia:keys(controller, game_object)
+    controller = controller or self.context.game:component(game_object, "app.EnemyActionController")
+    local keys = {}
+    keys[#keys + 1] = self:guid_key(controller, "SpawnerGuid", "guid:spawner:")
+    keys[#keys + 1] = self:guid_key(controller, "ActualUsingGuid", "guid:actual:")
+    keys[#keys + 1] = self:fallback_key(game_object)
     return keys
 end
 
@@ -56,12 +57,10 @@ function StaticMia:is_killed(controller, game_object)
     if not self:is_static(game_object) then
         return false
     end
-    for _, key in ipairs(self:keys(controller, game_object)) do
-        if self.killed[key] then
-            return true
-        end
-    end
-    return false
+    controller = controller or self.context.game:component(game_object, "app.EnemyActionController")
+    return self.killed[self:guid_key(controller, "SpawnerGuid", "guid:spawner:")]
+        or self.killed[self:guid_key(controller, "ActualUsingGuid", "guid:actual:")]
+        or self.killed[self:fallback_key(game_object)] or false
 end
 
 function StaticMia:remember(controller, game_object)

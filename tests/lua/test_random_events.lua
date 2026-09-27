@@ -43,6 +43,7 @@ return function()
     end
     function game:object(value) return value end
     function game:hook(_, signature, before, after)
+        assert(self.hooks[signature] == nil, "Hooks must not be registered twice")
         self.hooks[signature] = { before = before, after = after }
     end
     local context = {
@@ -53,6 +54,8 @@ return function()
     }
     local events = RandomEvents.new(context)
     context.features.random_events = events
+    events:install()
+    assert(next(game.hooks) == nil, "Weapon hooks must remain absent until a weapon event starts")
 
     assert(events:player() == nil)
     assert(events:passive_manager() == nil)
@@ -163,7 +166,10 @@ return function()
     sdk.to_ptr = function(value) return value end
     sdk.PreHookResult = { SKIP_ORIGINAL = "skip" }
     thread = { get_hook_storage = function() return hook_storage end }
+    events:start("weapon_infinite_ammo", true)
     events:install_weapon_hooks()
+    events:clear()
+    events:start("weapon_infinite_ammo", true)
     local gun = object({}, {
         get_loadNum = function(self) return self.load end,
         set_loadNum = function(self, value) self.load = value end,

@@ -25,20 +25,29 @@ function UI:label(name, value)
 end
 
 function UI:runtime_info()
+    local now = os.clock()
+    if self.next_runtime_at == nil or now >= self.next_runtime_at then
+        self.runtime_values = self:read_runtime_info()
+        self.next_runtime_at = now + 0.25
+    end
+    for _, entry in ipairs(self.runtime_values) do self:label(entry[1], entry[2]) end
+end
+
+function UI:read_runtime_info()
     local game = self.context.game
     local player = game:player()
-    if player == nil then
-        self:label("Player", "unavailable")
-        return
-    end
+    if player == nil then return { { "Player", "unavailable" } } end
     local transform = player:call("get_Transform")
-    self:label("Player", player:call("get_Name"))
-    self:label("Chapter", game:chapter())
-    self:label("Difficulty", DIFFICULTIES[game:difficulty()] or "unknown")
+    local values = {
+        { "Player", player:call("get_Name") },
+        { "Chapter", game:chapter() },
+        { "Difficulty", DIFFICULTIES[game:difficulty()] or "unknown" },
+    }
     if transform ~= nil then
         local position = transform:call("get_Position")
-        self:label("Position", ("%.3f, %.3f, %.3f"):format(position.x, position.y, position.z))
+        values[#values + 1] = { "Position", ("%.3f, %.3f, %.3f"):format(position.x, position.y, position.z) }
     end
+    return values
 end
 
 function UI:feature_info()
@@ -67,9 +76,7 @@ function UI:debug_tools()
     local changed, verbose = imgui.checkbox("Verbose logging", self.context.log.verbose)
     if changed then self.context.log.verbose = verbose end
     if imgui.button("Reload config") then
-        self.context.config:reload()
-        self.context.log.verbose = self.context.config:get(
-            "verbose-reframework-plugin-logging", self.context.log.verbose)
+        self.context:reload_config()
         self.context.log:info("Configuration reloaded from UI")
     end
     imgui.same_line()
@@ -113,11 +120,17 @@ end
 
 function UI:config_values()
     if not imgui.tree_node("Config values") then return end
-    for _, entry in ipairs(self.context.config:entries()) do
-        local value = type(entry.value) == "table" and json.dump_string(entry.value) or tostring(entry.value)
-        if #value > 160 then value = value:sub(1, 157) .. "..." end
-        imgui.text(entry.key .. ": " .. value)
+    local entries = self.context.config:entries()
+    if self.config_entries ~= entries then
+        self.config_lines = {}
+        for _, entry in ipairs(entries) do
+            local value = type(entry.value) == "table" and json.dump_string(entry.value) or tostring(entry.value)
+            if #value > 160 then value = value:sub(1, 157) .. "..." end
+            self.config_lines[#self.config_lines + 1] = entry.key .. ": " .. value
+        end
+        self.config_entries = entries
     end
+    for _, line in ipairs(self.config_lines) do imgui.text(line) end
     imgui.tree_pop()
 end
 
@@ -139,8 +152,13 @@ end
 function UI:draw_overlay()
     local label = self.context.features.random_events:overlay_label()
     if label == nil then return end
-    imgui.set_next_window_pos(Vector2f.new(32, 72), 1, Vector2f.new(0, 0))
-    imgui.push_style_color(WINDOW_BACKGROUND_COLOR, Vector4f.new(0.06, 0.06, 0.06, 0.45))
+    if self.overlay_position == nil then
+        self.overlay_position = Vector2f.new(32, 72)
+        self.overlay_pivot = Vector2f.new(0, 0)
+        self.overlay_color = Vector4f.new(0.06, 0.06, 0.06, 0.45)
+    end
+    imgui.set_next_window_pos(self.overlay_position, 1, self.overlay_pivot)
+    imgui.push_style_color(WINDOW_BACKGROUND_COLOR, self.overlay_color)
     if imgui.begin_window("BioRand random event##biorand-random-event-overlay", nil, OVERLAY_WINDOW_FLAGS) then
         imgui.text(label)
     end
