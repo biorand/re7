@@ -6,7 +6,7 @@ local function type_definition(name)
 end
 
 function Game.new()
-    return setmetatable({ methods = {}, fields = {} }, Game)
+    return setmetatable({ methods = {}, fields = {}, runtime_types = {}, list_fields = {} }, Game)
 end
 
 function Game:method(type_name, signature)
@@ -75,15 +75,39 @@ end
 
 function Game:component(game_object, type_name)
     if game_object == nil then return nil end
-    return game_object:call("getComponent(System.Type)", sdk.typeof(type_name))
+    local runtime_type = self.runtime_types[type_name]
+    if runtime_type == nil then
+        runtime_type = sdk.typeof(type_name)
+        self.runtime_types[type_name] = runtime_type
+    end
+    self.component_method = self.component_method or self:method("via.GameObject", "getComponent(System.Type)")
+    return self.component_method:call(game_object, runtime_type)
+end
+
+function Game:valid(game_object)
+    if game_object == nil then return false end
+    self.valid_method = self.valid_method or self:method("via.GameObject", "get_Valid")
+    return self.valid_method:call(game_object)
+end
+
+function Game:list_storage(collection)
+    if collection == nil then return nil, 0 end
+    local definition = collection:get_type_definition()
+    local fields = self.list_fields[definition]
+    if fields == nil then
+        -- RE7 List<T> uses mItems/mSize, not the newer games' _items/_size.
+        fields = { items = definition:get_field("mItems"), count = definition:get_field("mSize") }
+        self.list_fields[definition] = fields
+    end
+    return fields.items:get_data(collection), fields.count:get_data(collection)
 end
 
 function Game:list(collection)
     local index = 0
-    local count = collection ~= nil and collection:call("get_Count") or 0
+    local items, count = self:list_storage(collection)
     return function()
         while index < count do
-            local value = collection:call("get_Item", index)
+            local value = items:get_element(index)
             index = index + 1
             if value ~= nil then return value end
         end

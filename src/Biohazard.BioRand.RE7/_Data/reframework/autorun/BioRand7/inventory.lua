@@ -49,24 +49,23 @@ function Inventory:install_discard_hook()
     local game = self.context.game
     game:hook("app.Item", "isCanDiscard()", function(args)
         local storage = thread.get_hook_storage()
-        storage.biorand_force_discard = false
-        if not self.context.config:get("inventory-unrestricted-management", true) then
-            return
+        storage.biorand_discard_item = nil
+        if self.context.config:get("inventory-unrestricted-management", true) then
+            storage.biorand_discard_item = game:object(args[2])
         end
-
-        local item = game:object(args[2])
-        local item_data = item:call("get_ItemData")
-        if item_data == nil then
-            return
-        end
-
-        local data_id = item:get_field("ItemDataID") or item_data:get_field("ItemDataID")
-        local category = item_data:get_field("Category")
-        storage.biorand_force_discard = (data_id ~= nil and data_id:lower():sub(1, 12) == "foundfootage")
-            or (category ~= KEY_ITEM and category ~= USABLE_KEY_ITEM)
     end, function(retval)
         local storage = thread.get_hook_storage()
-        if storage.biorand_force_discard and sdk.to_int64(retval) % 256 == 0 then
+        local item = storage.biorand_discard_item
+        storage.biorand_discard_item = nil
+        if item == nil or sdk.to_int64(retval) % 256 ~= 0 then return retval end
+        local item_data = item:call("get_ItemData")
+        if item_data == nil then return retval end
+        local category = item_data:get_field("Category")
+        if category ~= KEY_ITEM and category ~= USABLE_KEY_ITEM then
+            return sdk.to_ptr(1)
+        end
+        local data_id = item:get_field("ItemDataID") or item_data:get_field("ItemDataID")
+        if data_id ~= nil and data_id:lower():sub(1, 12) == "foundfootage" then
             return sdk.to_ptr(1)
         end
         return retval

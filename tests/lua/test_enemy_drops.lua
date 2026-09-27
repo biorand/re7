@@ -152,11 +152,16 @@ return function()
         get_Folder = constant(nil),
     })
     local static_mia = context.features.static_mia
+    assert(not static_mia:is_killed({}, {}), "No reflection is needed until a static Mia has died")
     local keys = static_mia:keys(mia_controller, mia)
     assert(#keys == 2 and keys[1] == "guid:spawner:01234567-89ab-cdef-0123-456789abcdef")
     assert(keys[2] == "fallback::BioRandExtraEnemyStatic_Em2000_1:-112:200:300")
     assert(static_mia:remember(mia_controller, mia))
     assert(static_mia:is_killed(mia_controller, mia))
+    local guid_only = object({ get_Name = constant("BioRandExtraEnemyStatic_Em2000_1") })
+    assert(static_mia:is_killed(mia_controller, guid_only), "Known GUIDs must not read folder or transform")
+    assert(static_mia:is_killed(object({}, { SpawnerGuid = empty_guid, ActualUsingGuid = empty_guid }), mia),
+        "Position-based fallback must still work when neither GUID matches")
     local deactivated = false
     context.game.method = function(_, type_name, signature)
         assert(type_name == "app.Util" and signature == "setActive(via.GameObject, System.Boolean, System.Boolean)")

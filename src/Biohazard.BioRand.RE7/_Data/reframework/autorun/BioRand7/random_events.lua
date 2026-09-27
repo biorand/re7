@@ -1,4 +1,5 @@
 local Rng = require("BioRand7/rng")
+local ObjectCache = require("BioRand7/object_cache")
 
 local RandomEvents = {}
 RandomEvents.__index = RandomEvents
@@ -45,6 +46,8 @@ local STATUS_DELTAS = {
 }
 
 local INFINITE_AMMO_DELTA = { label = "infinite ammo", infinity = 1 }
+local TARGET_REFRESH_INTERVAL = 0.25
+local PASSIVE_REFRESH_INTERVAL = 0.25
 
 local MOVEMENT_FIELDS = {
     "ExternalWalkSpeedRate", "ExternalJogSpeedRate", "ExternalDyingWalkSpeedRate",
@@ -57,7 +60,7 @@ local function random_between(rng, minimum, maximum)
 end
 
 function RandomEvents.new(context)
-    return setmetatable({
+    local self = setmetatable({
         context = context,
         rng = nil,
         seed = nil,
@@ -70,7 +73,15 @@ function RandomEvents.new(context)
         enemy_states = {},
         explosive_shots = {},
         blindness = nil,
+        targets = {},
+        next_targets_at = 0,
     }, RandomEvents)
+    self.enemy_cache = ObjectCache.new(context.game, function(object, existing)
+        if existing ~= nil and existing.controller:call("get_Valid") then return existing end
+        local controller = context.game:component(object, "app.EnemyActionController")
+        if controller ~= nil then return { game_object = object, controller = controller } end
+    end)
+    return self
 end
 
 function RandomEvents:random()
@@ -132,6 +143,7 @@ end
 
 function RandomEvents:start(kind, from_ui, status)
     self:restore()
+    if kind:sub(1, 7) == "weapon_" then self:install_weapon_hooks() end
     local event = self:create(kind, os.clock(), status)
     self.active = event
     self.started_from_ui = from_ui == true
@@ -209,13 +221,18 @@ function RandomEvents:apply_passive_delta(manager, delta, direction)
         ReloadSpeedChangeRate = delta.reload or 0,
     }
     for field, change in pairs(changes) do
-        manager:set_field(field, manager:get_field(field) + change * direction)
+        if change ~= 0 then manager:set_field(field, manager:get_field(field) + change * direction) end
     end
-    local infinity = manager:get_field("BulletStackNumInfinityCount") + (delta.infinity or 0) * direction
-    manager:set_field("BulletStackNumInfinityCount", math.max(0, infinity))
+    if delta.infinity ~= nil then
+        local infinity = manager:get_field("BulletStackNumInfinityCount") + delta.infinity * direction
+        manager:set_field("BulletStackNumInfinityCount", math.max(0, infinity))
+    end
 end
 
 function RandomEvents:apply_passive(delta)
+    local now = os.clock()
+    if self.next_passive_at ~= nil and now < self.next_passive_at then return end
+    self.next_passive_at = now + PASSIVE_REFRESH_INTERVAL
     local manager = self:passive_manager()
     if manager == nil then
         return
@@ -283,47 +300,53 @@ function RandomEvents:apply_scale(event)
     local state = self.scale_states[address]
     if state == nil then
         state = { player = player, scale = transform:call("get_LocalScale") }
+        state.target_scale = Vector3f.new(
+            state.scale.x * event.scale, state.scale.y * event.scale, state.scale.z * event.scale)
         self.scale_states[address] = state
     end
-    transform:call("set_LocalScale", Vector3f.new(
-        state.scale.x * event.scale, state.scale.y * event.scale, state.scale.z * event.scale))
+    transform:call("set_LocalScale", state.target_scale)
 end
 
-function RandomEvents:enemy_targets()
+function RandomEvents:enemy_targets(event)
     local game = self.context.game
+    local now = os.clock()
+    local enemies = self.enemy_cache:update(now)
+    if self.enemies ~= enemies then
+        self.enemies = enemies
+        self.next_targets_at = 0
+    end
+    if now < self.next_targets_at then return self.targets end
+
+    self.targets = {}
+    self.next_targets_at = now + TARGET_REFRESH_INTERVAL
     local player = self:player()
-    if player == nil then return {} end
+    if player == nil then return self.targets end
     local player_transform = player:call("get_Transform")
-    if player_transform == nil then return {} end
+    if player_transform == nil then return self.targets end
     local player_position = player_transform:call("get_Position")
     local radius = self.context.config:get("event-enemy-radius", 25)
     local maximum = math.max(1, math.floor(self.context.config:get("event-enemy-max-targets", 8) + 0.5))
-    local targets, seen = {}, {}
-    local groups = game:singleton("app.ObjectManager"):get_field("ManagedObjects")
-    if groups == nil then return targets end
-    for group in game:list(groups) do
-        for game_object in game:list(group) do
-            if game_object:call("get_Valid") then
-                local address = game:address(game_object)
-                local controller = game:component(game_object, "app.EnemyActionController")
-                local transform = game_object:call("get_Transform")
-                if not seen[address] and controller ~= nil and transform ~= nil then
-                    seen[address] = true
-                    local position = transform:call("get_Position")
-                    local x, y, z = position.x - player_position.x, position.y - player_position.y,
-                        position.z - player_position.z
-                    local distance = x * x + y * y + z * z
-                    if distance <= radius * radius then
-                        targets[#targets + 1] = {
-                            game_object = game_object,
-                            address = address,
-                            damage = controller:call("get_enemyDamageController")
-                                or game:component(game_object, "app.EnemyDamageController"),
-                            distance = distance,
-                        }
-                    end
+    local targets = self.targets
+    for address, enemy in pairs(enemies) do
+        local game_object, controller = enemy.game_object, enemy.controller
+        if game:valid(game_object) and controller:call("get_Valid") then
+            local transform = game_object:call("get_Transform")
+            if transform ~= nil then
+                local position = transform:call("get_Position")
+                local x, y, z = position.x - player_position.x, position.y - player_position.y,
+                    position.z - player_position.z
+                local distance = x * x + y * y + z * z
+                if distance <= radius * radius then
+                    targets[#targets + 1] = {
+                        game_object = game_object,
+                        address = address,
+                        controller = controller,
+                        distance = distance,
+                    }
                 end
             end
+        else
+            enemies[address] = nil
         end
     end
     table.sort(targets, function(left, right)
@@ -333,37 +356,51 @@ function RandomEvents:enemy_targets()
     while #targets > maximum do
         table.remove(targets)
     end
+    if event.kind == "enemy_weak" or event.kind == "enemy_strong" then
+        for _, target in ipairs(targets) do
+            target.damage = target.controller:call("get_enemyDamageController")
+                or game:component(target.game_object, "app.EnemyDamageController")
+        end
+    end
     return targets
 end
 
 function RandomEvents:apply_enemies(event)
-    for _, target in ipairs(self:enemy_targets()) do
+    for _, target in ipairs(self:enemy_targets(event)) do
         local object = target.game_object
-        local address = self.context.game:address(object)
-        local state = self.enemy_states[address]
-        if state == nil then
-            state = { game_object = object, damage = target.damage }
-            self.enemy_states[address] = state
+        if self.context.game:valid(object) then
+            self:apply_enemy(event, target)
         end
-        state.damage = state.damage or target.damage
+    end
+end
 
-        if event.kind == "enemy_speed" or event.kind == "enemy_paused"
-            or event.kind == "enemy_weak" or event.kind == "enemy_strong" then
-            state.time_scale = state.time_scale or object:call("get_TimeScale")
-            local multiplier = event.enemy_speed or 1
-            if event.kind == "enemy_paused" then multiplier = 0 end
-            if event.kind == "enemy_weak" then multiplier = 0.85 end
-            if event.kind == "enemy_strong" then multiplier = 1.2 end
-            object:call("set_TimeScale", state.time_scale * multiplier)
-        end
-        if event.kind == "enemy_invisible" then
-            if state.draw_self == nil then state.draw_self = object:call("get_DrawSelf") end
-            object:call("set_DrawSelf", false)
-        end
-        if (event.kind == "enemy_weak" or event.kind == "enemy_strong") and state.damage ~= nil then
-            state.health = state.health or state.damage:call("get_defaultMaxHealth")
-            state.damage:call("set_defaultMaxHealth", math.max(1, state.health * event.enemy_health))
-        end
+function RandomEvents:apply_enemy(event, target)
+    local object = target.game_object
+    local address = self.context.game:address(object)
+    local state = self.enemy_states[address]
+    if state == nil then
+        state = { game_object = object, damage = target.damage }
+        self.enemy_states[address] = state
+    end
+    state.damage = state.damage or target.damage
+
+    if event.kind == "enemy_speed" or event.kind == "enemy_paused"
+        or event.kind == "enemy_weak" or event.kind == "enemy_strong" then
+        state.time_scale = state.time_scale or object:call("get_TimeScale")
+        local multiplier = event.enemy_speed or 1
+        if event.kind == "enemy_paused" then multiplier = 0 end
+        if event.kind == "enemy_weak" then multiplier = 0.85 end
+        if event.kind == "enemy_strong" then multiplier = 1.2 end
+        object:call("set_TimeScale", state.time_scale * multiplier)
+    end
+    if event.kind == "enemy_invisible" then
+        if state.draw_self == nil then state.draw_self = object:call("get_DrawSelf") end
+        object:call("set_DrawSelf", false)
+    end
+    if (event.kind == "enemy_weak" or event.kind == "enemy_strong") and state.damage ~= nil
+        and state.damage:call("get_Valid") then
+        state.health = state.health or state.damage:call("get_defaultMaxHealth")
+        state.damage:call("set_defaultMaxHealth", math.max(1, state.health * event.enemy_health))
     end
 end
 
@@ -395,6 +432,11 @@ function RandomEvents:restore_states(name, restore)
 end
 
 function RandomEvents:restore()
+    self.next_passive_at = nil
+    self.enemy_cache:reset()
+    self.enemies = nil
+    self.targets = {}
+    self.next_targets_at = 0
     self:restore_states("movement_states", function(state)
         if not state.movement:call("get_Valid") then return end
         for _, field in ipairs(MOVEMENT_FIELDS) do
@@ -508,6 +550,7 @@ function RandomEvents:request_explosive_bomb(gun)
 end
 
 function RandomEvents:install_weapon_hooks()
+    if self.weapon_hooked then return end
     local game = self.context.game
     game:hook("app.WeaponGun", "expendBullet()", function(args)
         local storage = thread.get_hook_storage()
@@ -554,10 +597,10 @@ function RandomEvents:install_weapon_hooks()
             self:request_explosive_bomb(game:object(args[2]))
         end
     end)
+    self.weapon_hooked = true
 end
 
 function RandomEvents:install()
-    self:install_weapon_hooks()
 end
 
 function RandomEvents:reset()

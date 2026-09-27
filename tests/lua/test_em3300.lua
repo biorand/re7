@@ -1,11 +1,17 @@
 return function()
     local Game = require("BioRand7/game")
     local Em3300Explosions = require("BioRand7/em3300_explosions")
+    local list = dofile("tests/lua/helpers.lua").list
     local now = 0
     local warnings, bombs, explosions, effects, destroyed = {}, 0, 0, 0, 0
     local player, object_manager, shell_manager
     local enemy_id_value = 7
     local game = Game.new()
+    local hooks = {}
+    game.hook = function(_, _, signature, before)
+        assert(hooks[signature] == nil, "Hooks must not be registered twice")
+        hooks[signature] = before
+    end
     local config = { ["biorand-seed"] = 35825 }
     local context = {
         game = game,
@@ -34,14 +40,6 @@ return function()
         }
     end
 
-    local function list(items, count)
-        return { call = function(_, method, index)
-            if method == "get_Count" then return count end
-            assert(method == "get_Item")
-            return items[index]
-        end }
-    end
-
     local methods = {
         ["app.GameManager:getPlayer()"] = function() return player end,
         ["app.ObjectManager:getEnemyID(via.GameObject)"] = function()
@@ -62,6 +60,8 @@ return function()
         end,
     }
     sdk = {
+        to_managed_object = function(value) return value end,
+        PreHookResult = { SKIP_ORIGINAL = "skip" },
         typeof = function(name) return name end,
         get_managed_singleton = function(name)
             if name == "app.ObjectManager" then return object_manager end
@@ -77,6 +77,11 @@ return function()
         find_type_definition = function(name)
             return {
                 get_method = function(_, signature)
+                    if name == "via.GameObject" and signature ~= "destroy(via.GameObject)" then
+                        assert(signature == "get_Valid" or signature == "get_Name" or signature == "get_Tag"
+                            or signature == "getComponent(System.Type)", signature)
+                        return { call = function(_, object, ...) return object:call(signature, ...) end }
+                    end
                     local method = assert(methods[name .. ":" .. signature], signature)
                     return { call = function(_, ...) return method(...) end }
                 end,
@@ -123,8 +128,12 @@ return function()
     assert(game:difficulty() == 2)
     assert(game:list(nil)() == nil)
     local feature = Em3300Explosions.new(context)
+    feature:install()
+    assert(hooks["update(via.fsm.ActionArg)"] == nil, "No global think-update hook before discovery")
     feature:update()
+    assert(hooks["update(via.fsm.ActionArg)"] ~= nil, "Discovery must enable think suppression")
     assert(feature.states[2].started == nil)
+    assert(feature.states[2].delay == nil, "Build the random stream only when the countdown starts")
     assert(feature.states[3] == nil, "Vanilla Eveline must not explode")
     player_position.x = 4
     feature:update()
@@ -138,6 +147,13 @@ return function()
     feature:update()
     feature:update()
     assert(bombs == 1 and explosions == 1 and destroyed == 0)
+    local action = { call = function(_, method)
+        if method == "get_enemyID" then return 7 end
+        assert(method == "get_gameObj")
+        return enemy
+    end }
+    assert(hooks["update(via.fsm.ActionArg)"]({ [2] = action }) == "skip",
+        "The deferred hook must still suppress exploded Eveline's native think action")
     now = now + 0.26
     feature:update()
     assert(destroyed == 1 and enemy.active == false)
@@ -166,4 +182,35 @@ return function()
     object_manager = nil
     feature:update()
     assert(game:player() == nil, "Do not reuse a singleton from a previous scene")
+
+    local calls, maximum = 0, 0
+    local props = {}
+    for index = 0, 935 do
+        local prop = object(100 + index, "Prop" .. index, "", {})
+        local call = prop.call
+        prop.call = function(...)
+            calls = calls + 1
+            return call(...)
+        end
+        props[index] = prop
+    end
+    groups = list({ [0] = list(props, 936) }, 1)
+    object_manager = { get_field = function() return groups end }
+    feature:reset()
+    now = 0
+    for frame = 0, 59 do
+        now = frame / 60
+        local before = calls
+        feature:update()
+        maximum = math.max(maximum, calls - before)
+        assert(next(feature.states) == nil)
+    end
+    assert(maximum <= 64 * 3, "Validate each entry once, then read its name and tag")
+    assert(calls < 6000, "An idle scene must not perform a full scan every frame")
+    print(("  936-object Eveline scan: %d calls/60 frames, peak %d/frame (previously 224640+)")
+        :format(calls, maximum))
+
+    local update = hooks["update(via.fsm.ActionArg)"]
+    update({ [2] = {} })
+    assert(next(feature.states) == nil, "Idle think hooks must not resolve unrelated actions")
 end

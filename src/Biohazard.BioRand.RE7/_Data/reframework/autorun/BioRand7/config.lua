@@ -11,6 +11,7 @@ end
 
 function Config:reload()
     self.values = json.load_file(CONFIG_PATH) or {}
+    self.sorted_entries = nil
 end
 
 function Config:get(key, default)
@@ -22,13 +23,16 @@ function Config:get(key, default)
 end
 
 function Config:entries()
+    if self.sorted_entries ~= nil then return self.sorted_entries end
     local entries = {}
     for key, value in pairs(self.values) do
-        entries[#entries + 1] = { key = key, value = value }
+        entries[#entries + 1] = { key = key, value = value, sort_key = key:lower() }
     end
     table.sort(entries, function(left, right)
-        return left.key:lower() < right.key:lower()
+        if left.sort_key == right.sort_key then return left.key < right.key end
+        return left.sort_key < right.sort_key
     end)
+    self.sorted_entries = entries
     return entries
 end
 

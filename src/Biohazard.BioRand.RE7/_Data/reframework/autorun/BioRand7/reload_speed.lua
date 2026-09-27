@@ -22,6 +22,11 @@ local WEAPON_NAMES = {
     [69] = "ch9-wp008", [70] = "ch9-wp009", [71] = "num", [9999] = "etc",
 }
 
+local MULTIPLIER_KEYS = {}
+for id, name in pairs(WEAPON_NAMES) do
+    MULTIPLIER_KEYS[id] = "weapon-reload-speed-multiplier-" .. name
+end
+
 local function round_rate(value)
     local scaled = value * 100
     local lower = math.floor(scaled)
@@ -37,11 +42,11 @@ function ReloadSpeed.new(context)
 end
 
 function ReloadSpeed:multiplier(weapon_id)
-    local name = WEAPON_NAMES[weapon_id]
-    if name == nil then
+    local key = MULTIPLIER_KEYS[weapon_id]
+    if key == nil then
         return nil
     end
-    return self.context.config:get("weapon-reload-speed-multiplier-" .. name)
+    return self.context.config:get(key)
 end
 
 function ReloadSpeed:apply(controller)
@@ -74,11 +79,13 @@ function ReloadSpeed:apply(controller)
 end
 
 function ReloadSpeed:install()
+    if self.hooked or not self.context.config:get("weapon-mod-reload-speed", false) then return end
     local game = self.context.game
     game:hook("app.PlayerMotionController", "update()", function(args)
-        thread.get_hook_storage().biorand_reload_controller = nil
+        local storage = thread.get_hook_storage()
+        storage.biorand_reload_controller = nil
         if self.context.config:get("weapon-mod-reload-speed", false) then
-            thread.get_hook_storage().biorand_reload_controller = game:object(args[2])
+            storage.biorand_reload_controller = game:object(args[2])
         end
     end, function(retval)
         local storage = thread.get_hook_storage()
@@ -89,6 +96,11 @@ function ReloadSpeed:install()
         end
         return retval
     end)
+    self.hooked = true
+end
+
+function ReloadSpeed:on_config_changed()
+    self:install()
 end
 
 return ReloadSpeed

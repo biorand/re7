@@ -72,7 +72,7 @@ Status: **Completed ✅**
 * Code refactoring
 
 *Estimated completion: June*  
-Status: **Not completed**
+Status: **Not completed, postponed **
 
 ==================== BETA TESTING PHASE 2 ====================
 
@@ -87,7 +87,7 @@ Status: **Not completed**
 * Not a Hero and End of Zoe must follow the staged compatibility and certification process in [DLCIntegrationPlan.MD](DLCIntegrationPlan.MD)
 
 *Estimated completion: August*  
-Status: **Not completed**
+Status: **Not completed, postponed **
 
 ## 6. Chapter shuffling
 
@@ -97,6 +97,6 @@ Status: **Not completed**
 * Have to manipulate flags (userdata/globalvariables.uvar.2)
 
 *Estimated completion: September*  
-Status: **Not completed**
+Status: **Not completed, postponed **
 
-### Estimated initial public access: **October**
+### Initial public access: **October**

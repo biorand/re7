@@ -37,7 +37,7 @@ function MadhouseSaves:install()
     end)
 
     local function update(args)
-        if self:enabled() then
+        if self.pending_menu ~= nil and self:enabled() then
             self:bypass(game:object(args[2]))
         end
     end

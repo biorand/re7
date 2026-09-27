@@ -25,7 +25,7 @@ return function()
 
     local hooks, settings, singletons = {}, {}, {}
     local static_fields = { RowNum = 4, fReloadSpeedRate = 123 }
-    local difficulty = 2
+    local difficulty, difficulty_reads = 2, 0
     local player_order
     local game = {
         hook = function(_, type_name, signature, before, after)
@@ -37,7 +37,10 @@ return function()
             assert(type_name == "app.PlayerOrder")
             return player and player_order
         end,
-        difficulty = function() return difficulty end,
+        difficulty = function()
+            difficulty_reads = difficulty_reads + 1
+            return difficulty
+        end,
         static_field = function(_, _, name) return static_fields[name] end,
         set_static_field = function(_, _, name, value) static_fields[name] = value end,
     }
@@ -80,6 +83,8 @@ return function()
     assert(args[3] == 2)
 
     local discard = hooks["app.Item:isCanDiscard()"]
+    discard.before({ 0, {} })
+    assert(discard.after(1) == 1, "Do not inspect items the game already permits discarding")
     local item_fields = { ItemDataID = "HandgunBullet" }
     local item_data_fields = { Category = 1 }
     local item_data = object(item_data_fields)
@@ -128,6 +133,11 @@ return function()
 
     local madhouse = MadhouseSaves.new(context)
     madhouse:install()
+    for _ = 1, 60 do
+        hooks["app.SaveDataManager:doUpdate()"].before({})
+        hooks["app.SaveDataManager:doLateUpdate()"].before({})
+    end
+    assert(difficulty_reads == 0, "Idle save updates must not query game state")
     local selected, closed = false, false
     local menu = object({}, {
         ["setSelectItemResult(System.Boolean, System.String)"] = function(_, cancelled, data_id)
@@ -153,7 +163,12 @@ return function()
 
     local reload = ReloadSpeed.new(context)
     reload:install()
+    assert(hooks["app.PlayerMotionController:update()"] == nil, "Do not hook disabled reload updates")
     settings["weapon-mod-reload-speed"] = true
+    reload:on_config_changed()
+    local installed_hook = hooks["app.PlayerMotionController:update()"]
+    reload:on_config_changed()
+    assert(hooks["app.PlayerMotionController:update()"] == installed_hook, "Config reload must not duplicate hooks")
     settings["weapon-reload-speed-multiplier-handgun-g17"] = 2
     local applied_rate
     local reload_table = object({}, {

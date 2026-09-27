@@ -24,9 +24,8 @@ context:add("ui", UI.new(context))
 local runtime_errors = {}
 
 local function update_feature(name)
-    local ok, error_message = xpcall(function()
-        context.features[name]:update()
-    end, debug.traceback)
+    local feature = context.features[name]
+    local ok, error_message = xpcall(feature.update, debug.traceback, feature)
     if ok then
         runtime_errors[name] = nil
     elseif runtime_errors[name] ~= error_message then

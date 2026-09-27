@@ -33,6 +33,7 @@ public sealed class RandomizerOutput {
         "BioRand7/inventory.lua",
         "BioRand7/logger.lua",
         "BioRand7/madhouse_saves.lua",
+        "BioRand7/object_cache.lua",
         "BioRand7/random_events.lua",
         "BioRand7/reload_speed.lua",
         "BioRand7/rng.lua",
