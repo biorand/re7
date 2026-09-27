@@ -5,8 +5,12 @@ local NAME_PREFIX = "BioRandExtraEnemyStatic_Em2000_"
 local EMPTY_GUID = "00000000-0000-0000-0000-000000000000"
 
 local function round(value)
-    if value < 0 then return math.ceil(value - 0.5) end
-    return math.floor(value + 0.5)
+    local lower = math.floor(value)
+    local fraction = value - lower
+    if fraction > 0.5 or (fraction == 0.5 and lower % 2 ~= 0) then
+        return lower + 1
+    end
+    return lower
 end
 
 function StaticMia.new(context)
@@ -23,13 +27,16 @@ end
 
 function StaticMia:keys(controller, game_object)
     local keys = {}
-    local spawner_guid = controller:call("get_SpawnerGuid"):call("ToString")
-    local actual_guid = controller:call("get_ActualUsingGuid"):call("ToString")
-    if spawner_guid ~= EMPTY_GUID then
-        keys[#keys + 1] = "guid:spawner:" .. spawner_guid
-    end
-    if actual_guid ~= EMPTY_GUID then
-        keys[#keys + 1] = "guid:actual:" .. actual_guid
+    controller = controller or self.context.game:component(game_object, "app.EnemyActionController")
+    if controller ~= nil then
+        local spawner_guid = controller:get_field("SpawnerGuid"):call("ToString()")
+        local actual_guid = controller:get_field("ActualUsingGuid"):call("ToString()")
+        if spawner_guid ~= EMPTY_GUID then
+            keys[#keys + 1] = "guid:spawner:" .. spawner_guid
+        end
+        if actual_guid ~= EMPTY_GUID then
+            keys[#keys + 1] = "guid:actual:" .. actual_guid
+        end
     end
 
     local folder = game_object:call("get_Folder")

@@ -11,7 +11,7 @@ function MadhouseSaves:enabled()
     if not self.context.config:get("madhouse-normal-saves", true) then
         return false
     end
-    return self.context.game:singleton("app.GameManager"):call("get_GameDifficulty") == HARD_DIFFICULTY
+    return self.context.game:difficulty() == HARD_DIFFICULTY
 end
 
 function MadhouseSaves:bypass(manager)
@@ -21,7 +21,7 @@ function MadhouseSaves:bypass(manager)
 
     local handle = self.pending_menu
     self.pending_menu = nil
-    local inventory_menu = handle:call("get__Menu")
+    local inventory_menu = handle:get_field("_Menu")
     if inventory_menu == nil then return end
     inventory_menu:call("setSelectItemResult(System.Boolean, System.String)", false, "SaveTape")
     handle:call("requestClose")
@@ -46,7 +46,7 @@ function MadhouseSaves:install()
 
     local function skip_tape(args)
         if self:enabled() then
-            game:object(args[2]):call("set_IsTapeSub", false)
+            game:object(args[2]):set_field("IsTapeSub", false)
             return sdk.PreHookResult.SKIP_ORIGINAL
         end
     end

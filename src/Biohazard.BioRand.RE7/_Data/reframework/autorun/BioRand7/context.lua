@@ -28,7 +28,6 @@ function Context:reset()
             feature:reset()
         end
     end
-    self.game.singletons = {}
 end
 
 return Context

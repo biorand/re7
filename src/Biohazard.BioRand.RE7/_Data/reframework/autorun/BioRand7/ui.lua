@@ -4,6 +4,7 @@ UI.__index = UI
 local DIFFICULTIES = { [0] = "Easy", [1] = "Normal", [2] = "Hard" }
 -- No decoration, movement, saved settings, focus, navigation, or input.
 local OVERLAY_WINDOW_FLAGS = 791407
+local WINDOW_BACKGROUND_COLOR = 2
 
 local function count(values)
     local result = 0
@@ -25,16 +26,19 @@ end
 
 function UI:runtime_info()
     local game = self.context.game
-    local player = game:singleton("app.ObjectManager"):call("get_PlayerObj")
+    local player = game:player()
     if player == nil then
         self:label("Player", "unavailable")
         return
     end
-    local position = player:call("get_Transform"):call("get_Position")
+    local transform = player:call("get_Transform")
     self:label("Player", player:call("get_Name"))
-    self:label("Chapter", game:singleton("app.GameFlowFsmManager"):call("get_CurrentMainGameFlow"))
-    self:label("Difficulty", DIFFICULTIES[game:singleton("app.GameManager"):call("get_GameDifficulty")] or "unknown")
-    self:label("Position", ("%.3f, %.3f, %.3f"):format(position.x, position.y, position.z))
+    self:label("Chapter", game:chapter())
+    self:label("Difficulty", DIFFICULTIES[game:difficulty()] or "unknown")
+    if transform ~= nil then
+        local position = transform:call("get_Position")
+        self:label("Position", ("%.3f, %.3f, %.3f"):format(position.x, position.y, position.z))
+    end
 end
 
 function UI:feature_info()
@@ -71,7 +75,7 @@ function UI:debug_tools()
     imgui.same_line()
     if imgui.button("Log snapshot") then
         local game = self.context.game
-        local player = game:singleton("app.ObjectManager"):call("get_PlayerObj")
+        local player = game:player()
         local player_name = player == nil and "unavailable" or player:call("get_Name")
         self.context.log:info(("Snapshot: seed=%s, player=%s, chapter=%s, difficulty=%s"):format(
             tostring(self.context.config:get("biorand-seed", "not present")),
@@ -136,11 +140,12 @@ function UI:draw_overlay()
     local label = self.context.features.random_events:overlay_label()
     if label == nil then return end
     imgui.set_next_window_pos(Vector2f.new(32, 72), 1, Vector2f.new(0, 0))
-    imgui.set_next_window_bg_alpha(0.45)
+    imgui.push_style_color(WINDOW_BACKGROUND_COLOR, Vector4f.new(0.06, 0.06, 0.06, 0.45))
     if imgui.begin_window("BioRand random event##biorand-random-event-overlay", nil, OVERLAY_WINDOW_FLAGS) then
         imgui.text(label)
     end
     imgui.end_window()
+    imgui.pop_style_color(1)
 end
 
 function UI:install()

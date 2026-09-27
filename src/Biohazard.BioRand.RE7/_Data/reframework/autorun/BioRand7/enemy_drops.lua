@@ -7,6 +7,22 @@ EnemyDrops.__index = EnemyDrops
 local DIFFICULTY_FACTORS = { [0] = 1.5, [1] = 1.0, [2] = 0.75 }
 local WALL_CLEARANCES = { 0.6, 0.9, 1.2 }
 
+local function round(value)
+    local lower = math.floor(value)
+    local fraction = value - lower
+    if fraction > 0.5 or (fraction == 0.5 and lower % 2 ~= 0) then
+        return lower + 1
+    end
+    return lower
+end
+
+local function enemy_id(name)
+    local digits = name:match("[Ee][Mm](%d%d%d%d)")
+    if digits ~= nil then
+        return "Em" .. digits
+    end
+end
+
 local function vector(x, y, z)
     return Vector3f.new(x, y, z)
 end
@@ -45,10 +61,8 @@ end
 
 function EnemyDrops:enemy_type(source, game_object)
     local runtime_name = source:get_type_definition():get_full_name()
-    local runtime_id = runtime_name:match("[Ee][Mm](%d%d%d%d)")
-    local object_id = game_object:call("get_Name"):match("[Ee][Mm](%d%d%d%d)")
-    runtime_id = runtime_id == nil and nil or "Em" .. runtime_id
-    object_id = object_id == nil and nil or "Em" .. object_id
+    local runtime_id = enemy_id(runtime_name)
+    local object_id = enemy_id(game_object:call("get_Name"))
     if runtime_id == "Em3000" and object_id == "Em8000" then
         return object_id
     end
@@ -67,7 +81,7 @@ end
 function EnemyDrops:rng(game_object, generation)
     local seed = tonumber(self.context.config:get("biorand-seed", 0)) or 0
     local address = self.context.game:address(game_object)
-    return Rng.new(seed * 16777619 + address * 31 + generation)
+    return Rng.for_enemy(seed, address, generation)
 end
 
 function EnemyDrops:stack_amount(item_id, rng)
@@ -82,12 +96,12 @@ function EnemyDrops:stack_amount(item_id, rng)
         minimum, maximum = maximum, minimum
     end
 
-    local min_amount = math.max(1, math.floor(minimum * limit + 0.5))
-    local max_amount = math.max(min_amount, math.min(limit, math.floor(maximum * limit + 0.5)))
+    local min_amount = math.max(1, round(minimum * limit))
+    local max_amount = math.max(min_amount, math.min(limit, round(maximum * limit)))
     local amount = rng:int(min_amount, max_amount)
     if self:config("enemy-drop-respect-difficulty", "item-drop-respect-difficulty", true) then
-        local difficulty = self.context.game:singleton("app.GameManager"):call("get_GameDifficulty")
-        amount = math.max(1, math.floor(amount * (DIFFICULTY_FACTORS[difficulty] or 1) + 0.5))
+        local difficulty = self.context.game:singleton("app.GameManager"):get_field("GameDifficulty")
+        amount = math.max(1, round(amount * (DIFFICULTY_FACTORS[difficulty] or 1)))
     end
     return amount
 end
@@ -156,7 +170,7 @@ function EnemyDrops:select(game_object, generation, enemy_type)
     local amount = self:stack_amount(item_id, rng)
     local multiplier = math.max(1, Data.drop_multipliers[enemy_type] or 1)
     if multiplier > 1 then
-        amount = math.floor(math.min(Data.stack_limits[item_id] or 1, amount * multiplier) + 0.5)
+        amount = round(math.min(Data.stack_limits[item_id] or 1, amount * multiplier))
     end
     return item_id, amount
 end
@@ -186,7 +200,7 @@ function EnemyDrops:cast_terrain_ray(start_position, end_position)
             return nil
         end
         local contact = result:call("getContactPoint(System.UInt32)", 0)
-        return contact:call("get_Position"), contact:call("get_Normal")
+        return contact:get_field("Position"), contact:get_field("Normal")
     end)
     if not ok then
         self.context.log:info("Enemy drop terrain ray failed: " .. tostring(hit_position), true)
@@ -207,14 +221,15 @@ end
 
 function EnemyDrops:wall_direction(enemy_object, position)
     local object_manager = self.context.game:singleton("app.ObjectManager")
-    local player = object_manager:call("get_PlayerObj") or object_manager:call("findActivePlayer")
-    local player_position = player == nil and nil or player:call("get_Transform"):call("get_Position")
-    local direction = player_position == nil and nil or horizontal_normal(subtract(player_position, position))
+    local player = object_manager and (object_manager:get_field("PlayerObj") or object_manager:call("findActivePlayer"))
+    local player_transform = player and player:call("get_Transform")
+    local player_position = player_transform and player_transform:call("get_Position")
+    local direction = player_position and horizontal_normal(subtract(player_position, position))
     if direction ~= nil then
         local _, wall_normal = self:cast_terrain_ray(
             add(position, multiply(direction, 0.75)),
             add(position, multiply(direction, -0.75)))
-        local wall_direction = wall_normal == nil and nil or horizontal_normal(wall_normal)
+        local wall_direction = wall_normal and horizontal_normal(wall_normal)
         if wall_direction ~= nil then
             if wall_direction.x * direction.x + wall_direction.z * direction.z < 0 then
                 wall_direction = multiply(wall_direction, -1)
@@ -291,15 +306,18 @@ function EnemyDrops:reset_enemy(enemy_object)
 end
 
 function EnemyDrops:death(source, controller)
-    local enemy_object = controller:call("get_GameObject")
+    local enemy_object = source:call("get_GameObject")
+    if enemy_object == nil then return end
     local static_mia = self.context.features.static_mia
     if static_mia:suppress(controller, enemy_object) then
         return
     end
 
-    local generation = self:begin(enemy_object)
-    if generation ~= nil and self.context.config:get("random-enemy-drops", true) then
-        self:spawn(source, enemy_object, generation)
+    if self.context.config:get("random-enemy-drops", true) then
+        local generation = self:begin(enemy_object)
+        if generation ~= nil then
+            self:spawn(source, enemy_object, generation)
+        end
     end
     static_mia:remember(controller, enemy_object)
 end

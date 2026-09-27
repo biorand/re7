@@ -120,7 +120,10 @@ public class RandomizerRandomEventPluginBehaviorTests {
 
     private static void AssertREFrameworkScripts(ZipArchive zip) {
         foreach (var scriptPath in REFrameworkScriptPaths) {
-            Assert.NotNull(zip.GetEntry($"reframework/autorun/{scriptPath}"));
+            var path = $"reframework/autorun/{scriptPath}";
+            var entry = zip.GetEntry(path);
+            Assert.NotNull(entry);
+            Assert.Equal(Serialization.EmbeddedData.GetFile(path), entry!.GetBytes());
         }
         Assert.NotNull(zip.GetEntry("reframework/data/BioRand7/config.json"));
         Assert.Null(zip.GetEntry("reframework/plugins/managed/Biohazard.BioRand.RE7.REFrameworkPlugins.dll"));

@@ -32,6 +32,11 @@ jobs:
       uses: actions/setup-dotnet@v5
       with:
         dotnet-version: 10.0
+    - name: Test REFramework Lua scripts
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y lua5.4
+        lua5.4 tests/lua/run.lua
     - name: Download baseline PAK
       if: env.BIORAND_RE7_TEST_PAK_URL != ''
       run: |

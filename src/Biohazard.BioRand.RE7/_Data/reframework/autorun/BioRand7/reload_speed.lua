@@ -22,6 +22,16 @@ local WEAPON_NAMES = {
     [69] = "ch9-wp008", [70] = "ch9-wp009", [71] = "num", [9999] = "etc",
 }
 
+local function round_rate(value)
+    local scaled = value * 100
+    local lower = math.floor(scaled)
+    local fraction = scaled - lower
+    if fraction > 0.5 or (fraction == 0.5 and lower % 2 ~= 0) then
+        lower = lower + 1
+    end
+    return lower / 100
+end
+
 function ReloadSpeed.new(context)
     return setmetatable({ context = context }, ReloadSpeed)
 end
@@ -35,12 +45,12 @@ function ReloadSpeed:multiplier(weapon_id)
 end
 
 function ReloadSpeed:apply(controller)
-    local weapon_id = controller:call("get_CurrentWeaponID")
+    local weapon_id = controller:get_field("CurrentWeaponID")
     local multiplier = self:multiplier(weapon_id)
     if multiplier == nil then
-        local weapon = controller:call("get_CurrentWeapon")
+        local weapon = controller:get_field("CurrentWeapon")
         if weapon ~= nil then
-            weapon_id = weapon:call("get_WeaponID")
+            weapon_id = weapon:get_field("WeaponID")
             multiplier = self:multiplier(weapon_id)
         end
     end
@@ -48,17 +58,17 @@ function ReloadSpeed:apply(controller)
         return
     end
 
-    local depressant = math.max(0, controller:call("get_DepressantLevel"))
+    local depressant = math.max(0, controller:get_field("DepressantLevel"))
     if depressant > 0 and not self.context.config:get("weapon-mod-reload-speed-include-stabilizers", true) then
         multiplier = 1.0
     end
 
-    local table_data = controller:call("get_PlayerReloadSpeedRateTable")
-    local motion_manager = controller:call("get_MotionManager")
+    local table_data = controller:get_field("PlayerReloadSpeedRateTable")
+    local motion_manager = controller:get_field("MotionManager")
     if table_data == nil or motion_manager == nil then return end
     local base_rate = table_data:call("getReloadSpeedRate(System.Int32)", depressant)
-    local rate = math.max(0.1, math.floor(base_rate * multiplier * 100 + 0.5) / 100)
-    controller:call("set_ReloadSpeedRate", rate)
+    local rate = math.max(0.1, round_rate(base_rate * multiplier))
+    controller:set_field("ReloadSpeedRate", rate)
     local hash = self.context.game:static_field("app.PlayerMotionController.VariableNameHash", "fReloadSpeedRate")
     motion_manager:call("setFloatToMotionVariable(System.UInt32, System.Single)", hash, rate)
 end
@@ -66,6 +76,7 @@ end
 function ReloadSpeed:install()
     local game = self.context.game
     game:hook("app.PlayerMotionController", "update()", function(args)
+        thread.get_hook_storage().biorand_reload_controller = nil
         if self.context.config:get("weapon-mod-reload-speed", false) then
             thread.get_hook_storage().biorand_reload_controller = game:object(args[2])
         end

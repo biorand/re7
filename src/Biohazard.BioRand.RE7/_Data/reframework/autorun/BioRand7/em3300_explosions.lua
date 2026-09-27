@@ -29,8 +29,9 @@ function Em3300Explosions:is_target(game_object)
     if name:lower() == "em3300" or name:lower():sub(1, 7) == "em3300_" then
         return true
     end
-    return self.context.game:method("app.ObjectManager", "getEnemyID(via.GameObject)")
-        :call(nil, game_object) == EM3300_ID
+    local enemy_id = self.context.game:method("app.ObjectManager", "getEnemyID(via.GameObject)")
+        :call(nil, game_object)
+    return enemy_id:call("get_HasValue") and enemy_id:call("get_Value") == EM3300_ID
 end
 
 function Em3300Explosions:game_object(action, action_arg)
@@ -38,14 +39,18 @@ function Em3300Explosions:game_object(action, action_arg)
     if game_object ~= nil and game_object:call("get_Valid") then
         return game_object
     end
-    return action_arg:call("get_OwnerGameObject")
+    if action_arg ~= nil then return action_arg:call("get_OwnerGameObject") end
+    return nil
 end
 
 function Em3300Explosions:near_player(enemy_object)
-    local player = self.context.game:singleton("app.ObjectManager"):call("get_PlayerObj")
+    local player = self.context.game:player()
     if player == nil then return false end
-    local player_position = player:call("get_Transform"):call("get_Position")
-    local enemy_position = enemy_object:call("get_Transform"):call("get_Position")
+    local player_transform = player:call("get_Transform")
+    local enemy_transform = enemy_object:call("get_Transform")
+    if player_transform == nil or enemy_transform == nil then return false end
+    local player_position = player_transform:call("get_Position")
+    local enemy_position = enemy_transform:call("get_Position")
     local x = player_position.x - enemy_position.x
     local y = player_position.y - enemy_position.y
     local z = player_position.z - enemy_position.z
@@ -54,7 +59,7 @@ end
 
 function Em3300Explosions:delay(game_object)
     local seed = tonumber(self.context.config:get("biorand-seed", 0)) or 0
-    local rng = Rng.new(seed * 16777619 + self.context.game:address(game_object) * 31 + 3300)
+    local rng = Rng.for_em3300(seed, self.context.game:address(game_object))
     return 3 + rng:float() * 5
 end
 
@@ -68,7 +73,7 @@ function Em3300Explosions:shell_manager(player)
         return shell_manager
     end
     local object_manager = self.context.game:singleton("app.ObjectManager")
-    local shell_object = object_manager:call("findObject(System.String)", "ShellManager")
+    local shell_object = object_manager and object_manager:call("findObject(System.String)", "ShellManager")
     if shell_object == nil then
         shell_object = self.context.game:method("app.ObjectManager", "findObjectInCurrentScene(System.String)")
             :call(nil, "ShellManager")
@@ -78,50 +83,62 @@ end
 
 function Em3300Explosions:detonate(enemy_object)
     local game = self.context.game
-    local player = game:singleton("app.ObjectManager"):call("get_PlayerObj")
+    local player = game:player()
     local transform = enemy_object:call("get_Transform")
+    if transform == nil then return end
     local shell_manager = self:shell_manager(player)
     local exploded = false
 
-    if shell_manager ~= nil then
-        local ok = pcall(function()
+    if player ~= nil and shell_manager ~= nil then
+        local ok, error_message = pcall(function()
             local bomb = shell_manager:call(
                 "createBomb(via.GameObject, via.Transform, via.vec3, via.Quaternion)",
-                player, transform, Vector3f.new(0, 0, 0), Quaternion.new(0, 0, 0, 1))
+                player, transform, Vector3f.new(0, 0, 0), Quaternion.identity())
             if bomb ~= nil then
                 bomb:call("requestExplosion")
                 exploded = true
             end
         end)
-        if not ok then exploded = false end
+        if not ok then
+            self.context.log:warn("Unable to create Em3300 bomb: " .. tostring(error_message))
+        end
     end
 
     if not exploded then
         local effects = game:component(enemy_object, "app.ObjectEffectManager")
         if effects ~= nil then
-            pcall(function()
+            local ok, error_message = pcall(function()
                 local effect_id = game:static_field("Em4200Effect.IDHolder", "Explosion")
                 effects:call(
                     "requestEffect(app.EffectID, via.vec3, via.Quaternion, via.GameObject, System.String)",
                     effect_id,
                     transform:call("get_Position"),
-                    Quaternion.new(0, 0, 0, 1),
+                    Quaternion.identity(),
                     enemy_object,
                     "")
+                exploded = true
             end)
+            if not ok then
+                self.context.log:warn("Unable to request Em3300 explosion effect: " .. tostring(error_message))
+            end
         end
+    end
+    if not exploded then
+        self.context.log:warn("Em3300 explosion unavailable: no bomb or fallback effect could be created")
     end
 end
 
 function Em3300Explosions:despawn(enemy_object)
     local game = self.context.game
-    pcall(function()
+    local ok, error_message = pcall(function()
         game:method("app.Util", "setActive(via.GameObject, System.Boolean, System.Boolean)")
             :call(nil, enemy_object, false, false)
     end)
-    pcall(function()
+    if not ok then self.context.log:warn("Unable to deactivate Em3300: " .. tostring(error_message)) end
+    ok, error_message = pcall(function()
         game:method("via.GameObject", "destroy(via.GameObject)"):call(nil, enemy_object)
     end)
+    if not ok then self.context.log:warn("Unable to destroy Em3300: " .. tostring(error_message)) end
 end
 
 function Em3300Explosions:update_object(enemy_object)
@@ -163,8 +180,9 @@ function Em3300Explosions:update()
     end
     local active = {}
     local game = self.context.game
-    local groups = game:singleton("app.ObjectManager"):call("get_ManagedObjects")
-    if groups == nil then return end
+    local object_manager = game:singleton("app.ObjectManager")
+    if object_manager == nil then return end
+    local groups = object_manager:get_field("ManagedObjects")
     for group in game:list(groups) do
         for game_object in game:list(group) do
             if self:is_target(game_object) then
