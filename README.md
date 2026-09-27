@@ -71,6 +71,14 @@ dotnet build .\biorand-re7.sln --no-restore
 dotnet test .\biorand-re7.sln --no-build --verbosity normal
 ```
 
+The REFramework runtime also has executable Lua tests, independent of the game and baseline PAK:
+
+```powershell
+lua tests/lua/run.lua
+```
+
+CI runs these with Lua 5.4. See [REFramework Lua validation](docs/reframework-lua.md) for the runtime API rules and in-game checks.
+
 ## Benchmarks
 
 Randomizer throughput benchmarks live in `src/Biohazard.BioRand.RE7.Benchmarks/` and use the embedded baseline PAK, `%USERPROFILE%\.biorand\biorand-re7.pak`, or a path supplied through `BIORAND_RE7_BENCHMARK_PAK`.

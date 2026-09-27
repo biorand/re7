@@ -18,6 +18,7 @@ Important projects and directories:
 - `src/reeutils/` - git submodule for RE Engine tooling. Do not edit it casually; call out any intentional submodule changes.
 - `docs/` - active reverse-engineering notes and roadmap. Read `docs/Notes.MD` before changing item, enemy, inventory, recipe, chapter, or DLC logic.
 - `.analysis/re7_src/` - locally generated REFramework.NET C# type database. Prefer it for DLC class names, inheritance, fields, and enums before spending time in IDA.
+- Generated C# properties can wrap TDB fields. Before translating a property to a Lua `get_`/`set_` call, verify the actual member in the raw TDB dump or live schema. Use `get_field`/`set_field` for fields; see `docs/reframework-lua.md`.
 - Live REFramework MCP can be available as `mcp__reframework__` when RE7 is running with the REFramework HTTP API at `http://localhost:8899`; local server project is `F:\RE_Modding\re-engine-mcp-master\mcp-server`.
 - `assets/`, `reframework/`, `reversing/`, `dumps/` - mod assets and research material. `dumps/` and local output folders are not normal source changes.
 
@@ -47,6 +48,8 @@ dotnet test .\src\Biohazard.BioRand.RE7.Tests\Biohazard.BioRand.RE7.Tests.csproj
 ```
 
 CI currently checks out submodules, installs .NET 10.0, then runs restore, build, and test. If .NET 10 is unavailable locally, say so rather than downgrading target frameworks.
+
+Run `lua tests/lua/run.lua` after changing REFramework Lua behavior. CI uses Lua 5.4; these tests do not require RE7 or a baseline PAK.
 
 ## CLI Usage
 

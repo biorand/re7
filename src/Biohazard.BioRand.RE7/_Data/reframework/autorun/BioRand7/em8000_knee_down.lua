@@ -14,19 +14,20 @@ function Em8000KneeDown:should_force(controller, result, weapon_group)
     if VANILLA_GROUPS[weapon_group] then
         return false
     end
-    if result:call("get_resistType") ~= LARGE_RESIST then
+    if result == nil or result:get_field("resistType") ~= LARGE_RESIST then
         return false
     end
-    if controller:call("get_MyEm8000ActionStatus") == nil then
+    if controller:get_field("MyEm8000ActionStatus") == nil then
         return false
     end
 
-    local think = controller:call("get_MyThink")
-    if think == nil or think:call("get__Mode") == EM8000_HAND_MODE then
+    local think = controller:get_field("MyThink")
+    if think == nil or think:get_field("_Mode") == EM8000_HAND_MODE then
         return false
     end
-    local flags = controller:call("get_DictForbidDamageReactionTypeFlag")
-    return flags ~= nil and not flags:call("get_Item", LARGE_REACTION)
+    local flags = controller:get_field("DictForbidDamageReactionTypeFlag")
+    return flags ~= nil and flags:call("ContainsKey", LARGE_REACTION)
+        and not flags:call("get_Item", LARGE_REACTION)
 end
 
 function Em8000KneeDown:install()
@@ -42,7 +43,7 @@ function Em8000KneeDown:install()
         end,
         function(retval)
             local storage = thread.get_hook_storage()
-            if storage.biorand_force_knee_down and sdk.to_int64(retval) == 0 then
+            if storage.biorand_force_knee_down and sdk.to_int64(retval) % 256 == 0 then
                 storage.biorand_force_knee_down = false
                 return sdk.to_ptr(1)
             end

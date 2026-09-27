@@ -6,7 +6,7 @@ local function type_definition(name)
 end
 
 function Game.new()
-    return setmetatable({ methods = {}, fields = {}, singletons = {} }, Game)
+    return setmetatable({ methods = {}, fields = {} }, Game)
 end
 
 function Game:method(type_name, signature)
@@ -38,12 +38,7 @@ function Game:set_static_field(type_name, name, value)
 end
 
 function Game:singleton(type_name)
-    local singleton = self.singletons[type_name]
-    if singleton == nil then
-        singleton = sdk.get_managed_singleton(type_name)
-        self.singletons[type_name] = singleton
-    end
-    return singleton
+    return sdk.get_managed_singleton(type_name)
 end
 
 function Game:object(pointer)
@@ -55,15 +50,27 @@ function Game:hook(type_name, signature, before, after)
 end
 
 function Game:player()
-    return self:singleton("app.ObjectManager"):call("findActivePlayer")
+    local manager = self:singleton("app.ObjectManager")
+    if manager == nil then return nil end
+    local player = manager:get_field("PlayerObj")
+    if player ~= nil and player:call("get_Valid") then return player end
+    player = manager:call("findActivePlayer")
+    if player ~= nil and player:call("get_Valid") then return player end
+    player = self:method("app.GameManager", "getPlayer()"):call(nil)
+    if player ~= nil and player:call("get_Valid") then return player end
+    return nil
 end
 
 function Game:difficulty()
-    return self:singleton("app.GameManager"):call("get_GameDifficulty")
+    local manager = self:singleton("app.GameManager")
+    if manager ~= nil then return manager:get_field("GameDifficulty") end
+    return nil
 end
 
 function Game:chapter()
-    return self:singleton("app.GameFlowFsmManager"):call("get_CurrentMainGameFlow")
+    local manager = self:singleton("app.GameFlowFsmManager")
+    if manager ~= nil then return manager:call("get_CurrentMainGameFlow") end
+    return nil
 end
 
 function Game:component(game_object, type_name)
@@ -73,12 +80,13 @@ end
 
 function Game:list(collection)
     local index = 0
-    local count = collection:call("get_Count")
+    local count = collection ~= nil and collection:call("get_Count") or 0
     return function()
-        if index >= count then return nil end
-        local value = collection:call("get_Item", index)
-        index = index + 1
-        return value
+        while index < count do
+            local value = collection:call("get_Item", index)
+            index = index + 1
+            if value ~= nil then return value end
+        end
     end
 end
 
