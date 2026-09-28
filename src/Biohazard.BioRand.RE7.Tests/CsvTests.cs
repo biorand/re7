@@ -6,6 +6,31 @@ namespace Biohazard.BioRand.RE7.Tests;
 
 public class CsvTests {
     [Fact]
+    public void QuotedCells_PreserveLeadingAndTrailingLiteralQuotes() {
+        const string csv = "Name,Value\n\"\"\"quoted\"\"\",7\n";
+
+        var row = Assert.Single(Csv.Deserialize<BomHeaderRow>(Encoding.UTF8.GetBytes(csv)));
+
+        Assert.Equal("\"quoted\"", row.Name);
+        Assert.Equal(7, row.Value);
+        Assert.Equal(row.Name, Csv.Read(csv)[0, 1]);
+    }
+
+    [Theory]
+    [InlineData("\n")]
+    [InlineData("\r\n")]
+    [InlineData("\r")]
+    public void Deserialize_AcceptsQuotedHeadersAndEscapedMultilineCells(string newline) {
+        var csv = Encoding.UTF8.GetBytes(
+            $"\uFEFF\"Name\",\"Value\"{newline}\"Main, \"\"Hall\"\"{newline}Upstairs\",\"7\"{newline}");
+
+        var row = Assert.Single(Csv.Deserialize<BomHeaderRow>(csv));
+
+        Assert.Equal($"Main, \"Hall\"{newline}Upstairs", row.Name);
+        Assert.Equal(7, row.Value);
+    }
+
+    [Fact]
     public void Deserialize_UsesInvariantCultureForDecimalScalars() {
         var originalCulture = CultureInfo.CurrentCulture;
         try {

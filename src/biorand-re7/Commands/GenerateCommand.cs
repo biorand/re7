@@ -70,60 +70,42 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings> {
 
         try {
             var output = randomizer.Randomize(input);
-            foreach (var asset in output.Assets) {
-                asset.Data.WriteToFile(asset.FileName);
-            }
-
-            // Find pak file
-            var pakFile = GetPakFile(output.Assets.First(x => x.Key == "1-patch").Data);
-            var zipFile = output.Assets.First(x => x.Key == "2-fluffy").Data;
-
-            reporter.RunTask($"Extracting log files",
-                () => { ExtractLogFiles(zipFile, Environment.CurrentDirectory); });
-
-            var outputPath = settings.OutputPath!;
-            if (HasExtension(outputPath, ".pak")) {
-                reporter.RunTask($"Writing {outputPath}", () => {
-#if DEBUG
-                    if (Biohazard.BioRand.RE7.Extensions.MemoryExtensions.IsProcessRunning("re7"))
-                        return;
-#endif
-                    EnsureParentDirectory(outputPath);
-                    pakFile.WriteToFile(outputPath);
-                });
-#if DEBUG
-                reporter.RunTask($"Extracting files", () => {
-                    var nativesDir = Path.Combine(
-                        Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                        ".biorand",
-                        "extract"
-                    );
-
-                    if (Directory.Exists(nativesDir)) {
-                        Directory.Delete(nativesDir, true);
-                    }
-
-                    ExtractNatives(zipFile, Path.GetDirectoryName(nativesDir)!);
-                });
-#endif
-            } else if (HasExtension(outputPath, ".zip")) {
-                reporter.RunTask($"Writing {outputPath}", () => {
-                    EnsureParentDirectory(outputPath);
-                    zipFile.WriteToFile(outputPath);
-                });
-            } else {
-                reporter.RunTask($"Writing {outputPath}",
-                    () => {
-                        ExtractEntries(zipFile, outputPath,
-                            entry => entry.FullName.StartsWith("natives/", StringComparison.OrdinalIgnoreCase));
-                    });
-            }
+            reporter.RunTask($"Writing {settings.OutputPath}", () => WriteOutput(output, settings.OutputPath!));
         }
         catch (Exception ex) {
             throw new RandomizerUserException("Randomization failed: " + ex);
         }
 
         return 0;
+    }
+
+    internal static void WriteOutput(IntelOrca.Biohazard.BioRand.RandomizerOutput output, string outputPath) {
+        outputPath = Path.GetFullPath(outputPath);
+        var isPak = HasExtension(outputPath, ".pak");
+        var isZip = HasExtension(outputPath, ".zip");
+        var directory = isPak || isZip ? Path.GetDirectoryName(outputPath)! : outputPath;
+        Directory.CreateDirectory(directory);
+        var patch = output.Assets.First(asset => asset.Key == "1-patch").Data;
+        var fluffy = output.Assets.First(asset => asset.Key == "2-fluffy").Data;
+
+        if (isPak) {
+            GetPakFile(patch).WriteToFile(outputPath);
+            ExtractLogFiles(fluffy, directory);
+        } else if (isZip) {
+            fluffy.WriteToFile(outputPath);
+        } else {
+            ExtractEntries(fluffy, directory, entry => entry.FullName != "modinfo.ini" && entry.FullName != "pic.jpg");
+        }
+
+        foreach (var asset in output.Assets.Where(asset => asset.Key != "1-patch" && asset.Key != "2-fluffy")) {
+            // An archive output carries companion downloads next to it. Direct installations need
+            // the shared asset PAK extracted, alongside the runtime and the generated game files.
+            if (asset.Key == "3-assets" && !isZip) {
+                ExtractEntries(asset.Data, directory, _ => true);
+            } else {
+                asset.Data.WriteToFile(Path.Combine(directory, Path.GetFileName(asset.FileName)));
+            }
+        }
     }
 
     internal static void EnsureParentDirectory(string path) {
@@ -135,10 +117,6 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings> {
 
     internal static bool HasExtension(string path, string extension)
         => string.Equals(Path.GetExtension(path), extension, StringComparison.OrdinalIgnoreCase);
-
-    private static void ExtractNatives(byte[] zipFile, string outputPath)
-        => ExtractEntries(zipFile, outputPath,
-            entry => entry.FullName.StartsWith("natives/", StringComparison.OrdinalIgnoreCase));
 
     private static void ExtractLogFiles(byte[] zipFile, string outputPath)
         => ExtractEntries(zipFile, outputPath, entry =>
@@ -228,16 +206,20 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings> {
         if (server == null)
             throw new Exception($"No server defined for {apiUrl}");
 
-        var seed = int.Parse(pathMatch.Groups[1].Value);
-        var client = new HttpClient();
+        var id = int.Parse(pathMatch.Groups[1].Value);
+        using var client = new HttpClient();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue($"Bearer", server.AuthToken);
         client.BaseAddress = new Uri(apiUrl);
-        var response = await client.GetFromJsonAsync<RandoResponse>($"/rando/{seed}");
+        var response = await client.GetFromJsonAsync<RandoResponse>($"/rando/{id}");
         if (response == null)
             throw new Exception("Invalid response from server");
 
+        return FromResponse(response);
+    }
+
+    internal static RandomizerInput FromResponse(RandoResponse response) {
         var result = new RandomizerInput();
-        result.Seed = int.Parse(pathMatch.Groups[1].Value);
+        result.Seed = response.Seed;
         result.UserName = response.UserName ?? "USERNAME";
         result.ProfileName = response.ProfileName;
         result.ProfileAuthor = response.ProfileUserName;
@@ -246,7 +228,7 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings> {
         return result;
     }
 
-    private class RandoResponse {
+    internal class RandoResponse {
         public int Id { get; init; }
         public string UserName { get; init; } = "";
         public long Created { get; init; }

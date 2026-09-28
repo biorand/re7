@@ -5,6 +5,8 @@ using Biohazard.BioRand.RE7.REEngine;
 using Biohazard.BioRand.RE7.Serialization;
 using Enums.app;
 using IntelOrca.Biohazard.BioRand.REE;
+using IntelOrca.Biohazard.REE.Rsz;
+using System.Collections.Immutable;
 
 namespace Biohazard.BioRand.RE7.Modifiers;
 
@@ -16,6 +18,8 @@ internal class StartingInventoryModifier : Modifier {
     }
 
     private const string RandomizerKey = "modifier/inventory";
+    internal const string MainHouseStartScene = "natives/stm/leveldesign/fsm/chapter3/chapter3_1/levelfsm_c03_1.scn.20";
+    internal const string MainHouseStartObject = "0_Ch1Item_ItemBoxIn_FFS";
     private const int AntiqueCoinsProbabilityPct = 1;
     private const int AntiqueCoinsCount = 2;
 
@@ -190,20 +194,13 @@ internal class StartingInventoryModifier : Modifier {
                 }
             }
 
-#if !DEBUG
-            if (randomizer.UserTags.Contains("re7:debugstartitems"))
-            {
-#endif
-            if (randomizeInventory) {
+            if (randomizeInventory && randomizer.UserTags.Contains("re7:debugstartitems")) {
                 if (debugItems.Count > 0) {
                     logger.LogLine(
                         $"Adding debug items: {string.Join(", ", debugItems.Select(x => $"{x.Num}x {x.ItemDataID}"))}");
                     root._AddItems.AddRange(debugItems.Select(CloneInventoryItem));
                 }
             }
-#if !DEBUG
-            }
-#endif
 
             if (giveAdditionalGun) {
                 var additionalGun = PickAdditionalGun(additionalGunRng, weapons, root._AddItems);
@@ -356,15 +353,49 @@ internal class StartingInventoryModifier : Modifier {
                 configuredCategories,
                 debugItems);
         }
+
+        if (randomizer.GetConfigOption<string>(ChapterJumpDataModifier.StartChapterConfigKey) == "Main House" &&
+            (randomizeEthansInventory || giveRandomSkillEthan || giveAdditionalGunEthan)) {
+            ApplyMainHouseInventory(randomizer);
+            logger.LogLine("Main House start: initialize Ethan's configured loadout in the saved opening FSM.");
+        }
+    }
+
+    private static void ApplyMainHouseInventory(Randomizer randomizer) {
+        // This single-use, saved opening FSM normally transfers the previous chapter's inventory
+        // into the item box. A Main House new game has no preceding chapter to provide that data.
+        // Reuse the native Chapter 1 AddItem action, including its inventory userdata reference.
+        var source = randomizer.FileRepository
+            .GetScnFile("natives/stm/leveldesign/fsm/chapter1/levelfsm_c01.scn.20")
+            .ReadScene(randomizer.FileRepository.TypeRepository)
+            .FindGameObject(go => go.Name == "0_MiaPhoto_AddItem")!;
+        RszObjectNode? addItem = null;
+        source.Visit(node => {
+            if (node is RszObjectNode obj && obj.Type.Name == "app.AddItem") addItem ??= obj;
+        });
+        if (addItem == null) throw new InvalidDataException("Missing starting inventory action.");
+
+        var replaced = 0;
+        randomizer.FileRepository.ModifyScnFile(MainHouseStartScene, scene => scene.VisitGameObjects(go => {
+            if (go.Name != MainHouseStartObject) return go;
+            return go.WithComponents(go.Components.Select(component => component.Visit(node => {
+                if (node is not RszObjectNode obj || obj.Type.Name != "app.fsm.CopySaveItem2ItemBox") return node;
+                replaced++;
+                return addItem
+                    .SetField("v0_Enabled", obj.Get<bool>("v0_Enabled"))
+                    .SetField("v1_Modified", true)
+                    .SetField("v2_UID", obj.Get<uint>("v2_UID"))
+                    .SetField("v3_ListNo", obj.Get<byte>("v3_ListNo"));
+            })).ToImmutableArray());
+        }));
+        if (replaced != 1) throw new InvalidDataException("Unexpected Main House inventory initialization layout.");
     }
 
     private static IReadOnlyList<StartingInventoryItem> LoadDebugStartItems(Randomizer randomizer) {
-#if !DEBUG
         if (!randomizer.UserTags.Contains("re7:debugstartitems"))
         {
             return [];
         }
-#endif
 
         return Csv.Deserialize<DebugStartItem>(randomizer.DynamicData.GetData(DynamicDataName.DebugStartItems)!)
             .Where(x => x.Quantity > 0)

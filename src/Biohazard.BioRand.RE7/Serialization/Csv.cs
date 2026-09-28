@@ -134,6 +134,7 @@ public static class Csv {
                 } else {
                     if (i < data.Length - 1 && data[i + 1] == '"') {
                         sb.Append('"');
+                        i++;
                     } else {
                         inQuote = false;
                     }
@@ -185,24 +186,31 @@ public static class Csv {
     private static ImmutableArray<Token> ReadTokens(byte[] buffer) {
         var tokens = ImmutableArray.CreateBuilder<Token>();
         var inQuotes = false;
+        var cellFinished = false;
         var textStart = -1;
-        for (var i = 0; i < buffer.Length; i++) {
+        var start = buffer.AsSpan().StartsWith(new byte[] { 0xEF, 0xBB, 0xBF }) ? 3 : 0;
+        for (var i = start; i < buffer.Length; i++) {
             var b = buffer[i];
             if (!inQuotes) {
                 if (b == ',') {
                     Finish(i);
                     tokens.Add(new Token(TokenKind.Comma, ","));
+                    cellFinished = false;
                 } else if (b == '\n') {
                     Finish(i);
                     tokens.Add(new Token(TokenKind.NewLine, "\n"));
+                    cellFinished = false;
                 } else if (b == '\r') {
                     Finish(i);
-                    if (i + 1 < buffer.Length) {
-                        if (buffer[i + 1] == '\n') {
-                            tokens.Add(new Token(TokenKind.NewLine, "\r\n"));
-                            i++;
-                        }
+                    if (i + 1 < buffer.Length && buffer[i + 1] == '\n') {
+                        i++;
                     }
+                    tokens.Add(new Token(TokenKind.NewLine, "\n"));
+                    cellFinished = false;
+                } else if (cellFinished) {
+                    // Tolerate whitespace following a closing quote without
+                    // carrying its offset into the next cell.
+                    continue;
                 } else if (b == '"') {
                     inQuotes = true;
                 } else if (textStart == -1) {
@@ -212,6 +220,7 @@ public static class Csv {
                 if (b == '"') {
                     if (i + 1 < buffer.Length) {
                         if (buffer[i + 1] == '"') {
+                            if (textStart == -1) textStart = i;
                             i++;
                             continue;
                         }
@@ -230,6 +239,8 @@ public static class Csv {
         return tokens.ToImmutable();
 
         void Finish(int position) {
+            if (cellFinished) return;
+            cellFinished = true;
             if (textStart == -1) {
                 tokens.Add(new Token(TokenKind.Text, ""));
             } else {

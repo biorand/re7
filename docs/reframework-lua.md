@@ -27,6 +27,12 @@ Public references: [managed object field and method access](https://cursey.githu
 
 ## Offline tests
 
+Enemy drop and Em3300 streams use a stable spawner/save GUID (or scene/name fallback), never a memory address or a session respawn counter. The same spawned enemy therefore keeps its roll after loading a save. This changes the old address-dependent runtime rolls; it does not change the seeded System.Random implementation.
+
+Use `Game:guid_string` for `System.Guid` fields. In the live RT build, calling `ToString()` on an unboxed GUID through Lua returned unrelated receiver bytes. Formatting the TDB fields `mData1`, `mData2`, `mData3`, and `mData4_0` through `mData4_7` matches the engine's actual GUID and avoids shared or process-dependent identities.
+
+`SaveDataManager.newGameInit()` and `loadLevelUsingLoadData()` reset transient feature state. Room streaming does not. Static Mia suppression is written into native records through `Em2000Order.saveData(app.EnemyStatus.EnemySaveDataClass)` using `Health`, `IsUpdate`, and `IsDraw`, and restored through the corresponding `loadData` method. Hook the save target rather than relying on the `EnemySave` accessors. These signatures and fields were verified against the live RT TDB; live calls confirmed the stable GUID and patched death record. The Lua suite covers an earlier save with a living enemy, a saved death, and a new game. A complete native checkpoint/slot persistence check remains unverified: direct test calls did not reliably execute the full save flow, and direct chest-interaction calls crashed the test session. Validate these through normal gameplay controls before signing off persistence.
+
 Run from the repository root:
 
 ```text

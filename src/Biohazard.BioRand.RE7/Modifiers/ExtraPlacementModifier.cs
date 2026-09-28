@@ -99,14 +99,14 @@ internal class ExtraPlacementModifier : Modifier {
                 .GetObject(FakeWoodenCrateGameObjectName)
                 .CloneWithNewGuids(
                     randomizer.GetRng("modifier/extra-placement/crate-template-instances", placement.SceneFile,
-                        placement.GuidOrAuto, true),
+                        GetGeneratedItemGuid(placement), true),
                     newGuid);
         } else {
             template = randomizer.TemplateService
                 .GetObject(WoodenCrateGameObjectName)
                 .CloneWithNewGuids(
                     randomizer.GetRng("modifier/extra-placement/crate-template-instances", placement.SceneFile,
-                        placement.GuidOrAuto, false),
+                        GetGeneratedItemGuid(placement), false),
                     newGuid);
             var drop = GetNextWoodenCrateDrop(randomizer.ItemRandomizer, rng, randomItemSettings);
             var itemDropDestruct = template.FindComponent<app.ItemDropDestruct>()!;
@@ -165,7 +165,7 @@ internal class ExtraPlacementModifier : Modifier {
             .GetObject(ItemBoxGameObjectName)
             .CloneWithNewGuids(
                 randomizer.GetRng("modifier/extra-placement/item-box-template-instances", placement.SceneFile,
-                    placement.GuidOrAuto),
+                    GetGeneratedItemGuid(placement)),
                 newGuid);
         var interactGameObject =
             template.Children.FirstOrDefault(child => child.FindComponent<app.InteractSendFsm>() != null);
@@ -218,7 +218,7 @@ internal class ExtraPlacementModifier : Modifier {
             var templateInstanceRng = randomizer.GetRng(
                 "modifier/extra-placement/template-instances",
                 placement.SceneFile,
-                placement.GuidOrAuto,
+                GetGeneratedItemGuid(placement),
                 templateItemId);
             template = randomizer.TemplateService
                 .GetItemTemplate(templateItemId)
@@ -241,7 +241,7 @@ internal class ExtraPlacementModifier : Modifier {
             var templateInstanceRng = randomizer.GetRng(
                 "modifier/extra-placement/template-instances",
                 placement.SceneFile,
-                placement.GuidOrAuto,
+                GetGeneratedItemGuid(placement),
                 templateItemId);
             template = randomizer.TemplateService
                 .GetItemTemplate(templateItemId)

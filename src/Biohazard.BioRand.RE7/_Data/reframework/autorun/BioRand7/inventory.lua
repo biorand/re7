@@ -123,6 +123,7 @@ end
 function Inventory:install_combine_hooks()
     local game = self.context.game
     game:hook("app.InventoryMenu.DictionaryCombineUIController", "deactivate()", function()
+        if not self.context.config:get("recipes-add-new", false) then return end
         local type_name = "app.InventoryMenu.DictionaryCombineUIController"
         if game:static_field(type_name, "RowNum") ~= MAX_COMBINE_ROWS then
             game:set_static_field(type_name, "RowNum", MAX_COMBINE_ROWS)
@@ -131,6 +132,7 @@ function Inventory:install_combine_hooks()
 
     game:hook("app.InventoryMenu", "DictionaryCombine_UnlockedCombine(app.ItemCombineData.Data)", nil,
         function(retval)
+            if not self.context.config:get("recipes-unlock-from-start", false) then return retval end
             if sdk.to_int64(retval) % 256 == 0 then
                 return sdk.to_ptr(1)
             end

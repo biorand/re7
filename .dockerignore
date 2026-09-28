@@ -1,0 +1,8 @@
+.analysis
+.vs
+**/bin
+**/obj
+**/TestResults
+out
+dumps
+GeneratedFiles

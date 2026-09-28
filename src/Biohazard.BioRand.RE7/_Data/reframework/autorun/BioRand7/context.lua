@@ -30,6 +30,13 @@ function Context:reset()
     end
 end
 
+function Context:install_session_hooks()
+    -- These are game-session boundaries; folderLoad also runs during normal room streaming.
+    for _, signature in ipairs({ "newGameInit()", "loadLevelUsingLoadData()" }) do
+        self.game:hook("app.SaveDataManager", signature, function() self:reset() end)
+    end
+end
+
 function Context:reload_config()
     self.config:reload()
     self.log.verbose = self.config:get("verbose-reframework-plugin-logging", self.log.verbose)

@@ -118,4 +118,33 @@ function Game:address(object)
     return object:get_address()
 end
 
+function Game:guid_string(value)
+    if value == nil then return nil end
+    -- Calling ToString() on RE7's unboxed System.Guid through Lua reads the wrong
+    -- receiver. Format its TDB fields so spawn identities survive process restarts.
+    return ("%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x"):format(
+        value:get_field("mData1"), value:get_field("mData2"), value:get_field("mData3"),
+        value:get_field("mData4_0"), value:get_field("mData4_1"), value:get_field("mData4_2"),
+        value:get_field("mData4_3"), value:get_field("mData4_4"), value:get_field("mData4_5"),
+        value:get_field("mData4_6"), value:get_field("mData4_7"))
+end
+
+function Game:enemy_identity(game_object)
+    local controller = self:component(game_object, "app.EnemyActionController")
+    local save = self:component(game_object, "app.EnemySave")
+    for _, source in ipairs({ { controller, "SpawnerGuid" }, { save, "SaveGUID" } }) do
+        if source[1] ~= nil then
+            local value = source[1]:get_field(source[2])
+            local guid = self:guid_string(value)
+            if guid ~= nil and guid ~= "00000000-0000-0000-0000-000000000000" then
+                return "enemy:" .. guid:lower()
+            end
+        end
+    end
+    -- Generated static enemies include a placement ID in their name. Unidentified vanilla
+    -- objects share a stream by scene/name rather than depending on allocation or movement.
+    local folder = game_object:call("get_Folder")
+    return "object:" .. (folder and folder:call("get_Path") or "") .. ":" .. game_object:call("get_Name")
+end
+
 return Game

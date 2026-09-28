@@ -4,21 +4,19 @@ on:
   push:
     branches: [ "master" ]
   pull_request:
-    branches: [ "staging" ]
+    branches: [ "staging", "master" ]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   build:
-    # The same-repo master branch is already tested by the push trigger.
-    if: >-
-      ${{
-        github.event_name != 'pull_request' ||
-        github.head_ref != 'master' ||
-        github.event.pull_request.head.repo.full_name != github.repository
-      }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [ Debug, Release ]
     env:
       BIORAND_RE7_TEST_PAK_URL: ${{ secrets.BIORAND_RE7_TEST_PAK_URL }}
       BIORAND_RE7_TEST_PAK_SHA256: ${{ secrets.BIORAND_RE7_TEST_PAK_SHA256 }}
@@ -48,16 +46,23 @@ jobs:
           echo "$BIORAND_RE7_TEST_PAK_SHA256  $pak_path" | sha256sum --check --strict
         fi
         echo "BIORAND_RE7_TEST_PAK=$pak_path" >> "$GITHUB_ENV"
+    - name: Require full validation for release candidates
+      if: github.event_name != 'pull_request'
+      run: |
+        if [ -z "$BIORAND_RE7_TEST_PAK_URL" ] || [ -z "$BIORAND_RE7_TEST_PAK_SHA256" ]; then
+          echo "::error::Release validation requires the baseline PAK URL and SHA256 secrets."
+          exit 1
+        fi
     - name: Note missing baseline PAK
       if: env.BIORAND_RE7_TEST_PAK_URL == ''
       run: echo "::notice::BIORAND_RE7_TEST_PAK_URL is not configured; pak-dependent tests will be skipped."
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build --no-restore -c ${{ matrix.configuration }}
     - name: Test
       if: env.BIORAND_RE7_TEST_PAK_URL != ''
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test --no-build -c ${{ matrix.configuration }} --verbosity normal
     - name: Test without baseline PAK
       if: env.BIORAND_RE7_TEST_PAK_URL == ''
-      run: dotnet test --no-build --verbosity normal --filter "Category!=RequiresPak"
+      run: dotnet test --no-build -c ${{ matrix.configuration }} --verbosity normal --filter "Category!=RequiresPak"

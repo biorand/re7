@@ -277,6 +277,9 @@ public class RandomizerExtraEnemyGenerationBehaviorTests {
         Assert.True(RszSerializer.Deserialize<bool>(staticMia.Settings["Update"]));
         Assert.True(RszSerializer.Deserialize<bool>(staticMia.Settings["Draw"]));
         Assert.Contains("app.fsm.Em2000ThinkState", GetFsmActionTypes(staticMia));
+        var controller = Assert.Single(staticMia.Components, component => component.Type.FindFieldIndex("SpawnerGuid") >= 0);
+        Assert.Equal(staticMia.Guid, controller.Get<Guid>("SpawnerGuid"));
+        Assert.NotEqual(Guid.Empty, staticMia.FindComponent<app.EnemySave>()!.SaveGUID);
     }
 
     [Fact]

@@ -498,9 +498,21 @@ public class RandomizerItemRandomizationTests {
         Assert.True(drawer.IsDirectGameObjectSet);
         Assert.NotEqual(Guid.Empty, drawer.DirectSetGameObject);
         Assert.Contains(drawerObject.Children, child => child.Guid == drawer.DirectSetGameObject);
+        var weaponTransform = weapon.FindComponent<GeneratedViaTransform>()!;
+        Assert.Equal(System.Numerics.Vector3.Zero, weaponTransform.Position);
+        Assert.Equal(System.Numerics.Quaternion.Identity, weaponTransform.Rotation);
         Assert.False(weapon.Settings.Get<bool>("Update"));
         Assert.False(weapon.Settings.Get<bool>("Draw"));
         Assert.NotEmpty(weaponInteractions);
+        Assert.Single(chest.Children);
+        chest.Visit(node => {
+            if (node is RszObjectNode obj && obj.Type.Name == "app.fsm.InteractTest")
+                Assert.Equal(drawerObject.Guid, obj.Get<Guid>("InteractObj"));
+            if (node is RszValueNode value && value.Type == RszFieldType.GameObjectRef) {
+                var reference = RszSerializer.Deserialize<Guid>(value);
+                if (reference != Guid.Empty) Assert.NotNull(afterScene.FindGameObject(reference));
+            }
+        });
         Assert.All(weaponInteractions, interaction => {
             Assert.True(interaction.GameObject.Settings.Get<bool>("Update"));
             Assert.False(interaction.GameObject.Settings.Get<bool>("Draw"));
@@ -551,6 +563,37 @@ public class RandomizerItemRandomizationTests {
         Assert.Equal(ForcedDropId, destruct.SetItemID);
         Assert.Equal(1, destruct.ChangeStackNum);
         AssertPositionMatchesPlacement(transform, placement);
+    }
+
+    [Fact]
+    public void AdditionalCrates_InSameScene_HaveIndependentPersistentIds() {
+        using var result = RandomizerTest.RunState(config => {
+            config["additional-wooden-crates"] = true;
+            config["additional-wooden-crates-fakes"] = false;
+        }, seed: 100583);
+        var scenes = result.ItemPlacementService.ItemPlacements
+            .Where(p => p.Enabled && p.IsExtra && p.Tags.Contains(ExtraPlacementModifier.WoodenCrateTag))
+            .GroupBy(p => p.SceneFile).Where(g => g.Count() > 1);
+        var checkedCrates = 0;
+        foreach (var group in scenes) {
+            var before = GetDynamicParent(result.ReadBeforeScene(group.Key));
+            var after = GetDynamicParent(result.ReadAfterScene(group.Key));
+            var ids = new HashSet<Guid>();
+            foreach (var crate in GetNewChildren(before, after).Where(go => go.Name == "ItemBox_VLong")) {
+                checkedCrates++;
+                var ownIds = new HashSet<Guid>();
+                crate.Visit(node => {
+                    if (node is not RszObjectNode obj) return;
+                    foreach (var name in new[] { "SaveGUID", "InstanceGuid" }) {
+                        if (obj.Type.FindFieldIndex(name) >= 0 && obj.Get<Guid>(name) is var id && id != Guid.Empty)
+                            ownIds.Add(id);
+                    }
+                });
+                Assert.NotEmpty(ownIds);
+                Assert.All(ownIds, id => Assert.True(ids.Add(id), $"Two crates share persistent ID {id} in {group.Key}"));
+            }
+        }
+        Assert.True(checkedCrates >= 2);
     }
 
     [Fact]

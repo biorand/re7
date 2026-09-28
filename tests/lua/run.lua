@@ -8,6 +8,7 @@ local suites = {
     "test_inventory",
     "test_enemy_drops",
     "test_rng",
+    "test_session_state",
     "test_random_events",
     "test_performance",
 }

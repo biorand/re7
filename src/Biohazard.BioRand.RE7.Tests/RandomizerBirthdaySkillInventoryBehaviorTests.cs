@@ -97,13 +97,13 @@ public class RandomizerBirthdaySkillInventoryBehaviorTests {
             "Props/sm9958_skillpatch01/skl001/skl001.mdf2");
         var passiveSkill = ReadAfterPassiveSkillUser(result, Skl001PassiveSkillUserPath);
         Assert.Equal(0.5f, passiveSkill.Get<float>("ReloadSpeedChangeRate"));
-        Assert.Equal(-0.4f, passiveSkill.Get<float>("HitTimeBonusChangeRate"));
+        Assert.Equal(0f, passiveSkill.Get<float>("HitTimeBonusChangeRate"));
         Assert.True(passiveSkill.Get<bool>("IsBulletStackNumInfinity"));
         Assert.NotNull(uiItemMessages.FindMessage(skillSetting.NameMsg));
         Assert.NotNull(uiItemMessages.FindMessage(skillSetting.ManualMsg));
         Assert.Equal("Infinite Ammo", uiItemMessages.GetString(skillSetting.NameMsg, LanguageId.English));
         Assert.Equal(
-            "Infinite ammo. Reload your weapon\r\nas many times as you want...but\r\ntime bonuses are greatly decreased.",
+            "Infinite ammo. Reload your weapon\r\nas many times as you want.",
             uiItemMessages.GetString(skillSetting.ManualMsg, LanguageId.English));
     }
 

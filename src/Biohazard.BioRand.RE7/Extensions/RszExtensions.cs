@@ -33,7 +33,8 @@ public static class RszExtensions {
         Rng rng) {
         return gameObject.Visit(node => {
             if (node is RszObjectNode objectNode) {
-                return ReplaceSaveGuid(objectNode, saveGuidMap, rng);
+                return ReplacePersistentGuid(ReplacePersistentGuid(objectNode, "SaveGUID", saveGuidMap, rng),
+                    "InstanceGuid", saveGuidMap, rng);
             }
 
             if (node is RszValueNode valueNode && valueNode.Type == RszFieldType.GameObjectRef) {
@@ -52,11 +53,12 @@ public static class RszExtensions {
         });
     }
 
-    private static RszObjectNode ReplaceSaveGuid(
+    private static RszObjectNode ReplacePersistentGuid(
         RszObjectNode objectNode,
+        string fieldName,
         IDictionary<Guid, Guid> saveGuidMap,
         Rng rng) {
-        var saveGuidIndex = objectNode.Type.FindFieldIndex("SaveGUID");
+        var saveGuidIndex = objectNode.Type.FindFieldIndex(fieldName);
         if (saveGuidIndex == -1 ||
             objectNode.Children[saveGuidIndex] is not RszValueNode saveGuidNode ||
             saveGuidNode.Type != RszFieldType.Guid) {
@@ -73,7 +75,7 @@ public static class RszExtensions {
             saveGuidMap[saveGuid] = newSaveGuid;
         }
 
-        return objectNode.SetField("SaveGUID", newSaveGuid);
+        return objectNode.SetField(fieldName, newSaveGuid);
     }
 
     extension(RszGameObject gameObject) {

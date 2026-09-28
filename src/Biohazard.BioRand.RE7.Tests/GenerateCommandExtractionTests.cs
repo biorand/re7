@@ -1,9 +1,67 @@
 using Biohazard.BioRand.RE7.Commands;
 using System.IO.Compression;
+using IntelOrca.Biohazard.BioRand;
 
 namespace Biohazard.BioRand.RE7.Tests;
 
 public class GenerateCommandExtractionTests {
+    [Fact]
+    public void UrlResponse_UsesGenerationSeedRatherThanRecordId() {
+        var input = GenerateCommand.FromResponse(new GenerateCommand.RandoResponse {
+            Id = 133558, Seed = 736361, ProfileName = "Shared profile",
+            Config = new() { ["random-items"] = true },
+        });
+        Assert.Equal(736361, input.Seed);
+        Assert.Equal("Shared profile", input.ProfileName);
+        Assert.True(input.Configuration.GetValueOrDefault<bool>("random-items"));
+    }
+
+    [Theory]
+    [InlineData("seed.pak")]
+    [InlineData("seed.zip")]
+    [InlineData("loose")]
+    public void Output_IncludesRuntimeAndAdditionalAssetsAtRequestedDestination(string name) {
+        var root = CreateTemporaryDirectory();
+        try {
+            var output = new IntelOrca.Biohazard.BioRand.RandomizerOutput([
+                new("1-patch", "Patch", "", "seed-original.zip", ZipBytes(("patch.pak", "pak"))),
+                new("2-fluffy", "Fluffy", "", "seed-mod.zip", ZipBytes(
+                    ("natives/stm/test.user.2", "native"), ("reframework/autorun/BioRand7.lua", "lua"),
+                    ("reframework/data/BioRand7/config.json", "{}"), ("process.log", "log"))),
+                new("3-assets", "Assets", "", "assets.zip", ZipBytes(("patch_002.pak", "assets"))),
+                new("4-key-hints", "Hints", "", "hints.html", "hints"u8.ToArray()),
+            ], "");
+            var target = Path.Combine(root, "destination", name);
+            GenerateCommand.WriteOutput(output, target);
+            var directory = name == "loose" ? target : Path.GetDirectoryName(target)!;
+            Assert.Equal("hints", File.ReadAllText(Path.Combine(directory, "hints.html")));
+            if (name == "seed.zip") {
+                using var zip = ZipFile.OpenRead(target);
+                Assert.NotNull(zip.GetEntry("reframework/autorun/BioRand7.lua"));
+                Assert.True(File.Exists(Path.Combine(directory, "assets.zip")));
+            } else {
+                Assert.Equal("lua", File.ReadAllText(Path.Combine(directory, "reframework/autorun/BioRand7.lua")));
+                Assert.Equal("{}", File.ReadAllText(Path.Combine(directory, "reframework/data/BioRand7/config.json")));
+                Assert.Equal("assets", File.ReadAllText(Path.Combine(directory, "patch_002.pak")));
+                Assert.Equal("log", File.ReadAllText(Path.Combine(directory, "process.log")));
+                if (name == "seed.pak") Assert.Equal("pak", File.ReadAllText(target));
+                else Assert.Equal("native", File.ReadAllText(Path.Combine(directory, "natives/stm/test.user.2")));
+            }
+            Assert.Empty(Directory.GetFiles(root));
+        } finally { Directory.Delete(root, true); }
+    }
+
+    private static byte[] ZipBytes(params (string Name, string Content)[] entries) {
+        using var stream = new MemoryStream();
+        using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, true)) {
+            foreach (var (name, content) in entries) {
+                using var writer = new StreamWriter(zip.CreateEntry(name).Open());
+                writer.Write(content);
+            }
+        }
+        return stream.ToArray();
+    }
+
     [Fact]
     public void EnsureParentDirectory_AllowsCurrentDirectoryOutputPath() {
         GenerateCommand.EnsureParentDirectory("biorand-re7-test-output.pak");

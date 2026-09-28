@@ -20,6 +20,7 @@ context:add("enemy_drops", EnemyDrops.new(context))
 context:add("em3300_explosions", Em3300Explosions.new(context))
 context:add("random_events", RandomEvents.new(context))
 context:add("ui", UI.new(context))
+context:install_session_hooks()
 
 local runtime_errors = {}
 
