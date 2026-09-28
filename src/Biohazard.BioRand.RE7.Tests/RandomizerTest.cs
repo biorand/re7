@@ -74,6 +74,8 @@ public static class RandomizerTest {
 
         configuration["random-starting-inventory-ethan"] = false;
         configuration["random-starting-inventory-mia"] = false;
+        configuration["random-starting-inventory-additional-gun-ethan"] = false;
+        configuration["random-starting-inventory-additional-gun-mia"] = false;
         configuration["random-starting-inventory-vhs"] = false;
         configuration["random-starting-inventory-skills-ethan"] = false;
         configuration["random-starting-inventory-skills-mia"] = false;

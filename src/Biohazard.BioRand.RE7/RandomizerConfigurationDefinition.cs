@@ -888,10 +888,21 @@ internal static class RandomizerConfigurationDefinition {
             Default = true
         });
 
+        foreach (var character in new[]{ "Ethan", "Mia" }) {
+            group.Items.Add(new GroupItem(){
+                Id = $"random-starting-inventory-additional-gun-{character.ToLowerInvariant()}",
+                Label = $"{character}: Additional Random Gun",
+                Description = $"Add one extra gun from {character}'s allowed gun categories, preferring a gun not already in the inventory. " +
+                              "Works independently of Random Starting Weapons. Requires at least one allowed gun category.",
+                Type = "switch",
+                Default = false
+            });
+        }
+
         group.Items.Add(new GroupItem(){
             Id = "random-starting-inventory-give-ammo",
             Label = "Provide Starter Ammo",
-            Description = "Provide an appropriate starter ammo loadout for the selected primary weapon.",
+            Description = "Provide an appropriate starter ammo loadout for each selected starting gun, including the additional gun.",
             Type = "switch",
             Default = true
         });
