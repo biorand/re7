@@ -8,6 +8,13 @@ namespace Biohazard.BioRand.RE7.Tests;
 
 [Trait("Category", "RequiresPak")]
 public class RandomizerStartingInventoryAdditionalBehaviorTests {
+    private static readonly string[] InventoryPaths =[
+        RandomizerTestPaths.EthanInventoryPath,
+        RandomizerTestPaths.MiaInventoryPath,
+        RandomizerTestPaths.ClancyInventoryPath,
+        RandomizerTestPaths.MiaVhsInventoryPath,
+    ];
+
     public static IEnumerable<object[]> StarterAmmoLoadouts() {
         yield return [
             StartingWeaponCategory.Handgun,
@@ -156,6 +163,146 @@ public class RandomizerStartingInventoryAdditionalBehaviorTests {
         Assert.True(result.WasFileModified(RandomizerTestPaths.MiaInventoryPath));
         Assert.False(result.WasFileModified(RandomizerTestPaths.MiaVhsInventoryPath));
         AssertRandomSkillItems(result, RandomizerTestPaths.MiaInventoryPath);
+    }
+
+    [Theory]
+    [InlineData("ethan", false)]
+    [InlineData("ethan", true)]
+    [InlineData("mia", false)]
+    [InlineData("mia", true)]
+    public void StartingInventory_AdditionalGun_AddsAllowedGunOnlyToSelectedCharacter(
+        string character,
+        bool randomizeWeapons
+    ) {
+        using var result = RandomizerTest.RunState(config => {
+            config[$"random-starting-inventory-{character}"] = randomizeWeapons;
+            config[$"random-starting-inventory-additional-gun-{character}"] = true;
+            config["random-starting-inventory-give-ammo"] = false;
+            DisableStartingWeapons(config, character);
+            config[$"inventory-weapon-handgun-{character}"] = true;
+            config[$"inventory-weapon-bladed-{character}"] = true;
+        });
+
+        var inventoryPath = character == "ethan"
+            ? RandomizerTestPaths.EthanInventoryPath
+            : RandomizerTestPaths.MiaInventoryPath;
+        var before = result.ReadBeforeUserFile<app.AddItemListData>(inventoryPath)._AddItems;
+        var after = result.ReadAfterUserFile<app.AddItemListData>(inventoryPath)._AddItems;
+        var newItems = after.Skip(before.Count).ToArray();
+        var handguns = StartingWeaponCategory.Handgun.GetItemIds().Select(id => id.ToString()).ToHashSet();
+        var guns = newItems.Where(item => handguns.Contains(item.ItemDataID)).ToArray();
+        var blades = StartingWeaponCategory.Bladed.GetItemIds().Select(id => id.ToString()).ToHashSet();
+
+        Assert.Equal(randomizeWeapons ? 2 : 1, guns.Length);
+        Assert.Equal(guns.Length, guns.Select(item => item.ItemDataID).Distinct().Count());
+        Assert.All(guns, gun => Assert.Equal(1, gun.Num));
+        Assert.Equal(randomizeWeapons ? 1 : 0, newItems.Count(item => blades.Contains(item.ItemDataID)));
+        Assert.DoesNotContain(newItems, item => item.ItemDataID is "HandgunBullet" or "HandgunBulletL");
+        Assert.Equal(before.Select(item => (item.ItemDataID, item.Num)),
+            after.Take(before.Count).Select(item => (item.ItemDataID, item.Num)));
+        foreach (var otherPath in InventoryPaths.Where(path => path != inventoryPath)) {
+            Assert.False(result.WasFileModified(otherPath));
+        }
+    }
+
+    [Theory]
+    [MemberData(nameof(StarterAmmoLoadouts))]
+    public void StartingInventory_AdditionalGun_ProvidesAmmoForBothGuns(
+        StartingWeaponCategory category,
+        (string ItemId, int Count)[] expectedAmmo
+    ) {
+        using var result = RandomizerTest.RunState(config => {
+            config["random-starting-inventory-ethan"] = true;
+            config["random-starting-inventory-additional-gun-ethan"] = true;
+            config["random-starting-inventory-give-ammo"] = true;
+            DisableStartingWeapons(config, "ethan");
+            config[$"inventory-weapon-{category.ToString().ToLowerInvariant()}-ethan"] = true;
+        });
+
+        var before = result.ReadBeforeUserFile<app.AddItemListData>(RandomizerTestPaths.EthanInventoryPath)._AddItems;
+        var after = result.ReadAfterUserFile<app.AddItemListData>(RandomizerTestPaths.EthanInventoryPath)._AddItems;
+        var newItems = after.Skip(before.Count).ToArray();
+        var allowedGuns = category.GetItemIds().Select(id => id.ToString()).ToHashSet();
+
+        Assert.Equal(2, newItems.Count(item => allowedGuns.Contains(item.ItemDataID)));
+        foreach (var (itemId, count) in expectedAmmo) {
+            Assert.Equal(2 * count, GetInventoryCount(newItems, itemId));
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void StartingInventory_AdditionalGun_WithoutAllowedGuns_DoesNotAddOtherWeapons(bool allowNonGuns) {
+        using var result = RandomizerTest.RunState(config => {
+            config["random-starting-inventory-additional-gun-ethan"] = true;
+            DisableStartingWeapons(config, "ethan");
+            config["inventory-weapon-bladed-ethan"] = allowNonGuns;
+            config["inventory-weapon-circularsaw-ethan"] = allowNonGuns;
+            config["inventory-weapon-bomb-ethan"] = allowNonGuns;
+        });
+
+        var before = result.ReadBeforeUserFile<app.AddItemListData>(RandomizerTestPaths.EthanInventoryPath)._AddItems;
+        var after = result.ReadAfterUserFile<app.AddItemListData>(RandomizerTestPaths.EthanInventoryPath)._AddItems;
+
+        Assert.Equal(before.Select(item => (item.ItemDataID, item.Num)),
+            after.Select(item => (item.ItemDataID, item.Num)));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void StartingInventory_MiaAdditionalGun_RespectsVhsToggle(bool randomizeVhs) {
+        using var result = RandomizerTest.RunState(config => {
+            config["random-starting-inventory-additional-gun-mia"] = true;
+            config["random-starting-inventory-vhs"] = randomizeVhs;
+            config["random-starting-inventory-give-ammo"] = false;
+            DisableStartingWeapons(config, "mia");
+            config["inventory-weapon-handgun-mia"] = true;
+        });
+
+        var before = result.ReadBeforeUserFile<app.AddItemListData>(RandomizerTestPaths.MiaVhsInventoryPath)._AddItems;
+        var after = result.ReadAfterUserFile<app.AddItemListData>(RandomizerTestPaths.MiaVhsInventoryPath)._AddItems;
+        var newItems = after.Skip(before.Count).ToArray();
+
+        Assert.Equal(randomizeVhs, result.WasFileModified(RandomizerTestPaths.MiaVhsInventoryPath));
+        if (randomizeVhs) {
+            Assert.Contains(Assert.Single(newItems).ItemDataID,
+                StartingWeaponCategory.Handgun.GetItemIds().Select(id => id.ToString()));
+        } else {
+            Assert.Empty(newItems);
+        }
+        Assert.False(result.WasFileModified(RandomizerTestPaths.EthanInventoryPath));
+        Assert.False(result.WasFileModified(RandomizerTestPaths.ClancyInventoryPath));
+    }
+
+    [Fact]
+    public void StartingInventory_AdditionalGuns_AreDeterministicAndPreserveOtherStartingItems() {
+        static void Configure(RandomizerConfiguration config, bool additionalGuns) {
+            config["random-starting-inventory-ethan"] = true;
+            config["random-starting-inventory-mia"] = true;
+            config["random-starting-inventory-vhs"] = true;
+            config["random-starting-inventory-additional-gun-ethan"] = additionalGuns;
+            config["random-starting-inventory-additional-gun-mia"] = additionalGuns;
+        }
+
+        using var withoutGuns = RandomizerTest.RunState(config => Configure(config, false));
+        using var withGuns = RandomizerTest.RunState(config => Configure(config, true));
+        using var repeated = RandomizerTest.RunState(config => Configure(config, true));
+
+        foreach (var path in InventoryPaths) {
+            var original = withoutGuns.ReadAfterUserFile<app.AddItemListData>(path)._AddItems;
+            var extra = withGuns.ReadAfterUserFile<app.AddItemListData>(path)._AddItems;
+
+            Assert.Equal(original.Select(item => (item.ItemDataID, item.Num)),
+                extra.Take(original.Count).Select(item => (item.ItemDataID, item.Num)));
+            Assert.Equal(withGuns.ReadAfterBytes(path), repeated.ReadAfterBytes(path));
+            if (path == RandomizerTestPaths.ClancyInventoryPath) {
+                Assert.Equal(original.Count, extra.Count);
+            } else {
+                Assert.True(extra.Count > original.Count);
+            }
+        }
     }
 
     private static void AssertRandomSkillItems(RandomizerRunResult result, string inventoryPath) {

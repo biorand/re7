@@ -224,6 +224,8 @@
   "item-drop-valuable-repair-kit": false,
   "random-starting-inventory-ethan": true,
   "random-starting-inventory-mia": true,
+  "random-starting-inventory-additional-gun-ethan": false,
+  "random-starting-inventory-additional-gun-mia": false,
   "random-starting-inventory-give-ammo": true,
   "random-starting-inventory-vhs": true,
   "random-starting-inventory-skills-ethan": false,

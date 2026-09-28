@@ -189,6 +189,20 @@ public class ConfigurationDefinitionTest {
         Assert.All(item.Options!, option => Assert.Contains($"{option}:", item.Description));
     }
 
+    [Theory]
+    [InlineData("Ethan")]
+    [InlineData("Mia")]
+    public void Test_Additional_Starting_Gun_Is_Opt_In(string character) {
+        var page = Assert.Single(RandomizerExecutor.ConfigurationDefinition.Pages, page => page.Label == "Inventory");
+        var group = Assert.Single(page.Groups, group => group.Label == "Starting Weapons");
+        var item = Assert.Single(group.Items,
+            item => item.Id == $"random-starting-inventory-additional-gun-{character.ToLowerInvariant()}");
+
+        Assert.Equal($"{character}: Additional Random Gun", item.Label);
+        Assert.Equal("switch", item.Type);
+        Assert.False(Assert.IsType<bool>(item.Default));
+    }
+
     [Fact]
     public void Test_General_Configuration_Items_Exist() {
         var definition = RandomizerExecutor.ConfigurationDefinition;
