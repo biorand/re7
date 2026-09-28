@@ -80,8 +80,7 @@ end
 
 function EnemyDrops:rng(game_object, generation)
     local seed = tonumber(self.context.config:get("biorand-seed", 0)) or 0
-    local address = self.context.game:address(game_object)
-    return Rng.for_enemy(seed, address, generation)
+    return Rng.for_enemy(seed, self.context.game:enemy_identity(game_object))
 end
 
 function EnemyDrops:stack_amount(item_id, rng)

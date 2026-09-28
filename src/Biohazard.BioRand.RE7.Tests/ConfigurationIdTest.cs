@@ -25,6 +25,7 @@ public class ConfigurationIdUsageTest {
         "username",
         "special",
         "tags",
+        "shuffle-chapters", // Retired public option, still read to reject unsafe legacy profiles.
     };
 
     private static readonly HashSet<string> IndirectlyReferencedConfigIds = new(StringComparer.Ordinal){

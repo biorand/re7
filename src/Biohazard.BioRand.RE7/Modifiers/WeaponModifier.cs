@@ -216,14 +216,14 @@ internal class WeaponModifier : Modifier {
             var sanitizedId = definition.WeaponId.ToString().ToLowerInvariant().Replace("_", "-");
             var min = randomizer.GetConfigOption<double>($"weapon-ammo-capacity-min-{sanitizedId}");
             var max = randomizer.GetConfigOption<double>($"weapon-ammo-capacity-max-{sanitizedId}");
-            var factor = Math.Max(minCap, Math.Round(rng.NextDouble(min, max), 1));
+            var factor = Math.Round(rng.NextDouble(min, max), 1);
             GetOrCreateRolls(rolls, definition.WeaponId).AmmoCapacityMultiplier = factor;
 
             var previousLoadNum = 0;
             var newLoadNum = 0;
             randomizer.FileRepository.ModifyUserFile<app.WeaponGunParameter>(definition.UserParamsPath, root => {
                 previousLoadNum = root.MaxLoadNum;
-                newLoadNum = (int)Math.Round(root.MaxLoadNum * factor);
+                newLoadNum = Math.Max(minCap, (int)Math.Round(root.MaxLoadNum * factor));
 
                 if (root.MaxLoadNum == newLoadNum) {
                     logger.LogLine($"Ammo capacity of {name} remains ({root.MaxLoadNum})");

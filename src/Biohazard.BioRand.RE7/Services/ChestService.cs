@@ -2,14 +2,33 @@
 using Biohazard.BioRand.RE7.Extensions;
 using IntelOrca.Biohazard.REE.Rsz;
 using System.Numerics;
+using System.Collections.Immutable;
+using IntelOrca.Biohazard.BioRand.REE;
 
 namespace Biohazard.BioRand.RE7.Services;
 
 internal class ChestService(Randomizer randomizer) {
-    private readonly RszGameObject _chestTemplate = randomizer.TemplateService.GetObject("Chest");
+    private readonly RszGameObject _chestTemplate = PrepareUnlockedTemplate(randomizer.TemplateService.GetObject("Chest"));
     private readonly Dictionary<string, RszGameObject> _weaponCache = new();
     private readonly Rng _rng = randomizer.GetRng("drops/weapon-chests");
     private readonly Rng _templateRng = randomizer.GetRng("drops/weapon-chests/template-instances");
+
+    private static RszGameObject PrepareUnlockedTemplate(RszGameObject chest) {
+        var drawer = chest.Children.Single(child => child.Name == "InteractDrawer");
+        // The imported root uses LockLv0, but still carries a LockLv1 child FSM and references
+        // to the source scene's drawer. That child waits on locks absent from the placed chest.
+        chest = chest.WithChildren([drawer]);
+        return chest.WithComponents(chest.Components.Select(component => component.Visit(node => {
+            if (node is not RszObjectNode obj) return node;
+            return obj.Type.Name switch {
+                "app.fsm.InteractTest" => obj.SetField("InteractObj", drawer.Guid),
+                "app.fsm.ActivateObject" => obj.SetField("GameObj", drawer.Guid),
+                // Motion/collider actions use IsOwnerObjSet. Keep their fallback self-reference local too.
+                "app.ObjectSet" => obj.SetField("GameObj", chest.Guid),
+                _ => node,
+            };
+        })).ToImmutableArray());
+    }
 
     private RszGameObject GetCachedWeaponOrCreate(string weaponId) {
         if (!_weaponCache.ContainsKey(weaponId))
@@ -51,7 +70,14 @@ internal class ChestService(Randomizer randomizer) {
                 .Set("Draw", false)
         );
 
-        weapon = weapon.AddOrUpdateComponent(transform);
+        // This object is a child of the drawer. A world placement here applies the
+        // chest offset twice and puts the gun outside the player's reach.
+        weapon = weapon.AddOrUpdateComponent(new GeneratedViaTransform() {
+            Position = Vector3.Zero,
+            Rotation = Quaternion.Identity,
+            Scale = Vector3.One,
+            ParentJoint = ""
+        });
 
         // Prepare chest
         var chest = _chestTemplate.CloneWithNewGuids(_templateRng);

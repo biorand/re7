@@ -3,11 +3,54 @@ using Biohazard.BioRand.RE7.Inventory;
 using Biohazard.BioRand.RE7.Items;
 using Biohazard.BioRand.RE7.Serialization;
 using IntelOrca.Biohazard.BioRand;
+using Biohazard.BioRand.RE7.Modifiers;
+using IntelOrca.Biohazard.REE.Rsz;
 
 namespace Biohazard.BioRand.RE7.Tests;
 
 [Trait("Category", "RequiresPak")]
 public class RandomizerStartingInventoryAdditionalBehaviorTests {
+    [Theory]
+    [InlineData("Main House")]
+    [InlineData("Normal")]
+    public void MainHouseStart_InitializesConfiguredLoadoutOnce(string start) {
+        using var result = RandomizerTest.RunState(config => {
+            config["start-chapter"] = start;
+            config["random-starting-inventory-ethan"] = true;
+            config["random-starting-inventory-give-ammo"] = true;
+            config["random-starting-inventory-skills-ethan"] = true;
+            config["random-starting-inventory-additional-gun-ethan"] = true;
+            DisableStartingWeapons(config, "ethan");
+            config["inventory-weapon-handgun-ethan"] = true;
+        });
+        var inventory = result.ReadAfterUserFile<app.AddItemListData>(RandomizerTestPaths.EthanInventoryPath)._AddItems;
+        Assert.True(inventory.Count(item => item.ItemDataID.StartsWith("Handgun_")) >= 2);
+        Assert.Contains(inventory, item => item.ItemDataID == "HandgunBullet");
+        Assert.Contains(inventory, item => item.ItemDataID == "RemedyM");
+        Assert.Contains(inventory, item => item.ItemDataID == "RemedyL");
+        Assert.Contains(inventory, item => item.ItemDataID.StartsWith("skl"));
+
+        var before = result.ReadBeforeScene(StartingInventoryModifier.MainHouseStartScene)
+            .FindGameObject(go => go.Name == StartingInventoryModifier.MainHouseStartObject)!;
+        var after = result.ReadAfterScene(StartingInventoryModifier.MainHouseStartScene)
+            .FindGameObject(go => go.Name == StartingInventoryModifier.MainHouseStartObject)!;
+        var beforeActions = new List<RszObjectNode>();
+        var afterActions = new List<RszObjectNode>();
+        before.Visit(node => { if (node is RszObjectNode obj) beforeActions.Add(obj); });
+        after.Visit(node => { if (node is RszObjectNode obj) afterActions.Add(obj); });
+        var transfer = Assert.Single(beforeActions, obj => obj.Type.Name == "app.fsm.CopySaveItem2ItemBox");
+        Assert.Contains(afterActions, obj => obj.Type.Name == "app.ForceFsmSave");
+        if (start == "Main House") {
+            Assert.DoesNotContain(afterActions, obj => obj.Type.Name == "app.fsm.CopySaveItem2ItemBox");
+            var add = Assert.Single(afterActions, obj => obj.Type.Name == "app.AddItem");
+            Assert.Equal(transfer.Get<uint>("v2_UID"), add.Get<uint>("v2_UID"));
+            Assert.Contains("Ch1_StartInventory.user", add["Inventory"].ToString());
+        } else {
+            Assert.DoesNotContain(afterActions, obj => obj.Type.Name == "app.AddItem");
+            Assert.Single(afterActions, obj => obj.Type.Name == "app.fsm.CopySaveItem2ItemBox");
+        }
+    }
+
     private static readonly string[] InventoryPaths =[
         RandomizerTestPaths.EthanInventoryPath,
         RandomizerTestPaths.MiaInventoryPath,
@@ -109,8 +152,10 @@ public class RandomizerStartingInventoryAdditionalBehaviorTests {
         Assert.True(GetInventoryCount(after, "RemedyL") >= 1);
     }
 
-    [Fact]
-    public void StartingInventory_DebugUser_UsesInjectedDebugStartItems() {
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void StartingInventory_DebugItems_RequireUserTag(bool authorized) {
         var debugCsv = """
                        ItemId,Quantity
                        Coin,2
@@ -120,6 +165,7 @@ public class RandomizerStartingInventoryAdditionalBehaviorTests {
         using var result = RandomizerTest.RunState(
             config => {
                 config["username"] = "captainezekiel";
+                config["tags"] = authorized ? "re7:debugstartitems" : "";
                 config["random-starting-inventory-ethan"] = true;
                 config["inventory-weapon-handgun-ethan"] = false;
                 config["random-starting-inventory-give-ammo"] = false;
@@ -131,9 +177,7 @@ public class RandomizerStartingInventoryAdditionalBehaviorTests {
         var ethanInventory = result.ReadAfterUserFile<app.AddItemListData>(RandomizerTestPaths.EthanInventoryPath)
             ._AddItems;
 
-        Assert.Contains(
-            [("Coin", 2), ("Herb", 1)],
-            ethanInventory.Select(x => (x.ItemDataID, x.Num)).ToArray());
+        Assert.Equal(authorized, ethanInventory.Any(x => x.ItemDataID == "Herb" && x.Num == 1));
     }
 
     [Fact]

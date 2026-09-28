@@ -143,8 +143,12 @@ return function()
     on_death({ nil, damage })
     assert(spawn_count == 2)
 
-    local guid = object({ ["ToString()"] = constant("01234567-89ab-cdef-0123-456789abcdef") })
-    local empty_guid = object({ ["ToString()"] = constant("00000000-0000-0000-0000-000000000000") })
+    context.game.guid_string = require("BioRand7/game").guid_string
+    local guid = object({}, {mData1=0x01234567,mData2=0x89ab,mData3=0xcdef,
+        mData4_0=0x01,mData4_1=0x23,mData4_2=0x45,mData4_3=0x67,
+        mData4_4=0x89,mData4_5=0xab,mData4_6=0xcd,mData4_7=0xef})
+    local empty_guid = object({}, {mData1=0,mData2=0,mData3=0,mData4_0=0,mData4_1=0,
+        mData4_2=0,mData4_3=0,mData4_4=0,mData4_5=0,mData4_6=0,mData4_7=0})
     local mia_controller = object({}, { SpawnerGuid = guid, ActualUsingGuid = empty_guid })
     local mia = object({
         get_Name = constant("BioRandExtraEnemyStatic_Em2000_1"),

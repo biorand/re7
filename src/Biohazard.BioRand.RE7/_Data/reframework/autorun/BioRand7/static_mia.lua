@@ -39,8 +39,28 @@ end
 
 function StaticMia:guid_key(controller, field, prefix)
     if controller == nil then return nil end
-    local guid = controller:get_field(field):call("ToString()")
+    local value = controller:get_field(field)
+    if value == nil then return nil end
+    local guid = self.context.game:guid_string(value)
     if guid ~= EMPTY_GUID then return prefix .. guid end
+end
+
+function StaticMia:restore(save, data)
+    local game_object = save:call("get_GameObject")
+    if data == nil or not self:is_static(game_object) then return end
+    local controller = self.context.game:component(game_object, "app.EnemyActionController")
+    for _, key in ipairs(self:keys(controller, game_object)) do
+        self.killed[key] = data:get_field("Health") <= 0 or nil
+    end
+end
+
+function StaticMia:save(save, data)
+    local game_object = save:call("get_GameObject")
+    if data == nil or not self:is_killed(nil, game_object) then return end
+    -- Persist the suppression through the game's own per-enemy save record.
+    data:set_field("Health", 0)
+    data:set_field("IsUpdate", false)
+    data:set_field("IsDraw", false)
 end
 
 function StaticMia:keys(controller, game_object)
@@ -95,6 +115,19 @@ function StaticMia:install()
     game:hook("app.Em2000.Em2000ActionController", "reactivate()", suppress)
     game:hook("app.Em2000.Em2000ActionController", "doStart()", suppress)
     game:hook("app.Em2000.Em2000ActionController", "doUpdate()", suppress)
+    game:hook("app.Em2000Order", "loadData(app.EnemyStatus.EnemySaveDataClass)", function(args)
+        self:restore(game:object(args[2]), game:object(args[3]))
+    end)
+    -- Hook the save target: the native caller can inline EnemySave's accessors.
+    game:hook("app.Em2000Order", "saveData(app.EnemyStatus.EnemySaveDataClass)", function(args)
+        local storage = thread.get_hook_storage()
+        storage.biorand_enemy_save = game:object(args[2])
+        storage.biorand_enemy_data = game:object(args[3])
+    end, function(retval)
+        local storage = thread.get_hook_storage()
+        self:save(storage.biorand_enemy_save, storage.biorand_enemy_data)
+        return retval
+    end)
 end
 
 function StaticMia:reset()

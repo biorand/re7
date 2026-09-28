@@ -17,7 +17,8 @@ function Em3300Explosions.new(context)
 end
 
 function Em3300Explosions:enabled()
-    return self.context.config:get("random-enemies", true)
+    return (self.context.config:get("random-enemies", true)
+        or self.context.config:get("extra-enemy-amount", 0) > 0)
         and self.context.config:get("enemy-evelineelderly-explosive-behavior", true)
 end
 
@@ -67,7 +68,7 @@ end
 
 function Em3300Explosions:delay(game_object)
     local seed = tonumber(self.context.config:get("biorand-seed", 0)) or 0
-    local rng = Rng.for_em3300(seed, self.context.game:address(game_object))
+    local rng = Rng.for_em3300(seed, self.context.game:enemy_identity(game_object))
     return 3 + rng:float() * 5
 end
 

@@ -1,7 +1,5 @@
 {
   "start-chapter": "Normal",
-  "shuffle-chapters": false,
-  "shuffle-chapters-with-ff": false,
   "randomized-messages": true,
   "main-menu-biorand-touch": true,
   "madhouse-normal-saves": true,
@@ -535,7 +533,7 @@
   "event-enemy-paused-duration": 8,
   "event-enemy-radius": 25,
   "event-enemy-max-targets": 8,
-  "debug-download-data": true,
+  "debug-download-data": false,
   "debug-force-reframework": false,
   "debug-download-reframework-nightly": false,
   "verbose-reframework-plugin-logging": false,

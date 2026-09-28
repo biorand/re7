@@ -21,6 +21,9 @@ I've gathered this information while working on the randomizer.
 
 ## Key Item Location Randomizer
 
+- Main House starts reuse the native Chapter 1 `app.AddItem` action in `0_Ch1Item_ItemBoxIn_FFS`, replacing the transfer from the skipped chapter. Keep the original action UID and `ForceFsmSave`/gimmick controls so the configured loadout initializes once and survives reload.
+- Placed weapon chests use the template's unlocked root FSM, with its interaction references rebound to the cloned drawer. Strip the imported LockLv1 children; their state checks reference locks absent from the placed chest. Keep drawer ownership of the hidden weapon until opening, and give the weapon an identity local transform. Reusing the chest's world transform applies the placement offset twice.
+
 - The key item location randomizer is intentionally conservative. If an item is tied to a boss reward, cutscene, or puzzle state rather than a plain inventory pickup, keep it vanilla until the full FSM sequence is understood and runtime-tested.
 - `RandomizerConfigurationDefinition.cs` is the source of truth for the `random-key-item-locations` option. Do not only edit profile JSON when changing the option.
 - Do not emulate trigger-driven room-entry flags as pickup side effects. Stone Statuette (`SilhouettePazzlePieceOldHouse`) remains randomizable, but its former `c03_3_Main_EnterMiaCapturedRoom` pickup side effect is intentionally skipped because the original writer is `150_Main_EnterMiaCapturedRoom`, a physical `TriggerInAction` in `levelfsm_c03_3.scn.20`. The randomizer adds an equivalent fallback trigger on the natural Old House shadow-puzzle path so players do not need to detour through the vanilla Stone Statuette room just to advance hidden progression.

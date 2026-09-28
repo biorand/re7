@@ -2,6 +2,7 @@ using Biohazard.BioRand.RE7.Enemies;
 using IntelOrca.Biohazard.REE.Rsz;
 using System.Collections.Immutable;
 using System.Numerics;
+using IntelOrca.Biohazard.BioRand.REE;
 
 namespace Biohazard.BioRand.RE7.Modifiers;
 
@@ -105,7 +106,7 @@ internal sealed class ExtraEnemySceneBuilder(
             Scale = Vector3.One,
         };
 
-        return EnemyTemplateFactory.RefreshRuntimeGuids(templateFactory.GetOrCreateEnemyTemplate(
+        var instance = EnemyTemplateFactory.RefreshRuntimeGuids(templateFactory.GetOrCreateEnemyTemplate(
                     enemyId,
                     transform,
                     updateTransform: true,
@@ -115,6 +116,12 @@ internal sealed class ExtraEnemySceneBuilder(
                     request.Enemy)
                 .WithName($"{StaticPrefix}_{enemyId}_{index:000}"),
             rng);
+        // Static instances never receive spawn() to replace the template's SpawnerGuid. Sharing
+        // it makes one Mia's saved death (and runtime RNG) apply to every cloned Mia.
+        return instance.WithComponents(instance.Components.Select(component =>
+            component.Type.FindFieldIndex("SpawnerGuid") >= 0
+                ? component.SetField("SpawnerGuid", instance.Guid)
+                : component).ToImmutableArray());
     }
 
     internal List<RszGameObject> CreateInstances(

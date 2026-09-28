@@ -8,8 +8,12 @@ namespace Biohazard.BioRand.RE7.Tests;
 
 [Trait("Category", "RequiresPak")]
 public class RandomizerWeaponModifierBehaviorTests {
-    [Fact]
-    public void WeaponModifier_AmmoCapacity_UpdatesGunParameterAndPrefabLoadNums() {
+    [Theory]
+    [InlineData(2.0, true)]
+    [InlineData(0.5, true)]
+    [InlineData(0.0, true)]
+    [InlineData(0.0, false)]
+    public void WeaponModifier_AmmoCapacity_UpdatesGunParameterAndPrefabLoadNums(double factor, bool preventZero) {
         var weapon = WeaponDefinitionRepository.Default.FromWeaponId("Handgun_G17");
         const string inventoryPrefabPath =
             "natives/stm/prefab/weapon/wp1210_handgun/inventory/wp1210_handgun_inventory.pfb.17";
@@ -18,18 +22,20 @@ public class RandomizerWeaponModifierBehaviorTests {
 
         using var result = RandomizerTest.RunState(config => {
             config["weapon-mod-ammo-capacity"] = true;
-            config["weapon-mod-ammo-capacity-prevent-zero"] = true;
-            config["weapon-ammo-capacity-min-handgun-g17"] = 2.0;
-            config["weapon-ammo-capacity-max-handgun-g17"] = 2.0;
+            config["weapon-mod-ammo-capacity-prevent-zero"] = preventZero;
+            config["weapon-ammo-capacity-min-handgun-g17"] = factor;
+            config["weapon-ammo-capacity-max-handgun-g17"] = factor;
         });
 
         var beforeParameter = result.ReadBeforeUserFile<app.WeaponGunParameter>(weapon.UserParamsPath!);
         var afterParameter = result.ReadAfterUserFile<app.WeaponGunParameter>(weapon.UserParamsPath!);
 
         Assert.True(result.WasFileModified(weapon.UserParamsPath!));
-        Assert.Equal(beforeParameter.MaxLoadNum * 2, afterParameter.MaxLoadNum);
-        AssertWeaponGunLoadNumsScaled(result, inventoryPrefabPath, weapon, 2.0);
-        AssertWeaponGunLoadNumsScaled(result, itemPrefabPath, weapon, 2.0);
+        var expected = Math.Max(preventZero ? 1 : 0, (int)Math.Round(beforeParameter.MaxLoadNum * factor));
+        Assert.Equal(expected, afterParameter.MaxLoadNum);
+        var effectiveFactor = (double)expected / beforeParameter.MaxLoadNum;
+        AssertWeaponGunLoadNumsScaled(result, inventoryPrefabPath, weapon, effectiveFactor);
+        AssertWeaponGunLoadNumsScaled(result, itemPrefabPath, weapon, effectiveFactor);
     }
 
     [Fact]
@@ -203,7 +209,7 @@ public class RandomizerWeaponModifierBehaviorTests {
         var before = ReadWeaponGun(result, prefabPath, weapon, before: true);
         var after = ReadWeaponGun(result, prefabPath, weapon, before: false);
         var expectedLoadNums = before.BulletInfoList
-            .Select(x => x.LoadNum <= 0 ? x.LoadNum : Math.Max(1, (int)Math.Round(x.LoadNum * factor)))
+            .Select(x => x.LoadNum <= 0 ? x.LoadNum : factor == 0 ? 0 : Math.Max(1, (int)Math.Round(x.LoadNum * factor)))
             .ToArray();
 
         Assert.True(result.WasFileModified(prefabPath));

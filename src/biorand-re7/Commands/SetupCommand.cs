@@ -30,7 +30,8 @@ internal sealed class SetupCommand : AsyncCommand<SetupCommand.Settings> {
     }
 
     protected override Task<int> ExecuteAsync(CommandContext context, Settings settings, CancellationToken token) {
-        var patternList = settings.Full ? FullPatterns : MiniPatterns;
+        // --full remains accepted for compatibility. Both forms must produce a usable baseline.
+        var patternList = FullPatterns;
         var gamePath = settings.InputPath!;
         using var pak = OpenGamePaks(gamePath);
 
@@ -38,6 +39,7 @@ internal sealed class SetupCommand : AsyncCommand<SetupCommand.Settings> {
         if (outputPath.EndsWith(".pak", StringComparison.OrdinalIgnoreCase)) {
             var newPak = new PakFileBuilder();
             HarvestFiles(pak, patternList, (path, data) => { newPak.AddEntry(path, data); });
+            GenerateCommand.EnsureParentDirectory(outputPath);
             newPak.Save(settings.OutputPath!, CompressionKind.Zstd);
         } else {
             HarvestFiles(pak, patternList, (path, data) => {
@@ -118,5 +120,4 @@ internal sealed class SetupCommand : AsyncCommand<SetupCommand.Settings> {
         @"natives/stm/animation/weapon/.*\.motbank\.\d+"
     ];
 
-    private static readonly ImmutableArray<string> MiniPatterns = [];
 }

@@ -15,18 +15,13 @@ return function()
     sequence(Rng.new(-2147483648), { 1559595546, 1755192844, 1649316172, 1198642031, 442452829, 1200195955 })
     sequence(Rng.new(305419896), { 1833211375, 1043988864, 268295676, 471379373, 1912720188, 1697597342 })
 
-    sequence(Rng.for_enemy(305419896, 1250999896491, 7), {
-        1077861140, 1696078089, 568935706, 96036013, 1091723123, 1515043706,
-    })
-    sequence(Rng.for_enemy(-2147483648, 140737488355312, 7), {
-        423343398, 1750263660, 262769150, 340709264, 1261189737, 633059086,
-    })
-    sequence(Rng.for_em3300(305419896, 1250999896491), {
-        780895852, 2139890164, 1728468517, 1544295617, 1041345379, 497306532,
-    })
-    sequence(Rng.for_em3300(-2147483648, 140737488355312), {
-        692713094, 374414991, 383766557, 2115873861, 176642612, 2064793208,
-    })
+    for _, factory in ipairs({ Rng.for_enemy, Rng.for_em3300 }) do
+        local first, reloaded = factory(35825, "enemy:one"), factory(35825, "enemy:one")
+        for _ = 1, 20 do assert(first:next() == reloaded:next()) end
+        assert(factory(35825, "enemy:one"):next() ~= factory(35825, "enemy:two"):next())
+        assert(factory(35825, "enemy:one"):next() ~= factory(35826, "enemy:one"):next())
+        assert(not pcall(factory, 35825, 1250999896491), "Memory addresses must not be accepted as identities")
+    end
     sequence(Rng.for_events(305419896), {
         1745618172, 130394104, 2016358628, 1228675900, 981669908, 670291357,
     })

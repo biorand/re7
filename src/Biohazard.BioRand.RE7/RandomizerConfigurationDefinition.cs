@@ -84,22 +84,6 @@ internal static class RandomizerConfigurationDefinition {
             Default = ChapterJumpDataModifier.NormalStartChapter
         });
 
-        group.Items.Add(new GroupItem(){
-            Id = "shuffle-chapters",
-            Label = "Shuffle Chapters",
-            Description = "Shuffle supported chapter transitions while preserving required progression constraints.",
-            Type = "switch",
-            Default = false
-        });
-
-        group.Items.Add(new GroupItem(){
-            Id = "shuffle-chapters-with-ff",
-            Label = "Include Found Footage in Chapter Shuffle",
-            Description = "Also include supported Found Footage VHS sections. Only applies when Shuffle Chapters is enabled.",
-            Type = "switch",
-            Default = false
-        });
-
         group = page.CreateGroup("Presentation");
 
         group.Items.Add(new GroupItem(){
@@ -1596,7 +1580,7 @@ internal static class RandomizerConfigurationDefinition {
         group.Items.Add(new GroupItem(){
             Id = "debug-download-data",
             Label = "Refresh Spreadsheet Data",
-            Description = "Download the latest dynamic spreadsheet data before generating a seed.",
+            Description = "Development only: download current spreadsheet data instead of the version shipped with this build. This can change a seed's results.",
             Type = "switch",
             Default = false
         });

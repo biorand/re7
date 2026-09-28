@@ -32,45 +32,18 @@ public class RandomizerChapterJumpBehaviorTests {
         Assert.Equal(ChapterNo.Chapter4, after.JumpChapter);
     }
 
-    [Fact]
-    public void ChapterJumpData_StartChapterMainHouse_IsPreservedWhenShuffling() {
-        using var result = RandomizerTest.RunState(config => {
-            config["start-chapter"] = "Main House";
-            config["shuffle-chapters"] = true;
-            config["shuffle-chapters-with-ff"] = false;
+    [Theory]
+    [InlineData("Normal", false)]
+    [InlineData("Normal", true)]
+    [InlineData("Main House", false)]
+    public void ChapterShuffle_RejectsUnsafeLegacyProfiles(string start, bool footage) {
+        var error = Assert.Throws<IntelOrca.Biohazard.BioRand.RandomizerUserException>(() => {
+            using var result = RandomizerTest.RunState(config => {
+                config["start-chapter"] = start;
+                config["shuffle-chapters"] = true;
+                config["shuffle-chapters-with-ff"] = footage;
+            });
         });
-
-        var after = RandomizerTestHelpers.GetChapterJump(
-            result.ReadAfterScene(RandomizerTestPaths.ChapterJumpScenePath), RandomizerTestPaths.GuestHouseJumpGuid);
-
-        Assert.True(result.WasFileModified(RandomizerTestPaths.ChapterJumpScenePath));
-        Assert.Equal(ChapterNo.Chapter3, after.JumpChapter);
-    }
-
-    [Fact]
-    public void ChapterJumpData_ShuffleWithoutFoundFootage_DerangesMainCampaignTransitions() {
-        using var result = RandomizerTest.RunState(config => {
-            config["shuffle-chapters"] = true;
-            config["shuffle-chapters-with-ff"] = false;
-        });
-
-        var candidates = new[]{ ChapterNo.Chapter1, ChapterNo.Chapter3, ChapterNo.Chapter4 };
-        var before = RandomizerTestHelpers
-            .GetChapterJumps(result.ReadBeforeScene(RandomizerTestPaths.ChapterJumpScenePath))
-            .Where(x => candidates.Contains(x.JumpChapter))
-            .ToArray();
-        var after = RandomizerTestHelpers
-            .GetChapterJumps(result.ReadAfterScene(RandomizerTestPaths.ChapterJumpScenePath))
-            .Where(x => before.Select(b => b.Guid).Contains(x.Guid))
-            .ToArray();
-
-        Assert.True(result.WasFileModified(RandomizerTestPaths.ChapterJumpScenePath));
-        Assert.Equal(before.Length, after.Length);
-        Assert.Equal(before.Select(x => x.JumpChapter).OrderBy(x => x),
-            after.Select(x => x.JumpChapter).OrderBy(x => x));
-        Assert.All(after, entry => {
-            var original = before.Single(x => x.Guid == entry.Guid);
-            Assert.NotEqual(original.JumpChapter, entry.JumpChapter);
-        });
+        Assert.Contains("VHS returns", error.Message);
     }
 }

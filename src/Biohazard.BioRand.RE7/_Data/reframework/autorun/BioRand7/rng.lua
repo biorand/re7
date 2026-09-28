@@ -71,17 +71,21 @@ function Rng.new(seed)
     return setmetatable({ state = state, index = 0, paired_index = 21 }, Rng)
 end
 
-function Rng.for_enemy(seed, address, generation)
+local function mix_identity(hash, identity)
+    assert(type(identity) == "string", "Runtime RNG requires a stable enemy identity")
+    for index = 1, #identity do mix(hash, words(identity:byte(index))) end
+end
+
+function Rng.for_enemy(seed, identity)
     local hash = words(seed % UINT_RANGE)
-    mix(hash, words(address))
-    mix(hash, words(generation % UINT_RANGE))
+    mix_identity(hash, identity)
     return Rng.new(fold(hash))
 end
 
-function Rng.for_em3300(seed, address)
+function Rng.for_em3300(seed, identity)
     local hash = words(seed % UINT_RANGE)
     mix(hash, { 0x3030, 0x3333, 0x456D, 0 })
-    mix(hash, words(address))
+    mix_identity(hash, identity)
     return Rng.new(fold(hash))
 end
 

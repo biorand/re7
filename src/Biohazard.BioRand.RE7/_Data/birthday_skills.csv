@@ -1,11 +1,7 @@
 ItemDataID,Name,PassiveSkillUserPath,InventoryDescription,AttackChangeRate,MeleeAttackChangeRate,DyingAttackChangeRate,StunChangeRate,MaxHealthChangeValue,DamageChangeRate,IdleAutoRecoverySpeedChangeValue,GuardDamageCutRateChangeValue,WalkSpeedChangeRate,MoveSpeedChangeRate,DyingMoveSpeedChangeRate,ReloadSpeedChangeRate,HitTimeBonusChangeRate,KillTimeBonusChangeRate,DamageTimeBonusChangeRate,IsBulletStackNumInfinity,IsPsychostimulantEffectInfinity
-skl001,Infinite Ammo,Prefab/Skill/skl001/Skl001PassiveSkill.user,Infinite ammo. Reload your weapon\r\nas many times as you want...but\r\ntime bonuses are greatly decreased.,0,0,0,0,0,0,0,0,0,0,0,0.5,-0.4,-0.4,0,TRUE,FALSE
+skl001,Infinite Ammo,Prefab/Skill/skl001/Skl001PassiveSkill.user,Infinite ammo. Reload your weapon\r\nas many times as you want.,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,TRUE,FALSE
 skl002,Health Regen,Prefab/Skill/skl002/Skl002PassiveSkill.user,Stand still and watch that health\r\nrecover!,0,0,0,0,0,0,30,0,0,0,0,0,0,0,0,FALSE,FALSE
 skl003,Clairvoyance,Prefab/Skill/skl003/Skl003PassiveSkill.user,Lets you see where items are.,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,FALSE,TRUE
-skl004,Time Bonus Alpha-II,Prefab/Skill/skl004/Skl004PassiveSkill.user,Greatly increases the time bonus\r\nwhen you land an attack...but greatly\r\nreduces your movement speed.,0,0,0,0,0,0,0,0,0,-0.25,0,0,0.3,0,0,FALSE,FALSE
-skl005,Time Bonus Alpha-I,Prefab/Skill/skl005/Skl005PassiveSkill.user,Increases your time bonus when you\r\nland an attack!,0,0,0,0,0,0,0,0,0,0,0,0,0.1,0,0,FALSE,FALSE
-skl006,Time Bonus Beta-II,Prefab/Skill/skl006/Skl006PassiveSkill.user,Greatly increases your time bonus\r\nwhen you kill an enemy...but greatly\r\nreduces your movement speed.,0,0,0,0,0,0,0,0,0,-0.25,0,0,0,0.3,0,FALSE,FALSE
-skl007,Time Bonus Beta-I,Prefab/Skill/skl007/Skl007PassiveSkill.user,Increases your time bonus when\r\nyou kill an enemy!,0,0,0,0,0,0,0,0,0,0,0,0,0,0.1,0,FALSE,FALSE
 skl008,Defense II,Prefab/Skill/skl008/Skl008PassiveSkill.user,40% Reduced damage taken.\r\n20% Reduced enemy stun rate.,0,0,0,-0.2,0,-0.4,0,0,0,0,0,0,0,0,0,FALSE,FALSE
 skl009,Defense I,Prefab/Skill/skl009/Skl009PassiveSkill.user,20% Reduced damage taken.,0,0,0,0,0,-0.2,0,0,0,0,0,0,0,0,0,FALSE,FALSE
 skl010,Speed Up II,Prefab/Skill/skl010/Skl010PassiveSkill.user,40% Increased running speed.\r\n30% Increased walking speed.,0,0,0,0,0,0,0,0,0.3,0.4,0,0,0,0,0,FALSE,FALSE
@@ -18,7 +14,11 @@ skl016,Toughness II,Prefab/Skill/skl016/Skl016PassiveSkill.user,50% Increased ma
 skl017,Toughness I,Prefab/Skill/skl017/Skl017PassiveSkill.user,25% Increased max health.,0,0,0,0,250,0,0,0,0,0,0,0,0,0,0,FALSE,FALSE
 skl018,Guard Up,Prefab/Skill/skl018/Skl018PassiveSkill.user,15% Increased block effectiveness.,0,0,0,0,0,0,0,0.15,0,0,0,0,0,0,0,FALSE,FALSE
 skl019,Quick Reload,Prefab/Skill/skl019/Skl019PassiveSkill.user,50% Increased reload speed.,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,FALSE,FALSE
-skl020,Masochist,Prefab/Skill/skl020/Skl020PassiveSkill.user,Gives you a time bonus when\r\nyou're attacked.,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0.03,FALSE,FALSE
 skl021,Vengeance,Prefab/Skill/skl021/Skl021PassiveSkill.user,300% Increased damage\r\nwhen below 30% health.,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,FALSE,FALSE
 skl022,Narrow Escape,Prefab/Skill/skl022/Skl022PassiveSkill.user,50% Increased Movement speed when\r\nbelow 30% health.,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,0,FALSE,FALSE
 skl023,Brawler,Prefab/Skill/skl023/Skl023PassiveSkill.user,300% Increased melee attack power.,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,FALSE,FALSE
+skl004,All In One +,Prefab/Skill/skl004/Skl004PassiveSkill.user,Combines all positive effects\r\ninto one.,0.5,3,3,0.25,500,-0.4,30,0.15,0.3,0.15,0.5,0.5,0,0,0,TRUE,TRUE
+skl006,Unlimited Power,Prefab/Skill/skl006/Skl006PassiveSkill.user,"POWER!!!!!!!!!!!!!\r\nUNLIMITED POWER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\r\nYes, this is a Palpatine reference.",999,999,999,999,999,-999,999,999,1,1,1,3,0,0,0,TRUE,TRUE
+skl005,All In One -,Prefab/Skill/skl005/Skl005PassiveSkill.user,Combines all negative effects\r\ninto one.,-0.2,0,0,-0.2,0,0,0,0,0,-0.25,0,-0.25,0,0,0,FALSE,FALSE
+skl007,Unused 1,Prefab/Skill/skl007/Skl007PassiveSkill.user,Unused. Yet.,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,FALSE,FALSE
+skl020,Unused 2,Prefab/Skill/skl020/Skl020PassiveSkill.user,Unused. Yet.,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,FALSE,FALSE

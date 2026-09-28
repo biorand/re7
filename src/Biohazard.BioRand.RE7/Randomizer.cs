@@ -44,10 +44,19 @@ internal class Randomizer : IDisposable {
         "random-starting-inventory-skills-mia",
         "recipes-add-new",
         "weapon-mod-reload-speed",
+        "random-starting-inventory-ethan",
+        "random-starting-inventory-mia",
+        "random-starting-inventory-additional-gun-ethan",
+        "random-starting-inventory-additional-gun-mia",
+        "additional-items",
+        "random-bird-cage-magnum",
+        "random-bird-cage-drugs-coins",
     ];
 
-    private bool IsREFrameworkRequired()
+    internal bool IsREFrameworkRequired()
         => GetConfigOption<bool>("random-enemies")
+           || GetConfigOption<double>("extra-enemy-amount") > 0
+           || (GetConfigOption<bool>("random-items") && GetConfigOption<bool>("replace-weapons"))
            || GetConfigOption<bool>("random-enemy-drops")
            || GetConfigOption<bool>("allow-dlc-items")
            || _optionsThatRequireREFramework.Any(option => GetConfigOption<bool>(option))
@@ -90,7 +99,7 @@ internal class Randomizer : IDisposable {
                 new(
                     "1-patch",
                     "Patch",
-                    "Simply drop this file into your RE 7 install folder.",
+                    "Extract the contents of this zip into your RE 7 install folder.",
                     $"biorand-re7-{input.Seed}.zip",
                     output.GetOutputZip()),
                 new(

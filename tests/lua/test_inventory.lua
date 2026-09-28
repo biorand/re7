@@ -126,9 +126,14 @@ return function()
     player_order = nil
     assert(insert.before({ 0, passive_item, owner_inventory }) == sdk.PreHookResult.SKIP_ORIGINAL)
 
+    local unlocked = hooks["app.InventoryMenu:DictionaryCombine_UnlockedCombine(app.ItemCombineData.Data)"]
+    hooks["app.InventoryMenu.DictionaryCombineUIController:deactivate()"].before()
+    assert(static_fields.RowNum == 4)
+    assert(unlocked.after(256) == 256, "Disabled recipe unlocks must retain the game's result")
+    settings["recipes-add-new"] = true
+    settings["recipes-unlock-from-start"] = true
     hooks["app.InventoryMenu.DictionaryCombineUIController:deactivate()"].before()
     assert(static_fields.RowNum == 5)
-    local unlocked = hooks["app.InventoryMenu:DictionaryCombine_UnlockedCombine(app.ItemCombineData.Data)"]
     assert(unlocked.after(256) == 1)
 
     local madhouse = MadhouseSaves.new(context)

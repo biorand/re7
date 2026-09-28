@@ -10,7 +10,7 @@
 
 BioRand 7 is a [cloud randomizer](https://beta-re7.biorand.net/) and mod-generation toolkit for [Resident Evil 7 Biohazard](https://store.steampowered.com/app/418370/Resident_Evil_7_Biohazard/) based on the [BioRand infrastructure](https://github.com/biorand).
 
-This repository contains the .NET randomizer library, command-line tools, data-generation utilities, tests, REFramework plugin code, and reverse-engineering notes that support it.
+This repository contains the .NET randomizer library, command-line tools, data-generation utilities, tests, REFramework Lua scripts, and reverse-engineering notes that support it.
 
 BioRand 7 is a fan-made project and is not affiliated with or endorsed by Capcom. You need a legally owned copy of Resident Evil 7 including all DLCs to use game-derived inputs locally.
 
@@ -43,6 +43,24 @@ For current design notes and planned work, see:
 - Uses embedded, spreadsheet-derived, and generated data so behavior can be tested without a local RE7 install.
 
 ## Requirements
+
+For players, use the Steam Windows RT/DX12 version of RE7 with its DLC installed. The older `dx11_non-rt` branch is unsupported. The SDK and Git requirements below apply to building the tools yourself.
+
+## Installing a generated seed
+
+1. Close RE7 and back up your saves before changing an installation. Start a new game for a new seed or changed progression settings.
+2. Download the seed's **Patch** ZIP and **Additional Assets** ZIP, if the generator lists one. Extract their contents into the folder containing `re7.exe`; placing the ZIP files there does not install them. Keep the directory structure, including `reframework/autorun/BioRand7.lua`, its `BioRand7/` modules, and `reframework/data/BioRand7/config.json`.
+3. When the output includes REFramework scripts, install the RE7 RT version of [REFramework](https://github.com/praydog/REFramework/releases) so its `dinput8.dll` sits next to `re7.exe`. Most randomizer profiles need this runtime, including randomized weapons and extra enemies. The generated ZIP normally supplies the BioRand scripts, not REFramework itself.
+4. Install every Additional Assets download listed for that seed. Missing assets can cause infinite loading. Reuse an installed asset pack only when its version matches the generated download.
+5. Alternatively, enable the **Fluffy Mod** ZIP in Fluffy Mod Manager and install any separately listed Additional Assets ZIP into the game folder. Follow the same REFramework requirement.
+
+When upgrading, disable the previous seed and remove its BioRand Lua entrypoint/module directory before installing the replacement, including when the new profile does not require scripts. Remove any legacy BioRand managed plugin or autorun script from an older C# installation so two runtimes cannot run together; preserve unrelated mods and plugins. Keep the seed's config, logs, build version, and optional spoilers for support.
+
+To uninstall, disable the Fluffy mod or remove the BioRand patch PAKs supplied by the seed and asset downloads, plus `reframework/autorun/BioRand7.lua`, `reframework/autorun/BioRand7/`, and `reframework/data/BioRand7/`. Remove only files installed by BioRand; do not remove vanilla PAKs or another mod's runtime.
+
+Chapter shuffling is unavailable in public profiles until return routes are validated. Old profiles with it enabled are rejected with an explanation. Generation uses the CSV snapshot embedded in the application by default; the advanced spreadsheet-refresh option is for development and can change an existing seed's results.
+
+## Developer requirements
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/)
 - Git with [Git LFS](https://git-lfs.com/)
@@ -78,6 +96,10 @@ lua tests/lua/run.lua
 ```
 
 CI runs these with Lua 5.4. See [REFramework Lua validation](docs/reframework-lua.md) for the runtime API rules and in-game checks.
+
+CI tests both Debug and Release. Pushes to `master` and manually triggered release checks require `BIORAND_RE7_TEST_PAK_URL` and `BIORAND_RE7_TEST_PAK_SHA256`; a run without PAK-backed tests is not release validation. Fork pull requests can run the tests that do not need game data.
+
+The CLI's `generate -o` destination includes its runtime files: `.pak` writes scripts/config beside the PAK, a directory receives the loose game files and runtime, and `.zip` writes the Fluffy archive with companion downloads beside it. Logs and spoilers stay with that destination. `setup` and `setup --full` both extract the baseline required for generation.
 
 ## Benchmarks
 

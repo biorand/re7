@@ -22,6 +22,17 @@ return function()
         log = { warn = function(_, message) warnings[#warnings + 1] = message end },
     }
 
+    local gating = Em3300Explosions.new(context)
+    config["random-enemies"] = false
+    config["extra-enemy-amount"] = 1
+    assert(gating:enabled(), "Extra-only enemy profiles need the path-clearing behavior")
+    config["enemy-evelineelderly-explosive-behavior"] = false
+    assert(not gating:enabled())
+    config["extra-enemy-amount"] = 0
+    config["enemy-evelineelderly-explosive-behavior"] = true
+    assert(not gating:enabled())
+    config["random-enemies"] = true
+
     local function object(address, name, tag, position)
         local transform = { call = function(_, method)
             assert(method == "get_Position", "Unexpected transform method: " .. method)
@@ -33,6 +44,7 @@ return function()
                 if method == "get_Valid" then return not self.destroyed end
                 if method == "get_Name" then return name end
                 if method == "get_Tag" then return tag end
+                if method == "get_Folder" then return nil end
                 if method == "get_Transform" then return transform end
                 if method == "getComponent(System.Type)" then return (self.components or {})[component] end
                 error("Unexpected GameObject method: " .. method)
