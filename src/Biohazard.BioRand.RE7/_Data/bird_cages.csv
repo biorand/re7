@@ -1,21 +1,21 @@
 Enabled,ItemId,MinAmount,MaxAmount,CoinsMin,CoinsMax,InputItemIds,Comment
-TRUE,skl002,1,1,3,5,Coin CoinOld,
-TRUE,skl003,1,1,3,5,Coin CoinOld,
-TRUE,skl008,1,1,5,7,Coin CoinOld,
-TRUE,skl009,1,1,3,5,Coin CoinOld,
-TRUE,skl010,1,1,5,7,Coin CoinOld,
-TRUE,skl011,1,1,3,5,Coin CoinOld,
-TRUE,skl012,1,1,5,7,Coin CoinOld,
-TRUE,skl013,1,1,3,5,Coin CoinOld,
-TRUE,skl014,1,1,5,7,Coin CoinOld,
-TRUE,skl015,1,1,3,5,Coin CoinOld,
-TRUE,skl016,1,1,5,7,Coin CoinOld,
-TRUE,skl017,1,1,3,5,Coin CoinOld,
-TRUE,skl018,1,1,3,5,Coin CoinOld,
-TRUE,skl019,1,1,3,5,Coin CoinOld,
-TRUE,skl021,1,1,3,5,Coin CoinOld,
-TRUE,skl022,1,1,3,5,Coin CoinOld,
-TRUE,skl023,1,1,3,5,Coin CoinOld,
+TRUE,skl002,1,1,3,5,Coin CoinOld,Health Regen
+TRUE,skl003,1,1,3,5,Coin CoinOld,Clairvoyance
+TRUE,skl008,1,1,5,7,Coin CoinOld,Defense II
+TRUE,skl009,1,1,3,5,Coin CoinOld,Defense I
+TRUE,skl010,1,1,5,7,Coin CoinOld,Speed Up II
+TRUE,skl011,1,1,3,5,Coin CoinOld,Speed Up I
+TRUE,skl012,1,1,5,7,Coin CoinOld,Firepower Up II
+TRUE,skl013,1,1,3,5,Coin CoinOld,Firepower Up I
+TRUE,skl014,1,1,5,7,Coin CoinOld,Impact II
+TRUE,skl015,1,1,3,5,Coin CoinOld,Impact I
+TRUE,skl016,1,1,5,7,Coin CoinOld,Toughness II
+TRUE,skl017,1,1,3,5,Coin CoinOld,Toughness I
+TRUE,skl018,1,1,3,5,Coin CoinOld,Guard Up
+TRUE,skl019,1,1,3,5,Coin CoinOld,Quick Reload
+TRUE,skl021,1,1,3,5,Coin CoinOld,Vengeance
+TRUE,skl022,1,1,3,5,Coin CoinOld,Narrow Escape
+TRUE,skl023,1,1,3,5,Coin CoinOld,Brawler
 FALSE,MachineGun,1,1,1,1,Coin CoinOld,Disabled until there is a way to display the input item
 FALSE,Shotgun_DB,1,1,1,1,Coin CoinOld,Disabled until there is a way to display the input item
 FALSE,Shotgun_M37,1,1,1,1,Coin CoinOld,Disabled until there is a way to display the input item
@@ -24,12 +24,3 @@ FALSE,GrenadeLauncher,1,1,1,1,Coin CoinOld,Disabled until there is a way to disp
 FALSE,Handgun_M19,1,1,1,1,Coin CoinOld,Disabled until there is a way to display the input item
 FALSE,Burner,1,1,1,1,Coin CoinOld,Disabled until there is a way to display the input item
 FALSE,Magnum,1,1,1,1,Coin CoinOld,Disabled until there is a way to display the input item
-FALSE,,,,,,,
-FALSE,,,,,,,
-FALSE,,,,,,,
-FALSE,,,,,,,
-FALSE,,,,,,,
-FALSE,,,,,,,
-FALSE,,,,,,,
-FALSE,,,,,,,
-FALSE,,,,,,,
