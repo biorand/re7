@@ -484,6 +484,8 @@ public class RandomizerItemRandomizationTests {
         var chest = Assert.Single(newRootObjects, child =>
             child.Children.Any(grandChild => grandChild.FindComponent<app.InteractDrawer>() != null));
         var drawerObject = Assert.Single(chest.Children, child => child.FindComponent<app.InteractDrawer>() != null);
+        Assert.True(drawerObject.Settings.Get<bool>("Update"));
+        Assert.True(drawerObject.Settings.Get<bool>("Draw"));
         var drawer = drawerObject.FindComponent<app.InteractDrawer>()!;
         var weapon = afterScene.FindGameObject(drawer.DirectSetGameObject);
         Assert.NotNull(weapon);

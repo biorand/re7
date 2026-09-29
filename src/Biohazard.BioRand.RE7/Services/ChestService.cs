@@ -15,6 +15,9 @@ internal class ChestService(Randomizer randomizer) {
 
     private static RszGameObject PrepareUnlockedTemplate(RszGameObject chest) {
         var drawer = chest.Children.Single(child => child.Name == "InteractDrawer");
+        // The locked template relies on Fsm_LockCheck to enable this child. An
+        // unlocked chest must register its drawer interaction immediately.
+        drawer = drawer.WithSettings(drawer.Settings.Set("Update", true).Set("Draw", true));
         // The imported root uses LockLv0, but still carries a LockLv1 child FSM and references
         // to the source scene's drawer. That child waits on locks absent from the placed chest.
         chest = chest.WithChildren([drawer]);
