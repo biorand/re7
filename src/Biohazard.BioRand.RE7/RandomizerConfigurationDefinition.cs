@@ -479,8 +479,8 @@ internal static class RandomizerConfigurationDefinition {
             Id = $"balanced-enemies",
             Label = "Balanced Enemies",
             Description =
-                "Keep very strong enemies out of earlier chapters so enemy strength ramps up with game progression. " +
-                "Good for permadeath runs but may reduce chaos.",
+                "Limit enemy strength in the Guest House and early Main House. Smaller bosses become eligible in the Old House, " +
+                "and larger bosses in the Testing Area and Boat House. Enemy sliders still control their relative frequency.",
             Type = "switch",
             Default = true
         });
