@@ -127,9 +127,11 @@ public class RandomizerBehaviorTests {
         Assert.Equal(beforeStrongChemFluid.MaxStackNum, afterStrongChemFluid.MaxStackNum);
     }
 
-    [Fact]
-    public void WeaponSoftlockPatch_PreservesBasementChainsawAfterDoorCut() {
-        using var result = RandomizerTest.RunState();
+    [Theory]
+    [InlineData(true, 0)]
+    [InlineData(false, 1)]
+    public void WeaponSoftlockPatch_RespectsKeepBasementChainsaw(bool keep, int expectedReduction) {
+        using var result = RandomizerTest.RunState(config => config["keep-basement-chainsaw"] = keep);
 
         var beforeChainSawReductions = FindActions(result.ReadBeforeScene(ChainSawDoorScenePath), "app.fsm.ItemReduce")
             .Where(IsChainSawReduction)
@@ -141,7 +143,7 @@ public class RandomizerBehaviorTests {
             .ToArray();
 
         Assert.Equal([1, 1, 1], beforeChainSawReductions);
-        Assert.Equal([0, 0, 0], afterChainSawReductions);
+        Assert.Equal([expectedReduction, expectedReduction, expectedReduction], afterChainSawReductions);
     }
 
     [Fact]

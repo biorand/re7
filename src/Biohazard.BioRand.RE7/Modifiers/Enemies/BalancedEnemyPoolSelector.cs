@@ -31,7 +31,7 @@ internal static class BalancedEnemyPoolSelector {
             return int.MaxValue;
 
         return enemy.IsBoss
-            ? Math.Max(enemy.BaseHealth, 20_000)
+            ? Math.Max(enemy.BaseHealth, 6_000)
             : enemy.BaseHealth;
     }
 
@@ -47,7 +47,7 @@ internal static class BalancedEnemyPoolSelector {
             return progression switch{
                 <= 2 => 3_000,
                 3 => 6_000,
-                _ => 10_000,
+                _ => 20_000,
             };
         }
 
@@ -57,17 +57,21 @@ internal static class BalancedEnemyPoolSelector {
     private static int GetChapter3Progression(string scenePath) {
         var normalizedScenePath = scenePath.Replace('\\', '/');
         if (normalizedScenePath.Contains("chapter3_5", StringComparison.OrdinalIgnoreCase) ||
-            normalizedScenePath.Contains("enemy_c03_5", StringComparison.OrdinalIgnoreCase)) {
+            normalizedScenePath.Contains("enemy_c03_5", StringComparison.OrdinalIgnoreCase) ||
+            normalizedScenePath.Contains("/c03_boat", StringComparison.OrdinalIgnoreCase)) {
             return 5;
         }
 
         if (normalizedScenePath.Contains("chapter3_4", StringComparison.OrdinalIgnoreCase) ||
-            normalizedScenePath.Contains("enemy_c03_4", StringComparison.OrdinalIgnoreCase)) {
+            normalizedScenePath.Contains("enemy_c03_4", StringComparison.OrdinalIgnoreCase) ||
+            normalizedScenePath.Contains("/c03_labo", StringComparison.OrdinalIgnoreCase)) {
             return 4;
         }
 
         if (normalizedScenePath.Contains("chapter3_3", StringComparison.OrdinalIgnoreCase) ||
-            normalizedScenePath.Contains("enemy_c03_3", StringComparison.OrdinalIgnoreCase)) {
+            normalizedScenePath.Contains("enemy_c03_3", StringComparison.OrdinalIgnoreCase) ||
+            normalizedScenePath.Contains("/c03_oldhouse", StringComparison.OrdinalIgnoreCase) ||
+            normalizedScenePath.Contains("/c03_greenhouse", StringComparison.OrdinalIgnoreCase)) {
             return 3;
         }
 

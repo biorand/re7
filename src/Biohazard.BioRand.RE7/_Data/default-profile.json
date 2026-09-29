@@ -1,5 +1,6 @@
 {
   "start-chapter": "Normal",
+  "keep-basement-chainsaw": true,
   "randomized-messages": true,
   "main-menu-biorand-touch": true,
   "madhouse-normal-saves": true,

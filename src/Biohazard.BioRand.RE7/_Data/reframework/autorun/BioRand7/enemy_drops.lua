@@ -48,7 +48,7 @@ local function horizontal_normal(value)
 end
 
 function EnemyDrops.new(context)
-    return setmetatable({ context = context, dropped = {}, generations = {} }, EnemyDrops)
+    return setmetatable({ context = context, dropped = {}, generations = {}, pending = {} }, EnemyDrops)
 end
 
 function EnemyDrops:config(enemy_key, fallback_key, default)
@@ -265,6 +265,11 @@ function EnemyDrops:spawn(source, enemy_object, generation)
         return
     end
 
+    -- Newly created drops start at the world origin. Their transform does not yet
+    -- contain the enemy's location, even when the factory receives its owner.
+    local enemy_transform = enemy_object:call("get_Transform")
+    local position = enemy_transform:call("get_Position")
+    local rotation = enemy_transform:call("get_Rotation")
     local item_manager = self.context.game:singleton("app.ItemManager")
     if item_manager == nil then
         self.context.log:warn("Unable to create enemy drop because app.ItemManager is unavailable")
@@ -278,15 +283,32 @@ function EnemyDrops:spawn(source, enemy_object, generation)
     end
     local transform = drop:call("get_Transform")
     if transform == nil then return end
-    local position = transform:call("get_Position")
-    local rotation = transform:call("get_Rotation")
     local ground = self:project_to_ground(position)
     if ground == nil and Data.single_drop_per_spawn[enemy_type] then
         ground = self:project_hive_drop(enemy_object, position)
     end
-    transform:call("setParent(via.Transform, System.Boolean)", nil, true)
-    transform:call("set_Position", ground or position)
-    transform:call("set_Rotation", rotation)
+    self.pending[#self.pending + 1] = { drop = drop, position = ground or position, rotation = rotation }
+end
+
+function EnemyDrops:update()
+    for index = #self.pending, 1, -1 do
+        local entry = self.pending[index]
+        if not entry.drop:call("get_Valid") then
+            table.remove(self.pending, index)
+        else
+            local transform = entry.drop:call("get_Transform")
+            if not entry.positioned then
+                -- Allow the native prefab to initialize before moving it, then let
+                -- its pickup child update before detaching from the dying enemy.
+                transform:call("set_Position", entry.position)
+                transform:call("set_Rotation", entry.rotation)
+                entry.positioned = true
+            else
+                transform:call("setParent(via.Transform, System.Boolean)", nil, true)
+                table.remove(self.pending, index)
+            end
+        end
+    end
 end
 
 function EnemyDrops:begin(enemy_object)
@@ -358,6 +380,7 @@ end
 function EnemyDrops:reset()
     self.dropped = {}
     self.generations = {}
+    self.pending = {}
 end
 
 return EnemyDrops

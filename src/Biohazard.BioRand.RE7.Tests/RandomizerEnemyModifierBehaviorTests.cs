@@ -150,6 +150,20 @@ public class RandomizerEnemyModifierBehaviorTests {
             scenePath: "natives/stm/scenes/chapter/chapter4/enemy_c04_3.scn.20"));
     }
 
+    [Theory]
+    [InlineData("MiaChainsaw", 1, "natives/stm/environment/scene/chapter1/c01_3f.scn.20", false)]
+    [InlineData("JackShears", 3, "natives/stm/scenes/chapter/chapter3/chapter3_2/moldeads.scn.20", false)]
+    [InlineData("JackShears", 3, "natives/stm/scenes/chapter/chapter3/chapter3_3/enemy.scn.20", true)]
+    [InlineData("JackShears", 3, "natives/stm/environment/scene/chapter3/c03_oldhouse1fkitchen01.scn.20", true)]
+    [InlineData("MiaChainsaw", 3, "natives/stm/environment/scene/chapter3/c03_greenhouse1f.scn.20", true)]
+    [InlineData("MargeMutated", 3, "natives/stm/environment/scene/chapter3/c03_oldhouse1fkitchen01.scn.20", false)]
+    [InlineData("MargeMutated", 3, "natives/stm/environment/scene/chapter3/c03_labo1f.scn.20", true)]
+    [InlineData("MargeMutated", 3, "natives/stm/environment/scene/chapter3/c03_boat1fentrance01.scn.20", true)]
+    public void BalancedEnemies_AllowBossesAsProgressionAdvances(string id, int chapter, string path, bool expected) {
+        var enemy = EnemyDefinitions.Instance.All.Single(enemy => enemy.Id == id);
+        Assert.Equal(expected, BalancedEnemyPoolSelector.IsCompatibleReplacement(enemy, chapter, path));
+    }
+
     [Fact]
     public void RandomizeEnemies_Balanced_PreservesOldHouseInsectsWhenPoolHasNoCompatibleInsects() {
         using var result = RandomizerTest.RunState(

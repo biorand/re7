@@ -1,4 +1,5 @@
 using Biohazard.BioRand.RE7.Extensions;
+using Biohazard.BioRand.RE7.Inventory;
 using Biohazard.BioRand.RE7.Items;
 using Biohazard.BioRand.RE7.Modifiers;
 using Biohazard.BioRand.RE7.REEngine;
@@ -484,6 +485,8 @@ public class RandomizerItemRandomizationTests {
         var chest = Assert.Single(newRootObjects, child =>
             child.Children.Any(grandChild => grandChild.FindComponent<app.InteractDrawer>() != null));
         var drawerObject = Assert.Single(chest.Children, child => child.FindComponent<app.InteractDrawer>() != null);
+        Assert.True(drawerObject.Settings.Get<bool>("Update"));
+        Assert.True(drawerObject.Settings.Get<bool>("Draw"));
         var drawer = drawerObject.FindComponent<app.InteractDrawer>()!;
         var weapon = afterScene.FindGameObject(drawer.DirectSetGameObject);
         Assert.NotNull(weapon);
@@ -521,6 +524,40 @@ public class RandomizerItemRandomizationTests {
             Assert.False(interaction.Component.IsForceEquip);
             Assert.True(interaction.Component.UsePickupSE);
         });
+    }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public void AdditionalWeaponChests_ExcludeEthansStartingWeapons(bool randomizeInventory, bool additionalGun) {
+        using var result = RandomizerTest.RunState(config => {
+            config["additional-items"] = true;
+            config["random-starting-inventory-ethan"] = randomizeInventory;
+            config["random-starting-inventory-additional-gun-ethan"] = additionalGun;
+            foreach (var category in Enum.GetValues<StartingWeaponCategory>())
+                config[$"inventory-weapon-{category.ToString().ToLowerInvariant()}-ethan"] =
+                    category == StartingWeaponCategory.MachineGun;
+        }, seed: 776198);
+
+        var inventory = result.ReadAfterUserFile<app.AddItemListData>(RandomizerTestPaths.EthanInventoryPath)._AddItems;
+        Assert.Contains(inventory, item => item.ItemDataID == "MachineGun");
+        var chestWeapons = new List<string>();
+        foreach (var path in result.ItemPlacementService.ItemPlacements
+                     .Where(p => p.Enabled && p.IsExtra && p.Tags.Contains(ExtraPlacementModifier.WeaponChestTag))
+                     .Select(p => p.SceneFile).Distinct()) {
+            var before = result.ReadBeforeScene(path);
+            var after = result.ReadAfterScene(path);
+            foreach (var root in after.Children.OfType<RszGameObject>()
+                         .Where(go => before.FindGameObject(go.Guid) == null)) {
+                foreach (var drawer in root.Children.Select(go => go.FindComponent<app.InteractDrawer>())
+                             .OfType<app.InteractDrawer>()) {
+                    var item = after.FindGameObject(drawer.DirectSetGameObject)?.FindComponent<app.Item>();
+                    if (item != null) chestWeapons.Add(item.ItemDataID);
+                }
+            }
+        }
+        Assert.NotEmpty(chestWeapons);
+        Assert.DoesNotContain("MachineGun", chestWeapons);
     }
 
     [Fact]
