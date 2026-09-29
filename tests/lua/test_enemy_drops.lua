@@ -58,6 +58,7 @@ return function()
     local drops = EnemyDrops.new(context)
     local transform = object({
         get_Position = constant(vector(-1.125, 2, 3)),
+        get_Rotation = constant({ x = 0, y = 0, z = 0, w = 1 }),
         get_AxisY = constant(vector(0, 1, 0)),
         get_AxisZ = constant(vector(0, 0, 1)),
         get_AxisX = constant(vector(1, 0, 0)),
@@ -130,6 +131,53 @@ return function()
     end
     local actual_hit, actual_normal = drops:cast_terrain_ray(vector(0, 1, 0), vector(0, -1, 0))
     assert(actual_hit == hit and actual_normal == normal)
+
+    -- The native factory returns a drop at (0, 0, 0), not at its owner's location.
+    -- Exercise the complete placement path with and without a terrain hit.
+    local placed, detached, rotated
+    local drop_transform = object({
+        get_Position = constant(vector(0, 0, 0)),
+        get_Rotation = constant({}),
+        ["setParent(via.Transform, System.Boolean)"] = function(_, parent, keep_world)
+            detached = parent == nil and keep_world
+        end,
+        set_Position = function(_, value) placed = value end,
+        set_Rotation = function(_, value) rotated = value end,
+    })
+    local valid = true
+    local drop_object = object({ get_Transform = constant(drop_transform), get_Valid = function() return valid end })
+    singletons["app.ItemManager"] = object({
+        ["createDropItemInstance(via.GameObject, System.String, System.Int32)"] = function(_, owner, id, amount)
+            assert(owner == enemy and id == "Gunpowder" and amount == 1)
+            return drop_object
+        end,
+    })
+    local placement_drops = EnemyDrops.new(context)
+    placement_drops.select = function() return "Gunpowder", 1 end
+    for _, ground_found in ipairs({ true, false }) do
+        placed, detached, rotated = nil, nil, nil
+        placement_drops.project_to_ground = function(_, position)
+            assert(position.x == -1.125 and position.y == 2 and position.z == 3)
+            return ground_found and vector(position.x, 1.8, position.z) or nil
+        end
+        placement_drops:spawn(controller, enemy, 0)
+        assert(placed == nil and detached == nil, "Do not move an uninitialized prefab")
+        placement_drops:update()
+        assert(detached == nil, "The pickup child must update before detachment")
+        placement_drops:update()
+        assert(detached and rotated.w == 1)
+        assert(placed.x == -1.125 and placed.z == 3)
+        assert(placed.y == (ground_found and 1.8 or 2))
+        assert(#placement_drops.pending == 0)
+    end
+    placement_drops:spawn(controller, enemy, 0)
+    valid = false
+    placement_drops:update()
+    assert(#placement_drops.pending == 0, "Discard a destroyed prefab without moving it")
+    valid = true
+    placement_drops:spawn(controller, enemy, 0)
+    placement_drops:reset()
+    assert(#placement_drops.pending == 0, "A new session must not retain old prefab references")
 
     local spawn_count = 0
     drops.spawn = function() spawn_count = spawn_count + 1 end

@@ -36,6 +36,7 @@ local function update_feature(name)
 end
 
 re.on_application_entry("UpdateBehavior", function()
+    update_feature("enemy_drops")
     update_feature("em3300_explosions")
     update_feature("random_events")
 end)
