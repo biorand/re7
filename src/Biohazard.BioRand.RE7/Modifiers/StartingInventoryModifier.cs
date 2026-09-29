@@ -354,6 +354,13 @@ internal class StartingInventoryModifier : Modifier {
                 debugItems);
         }
 
+        // RE7 rejects a second copy of an owned gun, even with free inventory slots.
+        // Reserve Ethan's loadout before additional chests and valuable drops are selected.
+        foreach (var item in GetInventory(randomizer, MainCampaignCharacter.Ethan)) {
+            if (itemDefinitions.FromId(item.ItemDataID)?.WeaponId != null)
+                randomizer.ItemRandomizer.MarkItemPlaced(item.ItemDataID);
+        }
+
         if (randomizer.GetConfigOption<string>(ChapterJumpDataModifier.StartChapterConfigKey) == "Main House" &&
             (randomizeEthansInventory || giveRandomSkillEthan || giveAdditionalGunEthan)) {
             ApplyMainHouseInventory(randomizer);
