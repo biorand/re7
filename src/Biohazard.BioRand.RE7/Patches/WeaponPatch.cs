@@ -30,7 +30,9 @@ internal class WeaponPatch(IPatchContext context) : IPatch {
             return root;
         });
 
-        KeepBasementChainsawAfterDoorCut();
+        if (context.GetConfigOption("keep-basement-chainsaw", true)) {
+            KeepBasementChainsawAfterDoorCut();
+        }
     }
 
     private void KeepBasementChainsawAfterDoorCut() {

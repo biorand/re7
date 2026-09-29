@@ -84,6 +84,14 @@ internal static class RandomizerConfigurationDefinition {
             Default = ChapterJumpDataModifier.NormalStartChapter
         });
 
+        group.Items.Add(new GroupItem(){
+            Id = "keep-basement-chainsaw",
+            Label = "Keep Chainsaw After Jack 2",
+            Description = "Keep the chainsaw after cutting open the basement exit. Disable to discard it as in the original game.",
+            Type = "switch",
+            Default = true
+        });
+
         group = page.CreateGroup("Presentation");
 
         group.Items.Add(new GroupItem(){
