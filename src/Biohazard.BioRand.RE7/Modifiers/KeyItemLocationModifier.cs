@@ -618,7 +618,7 @@ internal class KeyItemLocationModifier : Modifier {
                     continue;
                 }
 
-                if (match.HasDrawerContext)
+                if (match.HasDrawerContext || match.HasConditionalPickupContext)
                     continue;
 
                 yield return target;

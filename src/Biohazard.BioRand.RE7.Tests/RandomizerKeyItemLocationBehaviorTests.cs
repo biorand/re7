@@ -1029,6 +1029,32 @@ public class RandomizerKeyItemLocationBehaviorTests : IClassFixture<DefaultRando
     }
 
     [Fact]
+    public void KeyItemLocations_ExcludesSpiderLockersAndRegionalBodyVariantsFromEverySeed() {
+        var result = _defaultRun.Result;
+        var unsafeCarriers = new[] {
+            ("c03_gh1flowerroom01", "0944c68d-50a1-4207-b645-796a353aab95"),
+            ("c03_gh1flowerroom01", "d5c20bd7-969c-43e0-b506-bb954421eb42"),
+            ("c03_gh1froom02", "8b233067-d1dc-44f8-a7d9-1f2319c55746"),
+            ("c03_gh1froom02", "acb20802-02e5-4901-a6a8-70a3a39a6b72"),
+            ("c03_gh2fhallway01", "af78cd5c-b090-4557-bd9c-2f6a0d74b0c0"),
+            ("c03_gh2fhallway01", "c55742d9-eb59-48fb-8dab-05361bc455b6"),
+            ("c03_oldhouse1fkitchen01", "fc898db5-7468-4db8-b8cf-ceaf08bf48c2"),
+            ("c03_oldhouse1fkitchen01", "e0c1712e-c7a5-481f-a593-8dae6beed197"),
+            ("c03_oldhouse1froom02", "400c0d7e-f8cd-43d0-9c3e-c1ccfa2c0704"),
+            ("c03_oldhouse1froom02", "887e0b13-658a-441b-9210-726205b76601"),
+        }.Concat(SnakeKeyBodyGuids.Select(guid => ("c03_rightareab1fstoreroom", guid.ToString())));
+        var eligible = KeyItemLocationModifier.GetRouteTargetsForTesting(result.Randomizer)
+            .Select(target => target.TargetGuid).ToHashSet();
+        foreach (var (sceneName, guidText) in unsafeCarriers) {
+            var guid = Guid.Parse(guidText);
+            var scene = result.ReadBeforeScene($"natives/stm/environment/scene/chapter3/{sceneName}.scn.20");
+            var match = scene.FindGameObjectsByGuidWithFsmContext([guid])[guid];
+            Assert.True(match.HasConditionalPickupContext, $"Undetected conditional carrier: {sceneName}/{guid}");
+            Assert.DoesNotContain(guid, eligible);
+        }
+    }
+
+    [Fact]
     public void KeyItemLocations_RejectsPhotoRewardsAndKeysBehindTheirOwnDoors() {
         var result = _defaultRun.Result;
         var treasureGuids = new HashSet<Guid> {
