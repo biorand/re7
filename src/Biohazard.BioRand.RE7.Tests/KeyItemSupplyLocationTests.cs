@@ -79,6 +79,23 @@ public partial class RandomizerKeyItemLocationBehaviorTests {
     }
 
     [Fact]
+    public void KeyItemLocations_ShipSupplySitesRespectWrenchAndCorrosiveAccess() {
+        var sites = KeyItemSupplyLocations.CreatePlacements().Where(p => p.Chapter == 4).ToArray();
+        Assert.Equal(6, sites.Length);
+        foreach (var p in sites) {
+            var onBridge = p.SceneFile.Contains("c04_ship4fbridge");
+            var inSickBay = p.SceneFile.Contains("c04_ship3finfirmary");
+            Assert.Equal(onBridge, KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(p, "EvOpener"));
+            Assert.Equal(!inSickBay, KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(p, "SpareKey"));
+            Assert.Equal(inSickBay, KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(p, "EvCable"));
+        }
+        using var result = RandomizerTest.RunState(config => config["random-key-item-locations"] = true, 895914);
+        var cable = Assert.Single(GetChangedPlacements(result), change => change.AfterId == "EvCable");
+        Assert.Equal(["EvOpener", "SpareKey"], PhysicalPickupRequirements[cable.Placement.Guid]);
+        AssertPhysicalProgression(result);
+    }
+
+    [Fact]
     public void KeyItemLocations_OldHouseSupplySitesPreserveStoneAndCrankGates() {
         var sites = KeyItemSupplyLocations.CreatePlacements().Where(p => p.SceneFile.Contains("c03_oldhouse")).ToArray();
         var crankSites = sites.Where(p => KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(p, "Crank")).ToArray();

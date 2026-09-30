@@ -63,6 +63,12 @@ internal static class KeyItemMapRepository {
     // and floor coordinate systems differ.
     private static readonly IReadOnlyDictionary<Guid, KeyItemMapLocation> _locations =
         new Dictionary<Guid, KeyItemMapLocation>{
+            [new("2ba97ef9-e5f3-4a38-a1d9-995339ee0880")] = At("wrecked-ship-4f", "Bridge - desk opposite consoles", 160.59f, 79.55f),
+            [new("03ed4c90-b901-4682-9122-86d0ac85ca14")] = At("wrecked-ship-4f", "Bridge - east console", 160.59f, 79.55f),
+            [new("7d20bf5a-f0c7-46a4-a9cb-3708865dd8ff")] = At("wrecked-ship-3f", "Control Room - bench", 294.6f, 160f),
+            [new("465c8c4e-d712-4a0d-8e73-22ae4813e505")] = At("wrecked-ship-3f", "Control Room - north desk", 294.6f, 160f),
+            [new("3e851c14-f5f9-448e-a1ce-a71ee63b7d04")] = At("wrecked-ship-3f", "Sick Bay - southeast desk", 202.33f, 90.67f),
+            [new("1b5bb0d4-21a1-47f7-bc66-27e605101293")] = At("wrecked-ship-3f", "Sick Bay - medicine cabinet", 202.33f, 90.67f),
             [new("54c7a657-2d7e-448d-b767-c04fdf4ec3bc")] = At("main-house-1f", "Pantry - box above hatch", 324f, 209.33f),
             [new("323c9f2e-4660-4650-8f21-4fdecdecace0")] = At("main-house-1f", "Pantry - shelves above hatch", 324f, 209.33f),
             [new("ee1ddf5f-6a3e-4a53-b27d-ca2ac20dbbaa")] = At("main-house-1f", "Kitchen", 229.5f, 219f),

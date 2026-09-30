@@ -1321,7 +1321,9 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
         });
 
         var extraKeyItem = GetChangedPlacements(keyItems)
-            .FirstOrDefault(change => change.Placement.IsExtra && ExpectedRules.ContainsKey(change.AfterId));
+            .FirstOrDefault(change => change.Placement.IsExtra &&
+                !change.Placement.Tags.Contains(KeyItemSupplyLocations.PlacementTag) &&
+                ExpectedRules.ContainsKey(change.AfterId));
 
         Assert.NotNull(extraKeyItem);
         var targetGuid = GetTargetGuid(extraKeyItem!.Placement);

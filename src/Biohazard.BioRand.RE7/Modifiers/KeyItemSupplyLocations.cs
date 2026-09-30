@@ -60,6 +60,31 @@ internal static class KeyItemSupplyLocations {
             new(-42.61093f, -2.43664f, 105.065f), "Outhouse - outdoor sink across Crank bridge",
             [new("chapter3/oldhouse/normal", new("c3ca528d-7208-4bf9-bcaf-79bb5309deda")),
              new("chapter3/oldhouse/hard", new("87487ba4-9748-43c1-b3a6-de3666a67f3c"))]),
+        // Only 4F pickups may carry the Lug Wrench: 2F needs the elevator hatch.
+        new(new("2ba97ef9-e5f3-4a38-a1d9-995339ee0880"), 4, "c04_ship4fbridge",
+            new(74.61298f, 36.58625f, 24.50033f), "Bridge - desk opposite main consoles",
+            [new("chapter4/ship4f/hard", new("2ba97ef9-e5f3-4a38-a1d9-995339ee0880"))]),
+        new(new("03ed4c90-b901-4682-9122-86d0ac85ca14"), 4, "c04_ship4fbridge",
+            new(66.80187f, 35.73818f, 32.79239f), "Bridge - east console",
+            [new("chapter4/ship4f/normal", new("03ed4c90-b901-4682-9122-86d0ac85ca14"))]),
+        // Control Room is accessible after opening the hatch, without Corrosive.
+        new(new("7d20bf5a-f0c7-46a4-a9cb-3708865dd8ff"), 4, "c04_ship3felectricdistributionroom",
+            new(62.78243f, 30.2f, 19.08536f), "Control Room - bench",
+            [new("chapter4/ship3f/normal", new("7d20bf5a-f0c7-46a4-a9cb-3708865dd8ff"))]),
+        new(new("465c8c4e-d712-4a0d-8e73-22ae4813e505"), 4, "c04_ship3felectricdistributionroom",
+            new(57.57818f, 30.21935f, 23.31315f), "Control Room - north desk",
+            [new("chapter4/ship3f/normal", new("465c8c4e-d712-4a0d-8e73-22ae4813e505"))]),
+        // Sick Bay remains behind Corrosive. Its medicine cabinet is unlocked;
+        // these are ordinary loose items, not drawer or corrosive-lock rewards.
+        new(new("3e851c14-f5f9-448e-a1ce-a71ee63b7d04"), 4, "c04_ship3finfirmary",
+            new(69.97965f, 30.21197f, 27.94349f), "Sick Bay - southeast desk",
+            [new("chapter4/ship3f/hard", new("3e851c14-f5f9-448e-a1ce-a71ee63b7d04"))]),
+        new(new("1b5bb0d4-21a1-47f7-bc66-27e605101293"), 4, "c04_ship3finfirmary",
+            new(71.35155f, 30.25129f, 24.12247f), "Sick Bay - unlocked south medicine cabinet",
+            [new("chapter4/ship3f/normal", new("1b5bb0d4-21a1-47f7-bc66-27e605101293")),
+             new("chapter4/ship3f/normal", new("5d4e7340-c74c-4a9c-b7b4-39510f5a0acd")),
+             new("chapter4/ship3f/hard", new("71876897-14cf-495c-b5a6-bdb5adf97f33")),
+             new("chapter4/ship3f/hard", new("c362b520-562d-41a7-aa6d-0a79d38b182f"))]),
     ];
 
     internal static string ScenePath(Location location)

@@ -7,6 +7,12 @@ public partial class RandomizerKeyItemLocationBehaviorTests {
     // Independently transcribed from the physical rooms/puzzles, not from the
     // production route graph. A scene-level classification alone is insufficient.
     private static readonly Dictionary<Guid, string[]> PhysicalPickupRequirements = new() {
+        [new("2ba97ef9-e5f3-4a38-a1d9-995339ee0880")] = ["SerumMaterialA", "SerumMaterialB"], // Bridge desk before elevator hatch
+        [new("03ed4c90-b901-4682-9122-86d0ac85ca14")] = ["SerumMaterialA", "SerumMaterialB"], // Bridge console before elevator hatch
+        [new("7d20bf5a-f0c7-46a4-a9cb-3708865dd8ff")] = ["EvOpener"], // Control Room bench
+        [new("465c8c4e-d712-4a0d-8e73-22ae4813e505")] = ["EvOpener"], // Control Room desk
+        [new("3e851c14-f5f9-448e-a1ce-a71ee63b7d04")] = ["EvOpener", "SpareKey"], // Sick Bay desk
+        [new("1b5bb0d4-21a1-47f7-bc66-27e605101293")] = ["EvOpener", "SpareKey"], // Sick Bay unlocked medicine cabinet
         [new("aa17f690-8061-4e89-8d36-9652c940901b")] = ["SilhouettePazzlePieceOldHouse"], // Dilapidated Room trash bin
         [new("fda3f315-c1c9-484c-a1a2-3ac0158249f6")] = ["SilhouettePazzlePieceOldHouse"], // Crank crawlspace window frames
         [new("9224c905-8e2c-4d6b-8eee-40c26ba468f0")] = ["Crank"], // Outhouse sink
