@@ -1110,8 +1110,10 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
             || c.Placement.Guid == MainHouseRightParlorStimulantGuid
             || c.Placement.Guid == new Guid("5e6490f0-17f6-0ba5-1fdb-5d70e2ac3b2b"));
         Assert.All(changes.Where(c => c.AfterId == "EvOpener"), c => Assert.True(IsShipBeforeLugWrench(c.Placement.SceneFile)));
-        // With no proven alternate carrier in the Processing Area, retain its native puzzle reward.
-        Assert.DoesNotContain(changes, c => c.BeforeId == "WorkroomKey" || c.AfterId == "WorkroomKey");
+        var dissection = Assert.Single(changes, c => c.AfterId == "WorkroomKey");
+        Assert.Contains(KeyItemSupplyLocations.All, location => location.Guid == dissection.Placement.Guid);
+        Assert.Equal(["SilhouettePazzlePiece"], PhysicalPickupRequirements[dissection.Placement.Guid]);
+        AssertPhysicalProgression(result);
     }
 
     [Theory]
