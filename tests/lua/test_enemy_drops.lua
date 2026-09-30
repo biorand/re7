@@ -75,6 +75,20 @@ return function()
     assert(drops:enemy_type(controller, unnamed_enemy) == nil)
     assert(drops:enemy_type(object({}, nil, "app.Em4000ActionController"), unnamed_enemy) == "Em4000")
 
+    configuration["enemy-drop-probability"] = 0
+    configuration["enemy-drop-ammo-only-available-weapons"] = false
+    context.game.enemy_identity = constant("boss-test")
+    for _, boss in ipairs({ "Em2000", "Em3001", "Em3600", "Em8000", "Em8001", "Em8100" }) do
+        assert(drops:probability(boss) == 1)
+        local id, amount = drops:select(enemy, 1, boss)
+        assert(id == "RemedyL" and amount == 1, "Bosses must reward even an empty configured pool")
+    end
+    assert(drops:select(enemy, 1, "Em4000") == nil, "Normal enemies still honor zero drop probability")
+    configuration["enemy-drop-ratio-chemicalm"] = 1
+    assert(drops:select(enemy, 1, "Em3600") == "ChemicalM", "Boss rewards must honor configured weights")
+    configuration["enemy-drop-ratio-chemicalm"] = nil
+    configuration["enemy-drop-probability"] = nil
+
     local fixed_rng = { int = function(_, minimum, maximum)
         assert(minimum == 3 and maximum == 3)
         return minimum

@@ -70,6 +70,7 @@ function EnemyDrops:enemy_type(source, game_object)
 end
 
 function EnemyDrops:probability(enemy_type)
+    if Data.bosses[enemy_type] then return 1 end
     local probability = self.context.config:get("enemy-drop-probability", 0.5)
     local config_id = Data.drop_config_ids[enemy_type]
     if config_id ~= nil then
@@ -163,6 +164,9 @@ function EnemyDrops:select(game_object, generation, enemy_type)
 
     local candidates = self:candidates(rng, Data.bosses[enemy_type] == true)
     if #candidates == 0 then
+        -- A boss kill always pays out, including profiles whose weighted pool
+        -- contains no boss-eligible supplies for the current chapter.
+        if Data.bosses[enemy_type] then return "RemedyL", 1 end
         return nil
     end
     local item_id = rng:weighted(candidates)

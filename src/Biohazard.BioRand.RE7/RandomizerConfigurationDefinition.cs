@@ -521,7 +521,7 @@ internal static class RandomizerConfigurationDefinition {
         group.Items.Add(new GroupItem(){
             Id = $"random-enemy-drops",
             Label = "Enable Enemy Drops",
-            Description = "Allow defeated enemies to drop randomized items through RE Framework.",
+            Description = "Allow defeated enemies to drop randomized items through RE Framework. Bosses always drop a reward; an empty boss reward pool falls back to a strong first aid med.",
             Type = "switch",
             Default = true
         });
@@ -530,7 +530,7 @@ internal static class RandomizerConfigurationDefinition {
             Id = $"enemy-drop-probability",
             Label = "Default Enemy Drop Chance",
             Description =
-                "The fallback probability that a defeated enemy drops an item. Per-enemy probabilities below override this value.",
+                "The fallback probability that a defeated enemy drops an item. Per-enemy probabilities below override this value. Bosses always drop a reward regardless of these probabilities.",
             Type = "percent",
             Min = 0,
             Max = 1,
