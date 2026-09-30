@@ -7,6 +7,11 @@ public partial class RandomizerKeyItemLocationBehaviorTests {
     // Independently transcribed from the physical rooms/puzzles, not from the
     // production route graph. A scene-level classification alone is insufficient.
     private static readonly Dictionary<Guid, string[]> PhysicalPickupRequirements = new() {
+        [new("aa17f690-8061-4e89-8d36-9652c940901b")] = ["SilhouettePazzlePieceOldHouse"], // Dilapidated Room trash bin
+        [new("fda3f315-c1c9-484c-a1a2-3ac0158249f6")] = ["SilhouettePazzlePieceOldHouse"], // Crank crawlspace window frames
+        [new("9224c905-8e2c-4d6b-8eee-40c26ba468f0")] = ["Crank"], // Outhouse sink
+        [new("4f286575-08b7-4e3e-8e03-0e191cd888d7")] = ["Crank"], // Outhouse toilet
+        [new("c3ca528d-7208-4bf9-bcaf-79bb5309deda")] = ["Crank"], // Sink outside Outhouse, beyond raised bridge
         [new("ea6086fa-a847-4dd0-86d0-effd55fade49")] = ["SilhouettePazzlePiece"], // Washroom bathtub
         [new("48cfd500-3c51-44db-aa06-6fdcbfbe40b3")] = ["SilhouettePazzlePiece"], // Washroom bathtub
         [new("3f8bea82-d7c0-4868-babc-f3de7266e2e2")] = ["SilhouettePazzlePiece"], // Washroom shelf

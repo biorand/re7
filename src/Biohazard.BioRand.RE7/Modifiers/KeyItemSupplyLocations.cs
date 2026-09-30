@@ -42,6 +42,24 @@ internal static class KeyItemSupplyLocations {
             new(-19.70368f, -4.279036f, -2.475724f), "Boiler Room - metal trolley",
             [new("chapter3/mainhouse_east/normal", new("f3ce63cd-3db3-4dfa-a9a9-1c4beecf6602")),
              new("chapter3/mainhouse_east/hard", new("e5cd4275-90eb-49a4-9dd2-134ebfcb89b9"))]),
+        // Crank stays beyond the Stone Statuette wall passage. Crow Key stays
+        // on the far side of its Crank bridge, preserving Marguerite's sequence.
+        new(new("aa17f690-8061-4e89-8d36-9652c940901b"), 3, "c03_oldhouse1fhole01",
+            new(-3.400401f, -2.328546f, 87.49411f), "Dilapidated Room - west trash bin",
+            [new("chapter3/oldhouse/normal", new("aa17f690-8061-4e89-8d36-9652c940901b"))]),
+        new(new("fda3f315-c1c9-484c-a1a2-3ac0158249f6"), 3, "c03_oldhouse1funderfloor01",
+            new(1.332273f, -4.568419f, 87.51324f), "Dilapidated Room crawlspace - window frames",
+            [new("chapter3/oldhouse/normal", new("fda3f315-c1c9-484c-a1a2-3ac0158249f6"))]),
+        new(new("9224c905-8e2c-4d6b-8eee-40c26ba468f0"), 3, "c03_oldhouse1fbridgewc01",
+            new(-40.96558f, -1.960753f, 106.2549f), "Outhouse - indoor sink",
+            [new("chapter3/oldhouse/hard", new("9224c905-8e2c-4d6b-8eee-40c26ba468f0"))]),
+        new(new("4f286575-08b7-4e3e-8e03-0e191cd888d7"), 3, "c03_oldhouse1fbridgewc01",
+            new(-42.59233f, -2.495482f, 107.7364f), "Outhouse - toilet basin",
+            [new("chapter3/oldhouse/normal", new("4f286575-08b7-4e3e-8e03-0e191cd888d7"))]),
+        new(new("c3ca528d-7208-4bf9-bcaf-79bb5309deda"), 3, "c03_oldhouse1fbridgewc01",
+            new(-42.61093f, -2.43664f, 105.065f), "Outhouse - outdoor sink across Crank bridge",
+            [new("chapter3/oldhouse/normal", new("c3ca528d-7208-4bf9-bcaf-79bb5309deda")),
+             new("chapter3/oldhouse/hard", new("87487ba4-9748-43c1-b3a6-de3666a67f3c"))]),
     ];
 
     internal static string ScenePath(Location location)

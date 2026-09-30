@@ -79,6 +79,22 @@ public partial class RandomizerKeyItemLocationBehaviorTests {
     }
 
     [Fact]
+    public void KeyItemLocations_OldHouseSupplySitesPreserveStoneAndCrankGates() {
+        var sites = KeyItemSupplyLocations.CreatePlacements().Where(p => p.SceneFile.Contains("c03_oldhouse")).ToArray();
+        var crankSites = sites.Where(p => KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(p, "Crank")).ToArray();
+        var crowSites = sites.Where(p => KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(p, "TalismanKey")).ToArray();
+        Assert.Equal(2, crankSites.Length);
+        Assert.Equal(3, crowSites.Length);
+        Assert.All(crankSites, p => Assert.Equal(["SilhouettePazzlePieceOldHouse"], PhysicalPickupRequirements[p.Guid]));
+        Assert.All(crowSites, p => Assert.Equal(["Crank"], PhysicalPickupRequirements[p.Guid]));
+        Assert.All(sites, p => Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(p, "SilhouettePazzlePieceOldHouse")));
+        using var result = RandomizerTest.RunState(config => config["random-key-item-locations"] = true, 895914);
+        var crow = Assert.Single(GetChangedPlacements(result), change => change.AfterId == "TalismanKey");
+        Assert.Contains(crowSites, placement => placement.Guid == crow.Placement.Guid);
+        AssertPhysicalProgression(result);
+    }
+
+    [Fact]
     public void KeyItemLocations_DissectionKeyHasSeveralSitesBeforeItsLockedDoor() {
         var candidates = KeyItemSupplyLocations.CreatePlacements().Where(placement =>
             KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(placement, "WorkroomKey")).ToArray();
