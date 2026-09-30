@@ -22,19 +22,18 @@ function Context:add(name, feature)
     return feature
 end
 
-function Context:reset()
+function Context:reset(reason)
     for _, feature in pairs(self.features) do
         if feature.reset ~= nil then
-            feature:reset()
+            feature:reset(reason)
         end
     end
 end
 
 function Context:install_session_hooks()
     -- These are game-session boundaries; folderLoad also runs during normal room streaming.
-    for _, signature in ipairs({ "newGameInit()", "loadLevelUsingLoadData()" }) do
-        self.game:hook("app.SaveDataManager", signature, function() self:reset() end)
-    end
+    self.game:hook("app.SaveDataManager", "newGameInit()", function() self:reset("new_game") end)
+    self.game:hook("app.SaveDataManager", "loadLevelUsingLoadData()", function() self:reset("load") end)
 end
 
 function Context:reload_config()

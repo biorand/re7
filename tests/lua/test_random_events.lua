@@ -57,6 +57,38 @@ return function()
     events:install()
     assert(next(game.hooks) == nil, "Weapon hooks must remain absent until a weapon event starts")
 
+    local event_settings = { ["biorand-seed"] = 895914 }
+    local sequence_context = {
+        game = game, log = context.log,
+        config = { get = function(_, key, default)
+            if event_settings[key] ~= nil then return event_settings[key] end
+            return default
+        end },
+    }
+    local sequence = RandomEvents.new(sequence_context)
+    local reference = RandomEvents.new(sequence_context)
+    local first, previous
+    for cycle = 1, 4 do
+        local seen = {}
+        for index = 1, #sequence:candidates() do
+            local kind = sequence:next_kind()
+            first = first or kind
+            assert(kind == reference:next_kind(), "Event order must be reproducible")
+            assert(not seen[kind] and kind ~= previous, "All enabled effects must appear before repeats")
+            seen[kind], previous = true, kind
+            if index == 3 then sequence:reset("load") end
+        end
+    end
+    sequence:reset("new_game")
+    assert(sequence:next_kind() == first, "A new game restarts the seeded sequence")
+    for _, key in ipairs({ "event-player-status-effects", "event-player-blindness", "event-player-freeze",
+        "event-player-scale", "event-weapon-infinite-ammo", "event-weapon-neuro-ammo",
+        "event-weapon-explosive-ammo", "event-enemy-speed", "event-enemy-invisible", "event-enemy-weak",
+        "event-enemy-strong", "event-enemy-paused" }) do event_settings[key] = false end
+    assert(sequence:next_kind() == nil)
+    event_settings["event-player-scale"] = true
+    assert(sequence:next_kind() == "player_scale" and sequence:next_kind() == "player_scale")
+
     assert(events:player() == nil)
     assert(events:passive_manager() == nil)
     events:apply_scale({ scale = 2 })
