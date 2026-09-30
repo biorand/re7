@@ -25,18 +25,14 @@ public class RandomizerKeyItemLocationBehaviorTests : IClassFixture<DefaultRando
             ["PendulumClock"] = new(3, ExpectedScope.AfterGarageBeforeShadowPuzzle),
             ["MorgueKey"] = new(3, ExpectedScope.BeforeShadowPuzzle),
             ["WorkroomKey"] = new(3, ExpectedScope.BeforeDissectionRoom),
-            ["MasterKey"] = new(3, ExpectedScope.AfterLanternBeforeSnakeRooms),
             ["TalismanKey"] = new(3, ExpectedScope.AfterCrankBeforeCrowDoor),
             ["Crank"] = new(3, ExpectedScope.AfterStonePuzzleBeforeCrank),
             ["SilhouettePazzlePieceOldHouse"] = new(3, ExpectedScope.BeforeOldHouseShadowPuzzle),
-            ["SerumMaterialA"] = new(3, ExpectedScope.AfterLanternBeforeSnakeRooms),
-            ["SerumMaterialB"] = new(3, ExpectedScope.BeforeJack3),
             ["EthanCarKey"] = new(3, ExpectedScope.Chapter3Start),
             ["SilhouettePazzlePiece"] = new(3, ExpectedScope.BeforeShadowPuzzle),
             ["EvCable"] = new(4, ExpectedScope.AfterCorrosiveBeforeRepair),
             ["EvOpener"] = new(4, ExpectedScope.BeforeLugWrench),
             ["SpareKey"] = new(4, ExpectedScope.MiaPresentShip),
-            ["SerumTypeE"] = new(4, ExpectedScope.BeforeNecrotoxinUse),
         };
 
     private static readonly HashSet<string> ExpectedPreservedKeyItemIds = new(StringComparer.OrdinalIgnoreCase){
@@ -51,6 +47,10 @@ public class RandomizerKeyItemLocationBehaviorTests : IClassFixture<DefaultRando
         "LucasCardKey2",
         "SerumComplete",
         "Candle_Lighted",
+        "MasterKey",
+        "SerumMaterialA",
+        "SerumMaterialB",
+        "SerumTypeE",
     };
 
     private static readonly IReadOnlyDictionary<string, ExpectedPickupFlag> ExpectedPickupFlags =
@@ -845,7 +845,7 @@ public class RandomizerKeyItemLocationBehaviorTests : IClassFixture<DefaultRando
         Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(monitorRoomExtra, "Battery"));
         Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(monitorRoomExtra, "Candle_Lighted"));
         Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(monitorRoomExtra, "SerumMaterialA"));
-        Assert.True(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(monitorRoomExtra, "SerumMaterialB"));
+        Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(monitorRoomExtra, "SerumMaterialB"));
 
         Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(dSeriesHead, "Battery"));
         Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(dSeriesHead, "Candle_Lighted"));
@@ -865,17 +865,17 @@ public class RandomizerKeyItemLocationBehaviorTests : IClassFixture<DefaultRando
     }
 
     [Fact]
-    public void KeyItemLocations_RemovesCultivationRoomMineDoorsForEarlyNecrotoxinPickup() {
+    public void KeyItemLocations_PreservesCultivationRoomDoorsAndNativeNecrotoxinSequence() {
         using var result = RandomizerTest.RunState(config => { config["random-key-item-locations"] = true; });
 
         var beforeScene = result.ReadBeforeScene(SaltMineCultivationRoomScenePath);
         var afterScene = result.ReadAfterScene(SaltMineCultivationRoomScenePath);
         foreach (var doorGuid in CultivationRoomDoorGuids) {
             Assert.NotNull(beforeScene.FindGameObject(doorGuid));
-            Assert.Null(afterScene.FindGameObject(doorGuid));
+            Assert.NotNull(afterScene.FindGameObject(doorGuid));
         }
 
-        Assert.Contains("Cultivation room mine doors removed:", result.ProcessLog);
+        Assert.DoesNotContain("Cultivation room mine doors removed:", result.ProcessLog);
     }
 
     [Fact]
@@ -897,7 +897,7 @@ public class RandomizerKeyItemLocationBehaviorTests : IClassFixture<DefaultRando
             Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(snakeKeyBody, "Lantern"));
             Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(snakeKeyBody, "LucasCardKey"));
             Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(snakeKeyBody, "LucasCardKey2"));
-            Assert.True(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(snakeKeyBody, "Battery"));
+            Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(snakeKeyBody, "Battery"));
             Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(snakeKeyBody, "SerumMaterialA"));
             Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(snakeKeyBody, "SerumMaterialB"));
         }
@@ -950,10 +950,10 @@ public class RandomizerKeyItemLocationBehaviorTests : IClassFixture<DefaultRando
         Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(greenhouseStairs, "SerumMaterialA"));
 
         Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(dSeriesArmAltar, "Lantern"));
-        Assert.True(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(dSeriesArmAltar, "MasterKey"));
+        Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(dSeriesArmAltar, "MasterKey"));
         Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(dSeriesArmAltar, "SerumMaterialA"));
         Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(oldHouseStudyExtra, "Lantern"));
-        Assert.True(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(oldHouseStudyExtra, "SerumMaterialA"));
+        Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(oldHouseStudyExtra, "SerumMaterialA"));
     }
 
     [Fact]

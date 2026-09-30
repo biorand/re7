@@ -19,7 +19,6 @@ internal class KeyItemLocationModifier : Modifier {
     private const string RandomizerKey = "modifier/key-item-locations";
     private const string TemplateInstanceKey = $"{RandomizerKey}/template-instances";
     private const string ExtraKeyItemCarrierTemplateId = "HandgunBullet";
-    private const string CultivationRoomScenePath = "natives/stm/environment/scene/chapter4/c04_cavepassage05.scn.20";
 
     internal const string OldHouseLevelFsmScenePath =
         "natives/stm/leveldesign/fsm/chapter3/chapter3_3/levelfsm_c03_3.scn.20";
@@ -47,7 +46,7 @@ internal class KeyItemLocationModifier : Modifier {
 
     private const uint OldHouseShadowPuzzleProgressionPassThroughFireplaceActionUid = 0xB107A200;
 
-    private static readonly HashSet<string> _preservedVanillaKeyItemIds = new(StringComparer.OrdinalIgnoreCase) // TODO
+    private static readonly HashSet<string> _preservedVanillaKeyItemIds = new(StringComparer.OrdinalIgnoreCase)
     {
         "ChainCutter",
         "EntranceHallKey",
@@ -60,6 +59,12 @@ internal class KeyItemLocationModifier : Modifier {
         "LucasCardKey2",
         "SerumComplete",
         "Candle_Lighted",
+        // These rewards advance scripted story branches, including regional body
+        // variants and the mine laboratory sequence. Keep their native events intact.
+        "MasterKey",
+        "SerumMaterialA",
+        "SerumMaterialB",
+        "SerumTypeE",
     };
 
     private static readonly ItemDefinitionRepository _itemDefinitions = ItemDefinitionRepository.Default;
@@ -203,13 +208,6 @@ internal class KeyItemLocationModifier : Modifier {
     private static readonly Guid _oldHouseCrowKeyGuid = new("8b940901-8893-4091-a4ac-5a16b3de3a11");
     private static readonly Guid _lucasPuzzleCandleGuid = new("05606c7e-3669-497e-8196-561faefb95e5");
 
-    private static readonly Guid[] _cultivationRoomDoorGuids =[
-        new("3f4ca9a0-b4ff-432b-8784-1403fd1b687f"),
-        new("55adadba-98ee-4086-bce7-3610a3bd9ecb"),
-        new("03b4daed-2766-435e-96cb-1b4857b71f0a"),
-        new("d7f7420e-e505-4772-a973-0342b1d58a85"),
-    ];
-
     private static readonly HashSet<Guid> _snakeKeyRewardGuids =[
         new("96da0bd0-1a8b-4c35-bc02-695da693e8d4"),
         new("24512acb-965b-462c-941e-375f9d62bd5e"),
@@ -281,7 +279,6 @@ internal class KeyItemLocationModifier : Modifier {
         var itemRandomizer = randomizer.ItemRandomizer;
         var randomItemSettings = randomizer.StaticItemRandomizationService.RandomItemSettings;
         var preserveItemModels = randomizer.GetConfigOption<bool>("preserve-item-models");
-        RemoveCultivationRoomMineDoors(randomizer, logger);
         AddOldHouseShadowPuzzleProgressionTrigger(randomizer, logger);
         var availableTargets = GetEligibleTargetPlacements(randomizer, itemPlacementService)
             .OrderBy(target => target.Placement.SceneFile, StringComparer.OrdinalIgnoreCase)
@@ -372,25 +369,6 @@ internal class KeyItemLocationModifier : Modifier {
             });
             logger.Pop();
         }
-    }
-
-    private static void RemoveCultivationRoomMineDoors(Randomizer randomizer, RandomizerLogger logger) {
-        var removed = 0;
-        var doorGuids = _cultivationRoomDoorGuids.ToHashSet();
-        randomizer.FileRepository.ModifyScnFile(CultivationRoomScenePath, scene => {
-            foreach (var doorGuid in doorGuids) {
-                if (scene.FindGameObject(doorGuid) == null)
-                    continue;
-
-                scene = scene.RemoveGameObject(doorGuid);
-                removed++;
-            }
-
-            return scene;
-        });
-
-        logger.LogLine(
-            $"Cultivation room mine doors removed: {removed} in {FormatScenePath(CultivationRoomScenePath)}.");
     }
 
     private static void AddOldHouseShadowPuzzleProgressionTrigger(Randomizer randomizer, RandomizerLogger logger) {
