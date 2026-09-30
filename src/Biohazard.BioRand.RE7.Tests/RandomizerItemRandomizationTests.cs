@@ -306,6 +306,9 @@ public class RandomizerItemRandomizationTests {
         Assert.Equal(1, afterItem.ItemStackNum);
         Assert.NotNull(afterGameObject);
         Assert.NotNull(afterGameObject!.FindComponent("via.render.Mesh"));
+        Assert.True(BirthdaySkillVisuals.TryGetResources(afterItem.ItemDataID, out var visuals));
+        Assert.Equal(visuals.Mesh, GetVisualResource(afterGameObject, "Mesh"));
+        Assert.Equal(visuals.Material, GetVisualResource(afterGameObject, "Material"));
     }
 
     [Fact]

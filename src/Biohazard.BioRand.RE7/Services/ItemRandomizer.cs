@@ -187,18 +187,7 @@ internal class ItemRandomizer {
     }
 
     public string GetItemTemplateIdForDrop(string itemDataId, Rng rng, RandomItemSettings settings) {
-        if (!ItemDrops.IsBirthdaySkill(itemDataId)) {
-            return itemDataId;
-        }
-
-        var visibleTemplateCandidates = ItemDrops.GenericDrops
-            .Where(id => settings.GetItemRatio(id) > 0)
-            .Where(id => id != itemDataId)
-            .ToArray();
-
-        return visibleTemplateCandidates.Length == 0
-            ? ItemDrops.BirthdaySkillVisualTemplateFallback
-            : rng.Next(visibleTemplateCandidates);
+        return itemDataId;
     }
 
     public IReadOnlyList<ValuableDrop> GetValuableDrops(Rng rng, string configPrefix) {

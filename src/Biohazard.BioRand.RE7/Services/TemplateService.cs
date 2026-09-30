@@ -1,5 +1,6 @@
 ﻿using Biohazard.BioRand.RE7.Serialization;
 using IntelOrca.Biohazard.REE.Rsz;
+using Biohazard.BioRand.RE7.Items;
 
 namespace Biohazard.BioRand.RE7.Services;
 
@@ -8,9 +9,11 @@ internal class TemplateService {
     private const string EnemyFsmGeneratorTemplateName = "FsmGenerator";
     private readonly ScnFile _templateScnFile;
     private readonly RszScene _scene;
+    private readonly Randomizer _randomizer;
     private readonly Dictionary<string, RszGameObject> _itemTemplates = new();
 
     public TemplateService(Randomizer randomizer) {
+        _randomizer = randomizer;
         _templateScnFile = new(
             FileVersions.SceneFileVersion,
             EmbeddedData.GetFile($"{TemplateSceneFileName}.{FileVersions.SceneFileVersion}")
@@ -47,6 +50,15 @@ internal class TemplateService {
 
     // TODO: DLC item support
     public RszGameObject GetItemTemplate(string id) {
+        if (!_itemTemplates.ContainsKey(id) && BirthdaySkillVisuals.TryGetResources(id, out var resources)) {
+            BirthdaySkillVisuals.CopyRequiredFiles(_randomizer.FileRepository, id);
+            var template = GetItemTemplate("Coin");
+            var mesh = template.FindComponent("via.render.Mesh")!
+                .Set("Mesh", new RszResourceNode(resources.Mesh))
+                .Set("Material", new RszResourceNode(resources.Material));
+            var item = template.FindComponent("app.Item")!.Set("ItemDataID", id);
+            _itemTemplates.Add(id, template.AddOrUpdateComponent(mesh).AddOrUpdateComponent(item));
+        }
         _itemTemplates.TryGetValue(id, out RszGameObject? result);
         return result ?? throw new Exception($"Item template {id} not found in template scene!");
     }
