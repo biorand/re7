@@ -27,6 +27,12 @@ internal static class BalancedEnemyPoolSelector {
     }
 
     private static int GetEnemyStrength(IEnemyDefinition enemy) {
+        // Encounter availability is distinct from health. Elder Eveline is an
+        // invulnerable hazard, while fat Molded are suitable once Ethan reaches
+        // the Main House. Neither belongs in the poorly equipped Guest House.
+        if (enemy.Id is "MoldedFat" or "EvelineElderly")
+            return 3_000;
+
         if (enemy.BaseHealth == int.MaxValue)
             return int.MaxValue;
 
