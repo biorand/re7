@@ -237,4 +237,17 @@ return function()
         end }
     end
     assert(static_mia:suppress(mia_controller, mia) and deactivated)
+
+    static_mia:reset()
+    deactivated = false
+    local mia_action = object({ get_GameObject = constant(mia) }, { SpawnerGuid = guid, ActualUsingGuid = empty_guid })
+    static_mia:install()
+    drops:death(mia_action, mia_action)
+    local update_mia = hooks["app.Em2000.Em2000ActionController:doUpdate()"]
+    assert(update_mia({ nil, mia_action }) == nil and not deactivated,
+        "Lethal damage must allow Mia's native death animation to update")
+    drops:death(mia_action, mia_action)
+    assert(not deactivated, "Duplicate death notifications must not hide the dying actor")
+    hooks["app.EnemyActionController:finishDead(System.Boolean, System.Boolean)"]({ nil, mia_action })
+    assert(update_mia({ nil, mia_action }) == sdk.PreHookResult.SKIP_ORIGINAL and deactivated)
 end

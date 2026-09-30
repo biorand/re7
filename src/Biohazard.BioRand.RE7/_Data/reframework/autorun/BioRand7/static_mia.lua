@@ -14,7 +14,7 @@ local function round(value)
 end
 
 function StaticMia.new(context)
-    return setmetatable({ context = context, killed = {}, suppressed = {} }, StaticMia)
+    return setmetatable({ context = context, killed = {}, suppressed = {}, dying = {} }, StaticMia)
 end
 
 function StaticMia:is_static(game_object)
@@ -103,6 +103,16 @@ function StaticMia:suppress(controller, game_object)
     return true
 end
 
+function StaticMia:begin_death(controller, game_object)
+    if self:remember(controller, game_object) then
+        self.dying[self.context.game:address(game_object)] = true
+    end
+end
+
+function StaticMia:finish_death(game_object)
+    if game_object ~= nil then self.dying[self.context.game:address(game_object)] = nil end
+end
+
 function StaticMia:install()
     local game = self.context.game
     local function suppress(args)
@@ -114,7 +124,15 @@ function StaticMia:install()
     end
     game:hook("app.Em2000.Em2000ActionController", "reactivate()", suppress)
     game:hook("app.Em2000.Em2000ActionController", "doStart()", suppress)
-    game:hook("app.Em2000.Em2000ActionController", "doUpdate()", suppress)
+    game:hook("app.Em2000.Em2000ActionController", "doUpdate()", function(args)
+        if next(self.killed) == nil then return end
+        local controller = game:object(args[2])
+        local game_object = self:controller_game_object(controller)
+        -- Keep the native death animation running. Reactivation and loading a
+        -- dead save still suppress immediately so she cannot fight again.
+        if self.dying[game:address(game_object)] then return end
+        return suppress(args)
+    end)
     game:hook("app.Em2000Order", "loadData(app.EnemyStatus.EnemySaveDataClass)", function(args)
         self:restore(game:object(args[2]), game:object(args[3]))
     end)
@@ -133,6 +151,7 @@ end
 function StaticMia:reset()
     self.killed = {}
     self.suppressed = {}
+    self.dying = {}
 end
 
 return StaticMia
