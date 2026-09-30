@@ -293,6 +293,8 @@ internal class KeyItemLocationModifier : Modifier {
         var replacementPlanSet = CreateKeyItemReplacementPlans(logger, rng, availableTargets);
         if (replacementPlanSet == null)
             return;
+        KeyItemSupplyLocations.RemoveOverlappingSupplies(randomizer,
+            replacementPlanSet.Assignments.Select(assignment => assignment.Target.TargetGuid));
         AddKeyItemHintsOutput(randomizer, replacementPlanSet);
         var replacementPlans = replacementPlanSet.Plans;
         var acquisitionFlagsByItemId = GetAcquisitionFlagsByItemId(

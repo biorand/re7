@@ -261,7 +261,7 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
     }
 
     [Fact]
-    public void KeyItemLocations_BoundedSearchRegressionSeedKeepsSafePartialRouteWhenHatchKeyIsVanilla() {
+    public void KeyItemLocations_BoundedSearchRegressionSeedUsesNewSafeHatchLocations() {
         using var result = RandomizerTest.RunState(config => { config["random-key-item-locations"] = true; }, seed: 16);
 
         var randomizedKeyItems = GetChangedPlacements(result)
@@ -270,13 +270,13 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         Assert.NotEmpty(randomizedKeyItems);
-        Assert.DoesNotContain("FloorDoorKey", randomizedKeyItems);
+        Assert.Contains("FloorDoorKey", randomizedKeyItems);
         Assert.DoesNotContain("Skipped full key item route", result.ProcessLog);
-        Assert.Contains("Skipped key item Hatch Key: no route-safe candidate placement was found.", result.ProcessLog);
+        AssertPhysicalProgression(result);
     }
 
     [Fact]
-    public void KeyItemLocations_PreservesVanillaHatchKeyWhenNoRouteSafeTargetForSoftlockSeed() {
+    public void KeyItemLocations_SoftlockSeedUsesAReviewedLocationBeforeTheHatch() {
         using var result = RandomizerTest.RunState(config => {
             config["random-key-item-locations"] = true;
             config["random-items"] = true;
@@ -286,14 +286,9 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
             config["additional-wooden-crates"] = true;
         }, seed: 736361);
 
-        var change = GetChangedPlacements(result).SingleOrDefault(changed =>
-            changed.Placement.Guid == MainHouseHatchKeyGuid &&
-            changed.Placement.SceneFile.Equals(MainHouseWestItemSetScenePath, StringComparison.OrdinalIgnoreCase));
-        var hatchKey = GetItem(result.ReadAfterScene(MainHouseWestItemSetScenePath), MainHouseHatchKeyGuid);
-
-        Assert.Null(change);
-        Assert.Equal("FloorDoorKey", hatchKey.ItemDataID);
-        Assert.Contains("Skipped key item Hatch Key: no route-safe candidate placement was found.", result.ProcessLog);
+        var change = Assert.Single(GetChangedPlacements(result), changed => changed.AfterId == "FloorDoorKey");
+        Assert.Empty(PhysicalPickupRequirements[GetTargetGuid(change.Placement)]);
+        AssertPhysicalProgression(result);
     }
 
     [Fact]
@@ -433,14 +428,12 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
         var randomizedKeyItems = GetChangedPlacements(result)
             .Where(change => ExpectedRules.ContainsKey(change.AfterId))
             .ToDictionary(change => change.AfterId, StringComparer.OrdinalIgnoreCase);
-        var hatchKey = GetItem(result.ReadAfterScene(MainHouseWestItemSetScenePath), MainHouseHatchKeyGuid);
         var oxStatuette = GetItem(result.ReadAfterScene(MainHouseGarageScenePath), MainHouseGarageOxStatuetteGuid);
 
-        Assert.False(randomizedKeyItems.ContainsKey("FloorDoorKey"));
-        Assert.Equal("FloorDoorKey", hatchKey.ItemDataID);
+        Assert.Empty(PhysicalPickupRequirements[GetTargetGuid(randomizedKeyItems["FloorDoorKey"].Placement)]);
         Assert.Equal("EntranceHallKey", oxStatuette.ItemDataID);
-        Assert.Contains("Skipped key item Hatch Key: no route-safe candidate placement was found.", result.ProcessLog);
         Assert.DoesNotContain("Ox Statuette ->", result.ProcessLog);
+        AssertPhysicalProgression(result);
     }
 
     [Fact]

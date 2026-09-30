@@ -31,6 +31,8 @@ internal static class KeyItemCarrierSafety {
     };
 
     public static bool IsReviewed(ItemPlacement placement) {
+        if (KeyItemSupplyLocations.IsReviewed(placement))
+            return true;
         var guid = placement.IsExtra ? ExtraPlacementModifier.GetGeneratedItemGuid(placement) : placement.Guid;
         return Carriers.TryGetValue(guid, out var carrier) &&
                carrier.Extra == placement.IsExtra &&

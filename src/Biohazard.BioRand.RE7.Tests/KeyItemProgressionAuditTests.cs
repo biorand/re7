@@ -7,6 +7,9 @@ public partial class RandomizerKeyItemLocationBehaviorTests {
     // Independently transcribed from the physical rooms/puzzles, not from the
     // production route graph. A scene-level classification alone is insufficient.
     private static readonly Dictionary<Guid, string[]> PhysicalPickupRequirements = new() {
+        [new("54c7a657-2d7e-448d-b767-c04fdf4ec3bc")] = [], // Pantry, on box above hatch
+        [new("323c9f2e-4660-4650-8f21-4fdecdecace0")] = [], // Pantry, open shelves above hatch
+        [new("ee1ddf5f-6a3e-4a53-b27d-ca2ac20dbbaa")] = [], // Kitchen bin, opposite fridge
         [new("665a86ed-7e9c-4b56-a889-4377fa1d3f47")] = [], // West hallway, hatch key table
         [new("d87bf384-39f3-d2ee-41e9-2f2124140a37")] = ["FloorDoorKey"], // Below pantry hatch
         [new("401dbfaa-3469-0702-1c9a-d74a7d185216")] = ["EntranceHallKey"], // Recreation-room book
