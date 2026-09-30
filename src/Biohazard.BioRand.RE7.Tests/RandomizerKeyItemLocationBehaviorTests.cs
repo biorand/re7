@@ -9,7 +9,7 @@ using System.Text;
 namespace Biohazard.BioRand.RE7.Tests;
 
 [Trait("Category", "RequiresPak")]
-public class RandomizerKeyItemLocationBehaviorTests : IClassFixture<DefaultRandomizerRunFixture> {
+public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<DefaultRandomizerRunFixture> {
     private readonly DefaultRandomizerRunFixture _defaultRun;
 
     public RandomizerKeyItemLocationBehaviorTests(DefaultRandomizerRunFixture defaultRun) {

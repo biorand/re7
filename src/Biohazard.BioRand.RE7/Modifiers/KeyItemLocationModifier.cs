@@ -487,7 +487,8 @@ internal class KeyItemLocationModifier : Modifier {
                 || !placement.Enabled
                 || placement.Difficulty != null
                 || placement.Tags.Contains(ItemPlacement.ExcludeTag)
-                || _birdCageGuids.Contains(placement.Guid)) {
+                || _birdCageGuids.Contains(placement.Guid)
+                || !KeyItemCarrierSafety.IsReviewed(placement)) {
                 continue;
             }
 
