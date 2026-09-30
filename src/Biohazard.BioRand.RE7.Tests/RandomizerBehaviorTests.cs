@@ -128,6 +128,25 @@ public class RandomizerBehaviorTests {
     }
 
     [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    public void ItemStackModifier_LegacyProfileCannotReduceProgressionItemStacks(int stackLimit) {
+        var corrosive = ItemDefinitionRepository.Default.FromId("SpareKey")!;
+        var fuse = ItemDefinitionRepository.Default.FromId("FuseCh4")!;
+        var path = $"{"prefab/item".Of()}/{corrosive.SourceUserFile}";
+        using var result = RandomizerTest.RunState(config => {
+            config[corrosive.StackLimitConfigId] = stackLimit;
+            config[fuse.StackLimitConfigId] = stackLimit;
+        });
+        var before = result.ReadBeforeUserFile<app.ItemSettings>(path);
+        var after = result.ReadAfterUserFile<app.ItemSettings>(path);
+        foreach (var id in new[] { "SpareKey", "FuseCh4" }) {
+            Assert.Equal(before._Settings.Single(item => item.ItemDataID == id).MaxStackNum,
+                after._Settings.Single(item => item.ItemDataID == id).MaxStackNum);
+        }
+    }
+
+    [Theory]
     [InlineData(true, 0)]
     [InlineData(false, 1)]
     public void WeaponSoftlockPatch_RespectsKeepBasementChainsaw(bool keep, int expectedReduction) {

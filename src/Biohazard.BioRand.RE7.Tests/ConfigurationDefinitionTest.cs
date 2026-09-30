@@ -115,6 +115,8 @@ public class ConfigurationDefinitionTest {
         Assert.DoesNotContain(itemDefinitions.FromId("Handgun_G17")!.StackLimitConfigId, ids);
         Assert.DoesNotContain(itemDefinitions.FromId("BackDoorKey")!.StackLimitConfigId, ids);
         Assert.DoesNotContain(itemDefinitions.FromId("PendulumClock")!.StackLimitConfigId, ids);
+        Assert.DoesNotContain(itemDefinitions.FromId("SpareKey")!.StackLimitConfigId, ids);
+        Assert.DoesNotContain(itemDefinitions.FromId("FuseCh4")!.StackLimitConfigId, ids);
         Assert.DoesNotContain(itemDefinitions.FromId("EvelynRadar")!.StackLimitConfigId, ids);
         Assert.DoesNotContain(itemDefinitions.FromId("EvelynRadar2")!.StackLimitConfigId, ids);
         Assert.DoesNotContain(itemDefinitions.FromId("EvelynRadar3")!.StackLimitConfigId, ids);
