@@ -184,8 +184,15 @@ internal class KeyItemLocationModifier : Modifier {
     private const int LucasBeforePuzzleCarryMasks = BatteryMask | DSeriesHeadMask | CandleMask;
     private const int LucasAfterPuzzleCarryMasks = DSeriesHeadMask;
     private const int ShipBeforeWrenchMasks = ShipFuseMask | LugWrenchMask | CorrosiveMask;
-    private const int ShipAfterWrenchMasks = ShipFuseMask | LugWrenchMask | CorrosiveMask;
-    private const int ShipAfterCorrosiveMasks = PowerCableMask | ShipFuseMask | LugWrenchMask;
+    private const int ShipAfterWrenchMasks = ShipFuseMask | CorrosiveMask;
+    private const int ShipAfterCorrosiveMasks = PowerCableMask | ShipFuseMask;
+    // These rewards have photo/FSM prerequisites that are not represented by their room.
+    // Never use them as progression carriers, even after ordinary item randomization.
+    private static readonly HashSet<Guid> _treasureRewardGuids = [
+        new("b1548f47-609a-0190-3976-50b2aeafd6b6"), // Fireplace
+        new("abb03a3a-a10b-4dca-9385-6274ca2e004a"), // Trailer toilet
+        new("5e6490f0-17f6-0ba5-1fdb-5d70e2ac3b2b"), // Testing Area mannequin
+    ];
     private static readonly Guid _mainHouseWestBlueDogHeadGuid = new("401dbfaa-3469-0702-1c9a-d74a7d185216");
     private static readonly Guid _mainHouseWestBlueKeycardGuid = new("896dd0bb-f3ee-41bf-b4a0-0b28e99da94c");
     private static readonly Guid _mainHouseClockRewardGuid = new("0da28012-ad6a-0da5-1f0a-cacd2c677ed3");
@@ -1565,7 +1572,7 @@ internal class KeyItemLocationModifier : Modifier {
             NoReturn(_guestHouseAttic, _mainHouseBeforeHatch);
             Door(_mainHouseBeforeHatch, _mainHouseBeforeGarage, RouteKeys("FloorDoorKey"));
             Door(_mainHouseBeforeGarage, _garage, RouteKeys("EthanCarKey"));
-            Door(_mainHouseBeforeGarage, _scorpionRooms, RouteKeys("MorgueKey"));
+            Door(_mainHouseBeforeShadowPuzzle, _scorpionRooms, RouteKeys("MorgueKey"));
             Door(_garage, _mainHouseBeforeShadowPuzzle, RouteKeys("EntranceHallKey"));
             Door(_mainHouseBeforeShadowPuzzle, _mainHouseClockReward, RouteKeys("PendulumClock"));
             Door(_mainHouseBeforeShadowPuzzle, _mainHouseEast, RouteKeys("SilhouettePazzlePiece"));
@@ -1582,7 +1589,7 @@ internal class KeyItemLocationModifier : Modifier {
             Door(_barn, _lucasPuzzle, RouteKeys("Battery"));
             Door(_lucasPuzzle, _boatHouse, RouteKeys("Candle_Lighted"));
             NoReturn(_boatHouse, _ship, RouteKeys("SerumComplete", "SerumMaterialA", "SerumMaterialB"));
-            Door(_ship, _shipAfterLugWrench);
+            Door(_ship, _shipAfterLugWrench, RouteKeys("EvOpener"));
             Door(_shipAfterLugWrench, _shipAfterCorrosive, RouteKeys("SpareKey"));
             Door(_shipAfterCorrosive, _shipExit, RouteKeys("EvCable", "EvOpener", "FuseCh4"));
             NoReturn(_shipExit, _saltMine);
@@ -1927,6 +1934,9 @@ internal class KeyItemLocationModifier : Modifier {
                     return new(_testingArea, LucasBeforePuzzleCarryMasks, "Testing Area before barn");
                 if (IsMainHouseKeycardSetup(placement))
                     return new(_snakeRooms, KeycardSetupCarryMasks, "Main House snake-key rooms and keycard setup");
+                if (PathContains(path, "c03_mainhouse2fgrandma"))
+                    return new(_scorpionRooms, MainHouseCarryMasks | StoneStatuetteMask | DSeriesHeadMask,
+                        "Main House scorpion-key rooms");
                 if (IsSnakeKeyRewardTarget(placement))
                     return new(_oldHouseAfterLantern, SnakeKeyRewardCarryMasks,
                         "Old House cleared / Main House basement police body");
@@ -2010,7 +2020,8 @@ internal class KeyItemLocationModifier : Modifier {
         }
 
         private static bool IsUnsafeKeyItemTarget(ItemPlacement placement)
-            => (placement.Guid == _jack2RedDogHeadGuid
+            => _treasureRewardGuids.Contains(placement.Guid)
+               || (placement.Guid == _jack2RedDogHeadGuid
                 && PathContains(placement.SceneFile, "c03_rightareab1ffreezer"))
                || (placement.Guid == _lucasPuzzleCandleGuid
                    && PathContains(placement.SceneFile, "c03_leftarea1fpuzzleroom1"))
