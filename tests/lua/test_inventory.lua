@@ -132,6 +132,8 @@ return function()
     assert(unlocked.after(256) == 256, "Disabled recipe unlocks must retain the game's result")
     settings["recipes-add-new"] = true
     settings["recipes-unlock-from-start"] = true
+    hooks["app.InventoryMenu.DictionaryCombineUIController:setup()"].before()
+    assert(static_fields.RowNum == 5, "The first combine menu must initialize all rows before binding icons")
     hooks["app.InventoryMenu.DictionaryCombineUIController:deactivate()"].before()
     assert(static_fields.RowNum == 5)
     assert(unlocked.after(256) == 1)

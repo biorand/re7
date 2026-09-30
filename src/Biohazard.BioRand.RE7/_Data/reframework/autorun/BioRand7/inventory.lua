@@ -122,13 +122,17 @@ end
 
 function Inventory:install_combine_hooks()
     local game = self.context.game
-    game:hook("app.InventoryMenu.DictionaryCombineUIController", "deactivate()", function()
+    local function configure_rows()
         if not self.context.config:get("recipes-add-new", false) then return end
         local type_name = "app.InventoryMenu.DictionaryCombineUIController"
         if game:static_field(type_name, "RowNum") ~= MAX_COMBINE_ROWS then
             game:set_static_field(type_name, "RowNum", MAX_COMBINE_ROWS)
         end
-    end)
+    end
+    -- Configure the first menu setup too: a Main House start bypasses the
+    -- Guest House inventory, so it must not depend on an earlier deactivate.
+    game:hook("app.InventoryMenu.DictionaryCombineUIController", "setup()", configure_rows)
+    game:hook("app.InventoryMenu.DictionaryCombineUIController", "deactivate()", configure_rows)
 
     game:hook("app.InventoryMenu", "DictionaryCombine_UnlockedCombine(app.ItemCombineData.Data)", nil,
         function(retval)
