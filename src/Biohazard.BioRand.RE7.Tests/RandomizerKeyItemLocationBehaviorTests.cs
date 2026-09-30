@@ -840,7 +840,7 @@ public class RandomizerKeyItemLocationBehaviorTests : IClassFixture<DefaultRando
         Assert.True(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(barnPlacement, "Battery"));
         Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(barnPlacement, "Candle_Lighted"));
         Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(barnPlacement, "SerumMaterialA"));
-        Assert.True(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(barnPlacement, "SerumMaterialB"));
+        Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(barnPlacement, "SerumMaterialB"));
 
         Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(monitorRoomExtra, "Battery"));
         Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(monitorRoomExtra, "Candle_Lighted"));
@@ -899,7 +899,7 @@ public class RandomizerKeyItemLocationBehaviorTests : IClassFixture<DefaultRando
             Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(snakeKeyBody, "LucasCardKey2"));
             Assert.True(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(snakeKeyBody, "Battery"));
             Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(snakeKeyBody, "SerumMaterialA"));
-            Assert.True(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(snakeKeyBody, "SerumMaterialB"));
+            Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(snakeKeyBody, "SerumMaterialB"));
         }
     }
 
@@ -963,6 +963,7 @@ public class RandomizerKeyItemLocationBehaviorTests : IClassFixture<DefaultRando
             (ItemId: "Crank", Scope: ExpectedScope.AfterStonePuzzleBeforeCrank),
             (ItemId: "TalismanKey", Scope: ExpectedScope.AfterCrankBeforeCrowDoor),
             (ItemId: "EvCable", Scope: ExpectedScope.AfterCorrosiveBeforeRepair),
+            (ItemId: "SerumMaterialB", Scope: ExpectedScope.BeforeJack3),
         };
 
         foreach (var contract in contracts) {
@@ -1646,8 +1647,7 @@ public class RandomizerKeyItemLocationBehaviorTests : IClassFixture<DefaultRando
                                              || IsMainHouseSnakeKeyRoom(placement.SceneFile)
                                              || IsTestingArea(placement.SceneFile)
                                              || IsTestingAreaBeforeBarnFight(placement.SceneFile),
-            ExpectedScope.BeforeJack3 => IsMainHouseBeforeGarage(placement.SceneFile)
-                                         || ScopeMatches(ExpectedScope.BeforeBoatHouse, placement)
+            ExpectedScope.BeforeJack3 => IsTestingAreaAfterLucasPuzzle(placement.SceneFile)
                                          || IsBoatHouseRoute(placement.SceneFile),
             ExpectedScope.BoatHouse => IsBoatHouseRoute(placement.SceneFile),
             ExpectedScope.MiaPresentShip => IsMiaPresentShipRoute(placement.SceneFile),

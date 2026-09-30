@@ -242,7 +242,10 @@ internal class KeyItemLocationModifier : Modifier {
         new("Lantern", 3, LanternMask),
         new("LucasCardKey", 3, BlueKeycardMask), // Blue Keycard
         new("LucasCardKey2", 3, RedKeycardMask), // Red Keycard
-        new("SerumMaterialB", 3, DSeriesHeadMask), // D-Series Head
+        // Its acquisition flag completes the Lucas/keycard objective branches.
+        // Do not let an early pickup advance them before the puzzle-door event.
+        new("SerumMaterialB", 3, DSeriesHeadMask,
+            EarliestSafePhase: KeyItemRoutePhase.LucasPuzzle), // D-Series Head
         new("SerumComplete", 3, SerumMask, Count: 2), // Serum
         new("Candle_Lighted", 3, CandleMask, Priority: 20), // Candle
         new("EvCable", 4, PowerCableMask,
@@ -2039,6 +2042,7 @@ internal class KeyItemLocationModifier : Modifier {
         OldHouseAfterStonePuzzle = 11,
         OldHouseAfterCrank = 12,
         OldHouseAfterLantern = 14,
+        LucasPuzzle = 18,
         ShipAfterCorrosive = 22,
     }
 
