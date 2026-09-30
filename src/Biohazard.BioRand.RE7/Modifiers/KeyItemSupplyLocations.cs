@@ -26,6 +26,22 @@ internal static class KeyItemSupplyLocations {
         new(new("ee1ddf5f-6a3e-4a53-b27d-ca2ac20dbbaa"), 3, "c03_mainhouse1fldk",
             new(21.11776f, 0.5390167f, 6.891929f), "Kitchen - bin opposite fridge",
             [new("chapter3/mainhouse_west/normal", new("ee1ddf5f-6a3e-4a53-b27d-ca2ac20dbbaa"))]),
+        // Both bathtubs and the shelf are on the unlocked Washroom route. The
+        // Boiler Room trolley is also before the locked Dissection Room door.
+        new(new("ea6086fa-a847-4dd0-86d0-effd55fade49"), 3, "c03_rightareab1fmoldedcreationroom",
+            new(-33.03138f, -5.802011f, 6.169001f), "Washroom - northeast bathtub",
+            [new("chapter3/mainhouse_east/normal", new("ea6086fa-a847-4dd0-86d0-effd55fade49")),
+             new("chapter3/mainhouse_east/hard", new("dafbb82e-9755-4985-88fe-c9fded7ede80"))]),
+        new(new("48cfd500-3c51-44db-aa06-6fdcbfbe40b3"), 3, "c03_rightareab1fmoldedcreationroom",
+            new(-33.32859f, -5.752736f, -3.624534f), "Washroom - southeast bathtub",
+            [new("chapter3/mainhouse_east/normal", new("48cfd500-3c51-44db-aa06-6fdcbfbe40b3"))]),
+        new(new("3f8bea82-d7c0-4868-babc-f3de7266e2e2"), 3, "c03_rightareab1fmoldedcreationroom",
+            new(-24.82907f, -4.166566f, -3.427066f), "Washroom - metal shelf by southwest door",
+            [new("chapter3/mainhouse_east/normal", new("3f8bea82-d7c0-4868-babc-f3de7266e2e2"))]),
+        new(new("f3ce63cd-3db3-4dfa-a9a9-1c4beecf6602"), 3, "c03_rightareab1fstorageroom1",
+            new(-19.70368f, -4.279036f, -2.475724f), "Boiler Room - metal trolley",
+            [new("chapter3/mainhouse_east/normal", new("f3ce63cd-3db3-4dfa-a9a9-1c4beecf6602")),
+             new("chapter3/mainhouse_east/hard", new("e5cd4275-90eb-49a4-9dd2-134ebfcb89b9"))]),
     ];
 
     internal static string ScenePath(Location location)

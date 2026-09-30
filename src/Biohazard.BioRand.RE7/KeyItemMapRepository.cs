@@ -65,7 +65,11 @@ internal static class KeyItemMapRepository {
         new Dictionary<Guid, KeyItemMapLocation>{
             [new("54c7a657-2d7e-448d-b767-c04fdf4ec3bc")] = At("main-house-1f", "Pantry - box above hatch", 324f, 209.33f),
             [new("323c9f2e-4660-4650-8f21-4fdecdecace0")] = At("main-house-1f", "Pantry - shelves above hatch", 324f, 209.33f),
-            [new("ee1ddf5f-6a3e-4a53-b27d-ca2ac20dbbaa")] = At("main-house-1f", "Kitchen", 275f, 237f),
+            [new("ee1ddf5f-6a3e-4a53-b27d-ca2ac20dbbaa")] = At("main-house-1f", "Kitchen", 229.5f, 219f),
+            [new("ea6086fa-a847-4dd0-86d0-effd55fade49")] = At("processing-area", "Washroom - northeast bathtub", 329.6f, 255.4f),
+            [new("48cfd500-3c51-44db-aa06-6fdcbfbe40b3")] = At("processing-area", "Washroom - southeast bathtub", 329.6f, 255.4f),
+            [new("3f8bea82-d7c0-4868-babc-f3de7266e2e2")] = At("processing-area", "Washroom - metal shelf", 329.6f, 255.4f),
+            [new("f3ce63cd-3db3-4dfa-a9a9-1c4beecf6602")] = At("processing-area", "Boiler Room - metal trolley", 260.5f, 230.75f),
             [new("077f9206-19e7-4937-994b-cd13a80dabd4")] = At("processing-area", "Workshop", 434.67f, 150.67f),
             [new("0944c68d-50a1-4207-b645-796a353aab95")] = At("old-house-west-1f", "Old Yard", 372.8f, 284.12f),
             [new("0da28012-ad6a-0da5-1f0a-cacd2c677ed3")] = At("main-house-1f", "Living Room", 311f, 283f),

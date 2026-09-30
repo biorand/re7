@@ -79,6 +79,19 @@ public partial class RandomizerKeyItemLocationBehaviorTests {
     }
 
     [Fact]
+    public void KeyItemLocations_DissectionKeyHasSeveralSitesBeforeItsLockedDoor() {
+        var candidates = KeyItemSupplyLocations.CreatePlacements().Where(placement =>
+            KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(placement, "WorkroomKey")).ToArray();
+        Assert.True(candidates.Length >= 4);
+        Assert.All(candidates, placement =>
+            Assert.Equal(["SilhouettePazzlePiece"], PhysicalPickupRequirements[placement.Guid]));
+        using var result = RandomizerTest.RunState(config => config["random-key-item-locations"] = true, 895914);
+        var dissection = Assert.Single(GetChangedPlacements(result), change => change.AfterId == "WorkroomKey");
+        Assert.Contains(candidates, placement => placement.Guid == dissection.Placement.Guid);
+        AssertPhysicalProgression(result);
+    }
+
+    [Fact]
     public void KeyItemLocations_HatchHasSeveralCandidatesAboveItsOwnHatch() {
         var placements = KeyItemSupplyLocations.CreatePlacements().Where(placement =>
             KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(placement, "FloorDoorKey")).ToArray();
