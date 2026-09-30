@@ -1,5 +1,6 @@
 ﻿using Biohazard.BioRand.RE7.Items;
 using Biohazard.BioRand.RE7.Serialization;
+using Biohazard.BioRand.RE7.Modifiers;
 using System.Collections.Immutable;
 
 namespace Biohazard.BioRand.RE7.Services;
@@ -14,7 +15,8 @@ internal class ItemPlacementService {
     public ItemPlacementService(Randomizer randomizer) {
         var csv = randomizer.DynamicData.GetData(DynamicDataName.ItemPlacements) ??
                   throw new Exception("Unable to get item data");
-        ItemPlacements = Csv.Deserialize<ItemPlacement>(csv).ToImmutableList();
+        ItemPlacements = Csv.Deserialize<ItemPlacement>(csv)
+            .Concat(KeyItemSupplyLocations.CreatePlacements()).ToImmutableList();
         PlacementToItemMap = ItemPlacements.Where(x => !string.IsNullOrWhiteSpace(x.Id))
             .ToImmutableDictionary(x => x, x => ItemDefinitionRepository.Default.FromId(x.Id)!);
         IdToItemsMap = ItemPlacements.Where(x => !string.IsNullOrWhiteSpace(x.Id)).GroupBy(x => x.Id)

@@ -90,6 +90,8 @@ function RandomEvents:random()
         self.seed = seed
         self.rng = Rng.for_events(seed)
         self.next_event_at = nil
+        self.event_bag = nil
+        self.last_kind = nil
     end
     return self.rng
 end
@@ -118,6 +120,29 @@ function RandomEvents:schedule(now)
     minimum = math.max(1, math.min(3600, minimum))
     maximum = math.max(minimum, math.min(3600, maximum))
     self.next_event_at = now + minimum + self:random():float() * (maximum - minimum)
+end
+
+function RandomEvents:next_kind()
+    local rng = self:random()
+    local candidates = self:candidates()
+    local signature = table.concat(candidates, ",")
+    if #candidates == 0 then return nil end
+    if self.event_bag == nil or #self.event_bag == 0 or self.bag_signature ~= signature then
+        -- Visit every enabled effect before repeating one. Keep selection seeded,
+        -- but avoid the same effect at the boundary between two shuffled bags.
+        for index = #candidates, 2, -1 do
+            local other = rng:int(1, index)
+            candidates[index], candidates[other] = candidates[other], candidates[index]
+        end
+        if #candidates > 1 and candidates[#candidates] == self.last_kind then
+            local other = rng:int(1, #candidates - 1)
+            candidates[#candidates], candidates[other] = candidates[other], candidates[#candidates]
+        end
+        self.event_bag = candidates
+        self.bag_signature = signature
+    end
+    self.last_kind = table.remove(self.event_bag)
+    return self.last_kind
 end
 
 function RandomEvents:create(kind, now, status)
@@ -483,10 +508,14 @@ function RandomEvents:restore()
     end
 end
 
-function RandomEvents:clear()
+function RandomEvents:clear(preserve_sequence)
     self:restore()
-    self.rng = nil
-    self.seed = nil
+    if not preserve_sequence then
+        self.rng = nil
+        self.seed = nil
+        self.event_bag = nil
+        self.last_kind = nil
+    end
     self.next_event_at = nil
     self.active = nil
     self.started_from_ui = false
@@ -514,11 +543,11 @@ function RandomEvents:update()
     if self.active == nil then
         if self.next_event_at == nil then self:schedule(now) end
         if now >= self.next_event_at then
-            local candidates = self:candidates()
-            if #candidates == 0 then
+            local kind = self:next_kind()
+            if kind == nil then
                 self:schedule(now)
             else
-                self:start(candidates[self:random():int(1, #candidates)], false)
+                self:start(kind, false)
             end
         end
     end
@@ -603,8 +632,9 @@ end
 function RandomEvents:install()
 end
 
-function RandomEvents:reset()
-    self:clear()
+function RandomEvents:reset(reason)
+    -- Loading must release scene references without replaying the first effects.
+    self:clear(reason == "load")
 end
 
 RandomEvents.kinds = KINDS

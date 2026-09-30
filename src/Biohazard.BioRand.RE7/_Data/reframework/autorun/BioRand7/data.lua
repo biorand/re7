@@ -50,7 +50,7 @@ Data.drop_multipliers = {
     Em4200 = 1.25, Em2000 = 1.35, Em3001 = 1.5, Em8000 = 1.75, Em8001 = 1.75, Em3600 = 2.0,
 }
 
-Data.bosses = { Em2000 = true, Em3001 = true, Em3600 = true, Em8000 = true, Em8001 = true }
+Data.bosses = { Em2000 = true, Em3001 = true, Em3600 = true, Em8000 = true, Em8001 = true, Em8100 = true }
 Data.single_drop_per_spawn = { Em5510 = true, Em5511 = true, Em5512 = true }
 Data.boss_drop_items = {
     LiquidBomb = true, HandgunBulletL = true, ShotgunBullet = true, MagnumBullet = true,

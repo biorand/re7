@@ -19,7 +19,6 @@ internal class KeyItemLocationModifier : Modifier {
     private const string RandomizerKey = "modifier/key-item-locations";
     private const string TemplateInstanceKey = $"{RandomizerKey}/template-instances";
     private const string ExtraKeyItemCarrierTemplateId = "HandgunBullet";
-    private const string CultivationRoomScenePath = "natives/stm/environment/scene/chapter4/c04_cavepassage05.scn.20";
 
     internal const string OldHouseLevelFsmScenePath =
         "natives/stm/leveldesign/fsm/chapter3/chapter3_3/levelfsm_c03_3.scn.20";
@@ -47,7 +46,7 @@ internal class KeyItemLocationModifier : Modifier {
 
     private const uint OldHouseShadowPuzzleProgressionPassThroughFireplaceActionUid = 0xB107A200;
 
-    private static readonly HashSet<string> _preservedVanillaKeyItemIds = new(StringComparer.OrdinalIgnoreCase) // TODO
+    private static readonly HashSet<string> _preservedVanillaKeyItemIds = new(StringComparer.OrdinalIgnoreCase)
     {
         "ChainCutter",
         "EntranceHallKey",
@@ -60,6 +59,12 @@ internal class KeyItemLocationModifier : Modifier {
         "LucasCardKey2",
         "SerumComplete",
         "Candle_Lighted",
+        // These rewards advance scripted story branches, including regional body
+        // variants and the mine laboratory sequence. Keep their native events intact.
+        "MasterKey",
+        "SerumMaterialA",
+        "SerumMaterialB",
+        "SerumTypeE",
     };
 
     private static readonly ItemDefinitionRepository _itemDefinitions = ItemDefinitionRepository.Default;
@@ -184,8 +189,15 @@ internal class KeyItemLocationModifier : Modifier {
     private const int LucasBeforePuzzleCarryMasks = BatteryMask | DSeriesHeadMask | CandleMask;
     private const int LucasAfterPuzzleCarryMasks = DSeriesHeadMask;
     private const int ShipBeforeWrenchMasks = ShipFuseMask | LugWrenchMask | CorrosiveMask;
-    private const int ShipAfterWrenchMasks = ShipFuseMask | LugWrenchMask | CorrosiveMask;
-    private const int ShipAfterCorrosiveMasks = PowerCableMask | ShipFuseMask | LugWrenchMask;
+    private const int ShipAfterWrenchMasks = ShipFuseMask | CorrosiveMask;
+    private const int ShipAfterCorrosiveMasks = PowerCableMask | ShipFuseMask;
+    // These rewards have photo/FSM prerequisites that are not represented by their room.
+    // Never use them as progression carriers, even after ordinary item randomization.
+    private static readonly HashSet<Guid> _treasureRewardGuids = [
+        new("b1548f47-609a-0190-3976-50b2aeafd6b6"), // Fireplace
+        new("abb03a3a-a10b-4dca-9385-6274ca2e004a"), // Trailer toilet
+        new("5e6490f0-17f6-0ba5-1fdb-5d70e2ac3b2b"), // Testing Area mannequin
+    ];
     private static readonly Guid _mainHouseWestBlueDogHeadGuid = new("401dbfaa-3469-0702-1c9a-d74a7d185216");
     private static readonly Guid _mainHouseWestBlueKeycardGuid = new("896dd0bb-f3ee-41bf-b4a0-0b28e99da94c");
     private static readonly Guid _mainHouseClockRewardGuid = new("0da28012-ad6a-0da5-1f0a-cacd2c677ed3");
@@ -195,13 +207,6 @@ internal class KeyItemLocationModifier : Modifier {
     private static readonly Guid _oldHouseStoneStatuetteGuid = new("41a59cb8-7613-4d4b-a530-58aebfe0e1c8");
     private static readonly Guid _oldHouseCrowKeyGuid = new("8b940901-8893-4091-a4ac-5a16b3de3a11");
     private static readonly Guid _lucasPuzzleCandleGuid = new("05606c7e-3669-497e-8196-561faefb95e5");
-
-    private static readonly Guid[] _cultivationRoomDoorGuids =[
-        new("3f4ca9a0-b4ff-432b-8784-1403fd1b687f"),
-        new("55adadba-98ee-4086-bce7-3610a3bd9ecb"),
-        new("03b4daed-2766-435e-96cb-1b4857b71f0a"),
-        new("d7f7420e-e505-4772-a973-0342b1d58a85"),
-    ];
 
     private static readonly HashSet<Guid> _snakeKeyRewardGuids =[
         new("96da0bd0-1a8b-4c35-bc02-695da693e8d4"),
@@ -235,14 +240,19 @@ internal class KeyItemLocationModifier : Modifier {
         new("Lantern", 3, LanternMask),
         new("LucasCardKey", 3, BlueKeycardMask), // Blue Keycard
         new("LucasCardKey2", 3, RedKeycardMask), // Red Keycard
-        new("SerumMaterialB", 3, DSeriesHeadMask), // D-Series Head
+        // Its acquisition flag completes the Lucas/keycard objective branches.
+        // Do not let an early pickup advance them before the puzzle-door event.
+        new("SerumMaterialB", 3, DSeriesHeadMask,
+            EarliestSafePhase: KeyItemRoutePhase.LucasPuzzle), // D-Series Head
         new("SerumComplete", 3, SerumMask, Count: 2), // Serum
         new("Candle_Lighted", 3, CandleMask, Priority: 20), // Candle
         new("EvCable", 4, PowerCableMask,
             EarliestSafePhase: KeyItemRoutePhase.ShipAfterCorrosive), // Power Cable
         new("FuseCh4", 4, ShipFuseMask), // General Purpose Fuse
         new("EvOpener", 4, LugWrenchMask), // Lug Wrench
-        new("SpareKey", 4, CorrosiveMask, Count: 4), // Corrosive
+        // Cover all five present-day locks, so spending on optional rooms/cabinets
+        // cannot exhaust the only randomized supply. VHS supplies remain separate.
+        new("SpareKey", 4, CorrosiveMask, Count: 5), // Corrosive
         new("SerumTypeE", 4, NecrotoxinMask), // E-Necrotoxin
         new("EthanCarKey", 3, CarKeyMask, Priority: 80), // Car Key
         new("SilhouettePazzlePiece", 3, WoodenStatuetteMask, Priority: 80), // Wooden Statuette
@@ -271,7 +281,6 @@ internal class KeyItemLocationModifier : Modifier {
         var itemRandomizer = randomizer.ItemRandomizer;
         var randomItemSettings = randomizer.StaticItemRandomizationService.RandomItemSettings;
         var preserveItemModels = randomizer.GetConfigOption<bool>("preserve-item-models");
-        RemoveCultivationRoomMineDoors(randomizer, logger);
         AddOldHouseShadowPuzzleProgressionTrigger(randomizer, logger);
         var availableTargets = GetEligibleTargetPlacements(randomizer, itemPlacementService)
             .OrderBy(target => target.Placement.SceneFile, StringComparer.OrdinalIgnoreCase)
@@ -284,6 +293,8 @@ internal class KeyItemLocationModifier : Modifier {
         var replacementPlanSet = CreateKeyItemReplacementPlans(logger, rng, availableTargets);
         if (replacementPlanSet == null)
             return;
+        KeyItemSupplyLocations.RemoveOverlappingSupplies(randomizer,
+            replacementPlanSet.Assignments.Select(assignment => assignment.Target.TargetGuid));
         AddKeyItemHintsOutput(randomizer, replacementPlanSet);
         var replacementPlans = replacementPlanSet.Plans;
         var acquisitionFlagsByItemId = GetAcquisitionFlagsByItemId(
@@ -335,6 +346,11 @@ internal class KeyItemLocationModifier : Modifier {
                             continue;
                         }
 
+                        if (plan.Kind == ReplacementKind.KeyItem) {
+                            throw new InvalidOperationException(
+                                $"Cannot place progression item {plan.Drop.Id}: pickup {plan.TargetGuid} " +
+                                $"and its extra-item parent are missing from {plan.Placement.SceneFile}.");
+                        }
                         logger.LogLine(
                             $"Skipped replacing {plan.Placement.Id} in {FormatScenePath(plan.Placement.SceneFile)}: GameObject {plan.TargetGuid} was not found.");
                         continue;
@@ -362,25 +378,6 @@ internal class KeyItemLocationModifier : Modifier {
             });
             logger.Pop();
         }
-    }
-
-    private static void RemoveCultivationRoomMineDoors(Randomizer randomizer, RandomizerLogger logger) {
-        var removed = 0;
-        var doorGuids = _cultivationRoomDoorGuids.ToHashSet();
-        randomizer.FileRepository.ModifyScnFile(CultivationRoomScenePath, scene => {
-            foreach (var doorGuid in doorGuids) {
-                if (scene.FindGameObject(doorGuid) == null)
-                    continue;
-
-                scene = scene.RemoveGameObject(doorGuid);
-                removed++;
-            }
-
-            return scene;
-        });
-
-        logger.LogLine(
-            $"Cultivation room mine doors removed: {removed} in {FormatScenePath(CultivationRoomScenePath)}.");
     }
 
     private static void AddOldHouseShadowPuzzleProgressionTrigger(Randomizer randomizer, RandomizerLogger logger) {
@@ -492,7 +489,8 @@ internal class KeyItemLocationModifier : Modifier {
                 || !placement.Enabled
                 || placement.Difficulty != null
                 || placement.Tags.Contains(ItemPlacement.ExcludeTag)
-                || _birdCageGuids.Contains(placement.Guid)) {
+                || _birdCageGuids.Contains(placement.Guid)
+                || !KeyItemCarrierSafety.IsReviewed(placement)) {
                 continue;
             }
 
@@ -597,10 +595,12 @@ internal class KeyItemLocationModifier : Modifier {
                 .ReadScene(randomizer.FileRepository.TypeRepository);
             var targetMatches = scene.FindGameObjectsByGuidWithFsmContext(
                 sceneTargets.Select(target => target.TargetGuid).ToHashSet());
+            var hasExtraParent = scene.FindGameObject(gameObject =>
+                gameObject.Name.EndsWith("_dynamic", StringComparison.Ordinal)) != null;
 
             foreach (var target in sceneTargets) {
                 if (!targetMatches.TryGetValue(target.TargetGuid, out var match)) {
-                    if (target.Placement.IsExtra &&
+                    if (hasExtraParent && target.Placement.IsExtra &&
                         ExtraPlacementModifier.IsPlainExtraItemPlacement(target.Placement)) {
                         yield return target;
                     }
@@ -608,7 +608,7 @@ internal class KeyItemLocationModifier : Modifier {
                     continue;
                 }
 
-                if (match.HasDrawerContext)
+                if (match.HasDrawerContext || match.HasConditionalPickupContext)
                     continue;
 
                 yield return target;
@@ -1565,7 +1565,7 @@ internal class KeyItemLocationModifier : Modifier {
             NoReturn(_guestHouseAttic, _mainHouseBeforeHatch);
             Door(_mainHouseBeforeHatch, _mainHouseBeforeGarage, RouteKeys("FloorDoorKey"));
             Door(_mainHouseBeforeGarage, _garage, RouteKeys("EthanCarKey"));
-            Door(_mainHouseBeforeGarage, _scorpionRooms, RouteKeys("MorgueKey"));
+            Door(_mainHouseBeforeShadowPuzzle, _scorpionRooms, RouteKeys("MorgueKey"));
             Door(_garage, _mainHouseBeforeShadowPuzzle, RouteKeys("EntranceHallKey"));
             Door(_mainHouseBeforeShadowPuzzle, _mainHouseClockReward, RouteKeys("PendulumClock"));
             Door(_mainHouseBeforeShadowPuzzle, _mainHouseEast, RouteKeys("SilhouettePazzlePiece"));
@@ -1582,7 +1582,7 @@ internal class KeyItemLocationModifier : Modifier {
             Door(_barn, _lucasPuzzle, RouteKeys("Battery"));
             Door(_lucasPuzzle, _boatHouse, RouteKeys("Candle_Lighted"));
             NoReturn(_boatHouse, _ship, RouteKeys("SerumComplete", "SerumMaterialA", "SerumMaterialB"));
-            Door(_ship, _shipAfterLugWrench);
+            Door(_ship, _shipAfterLugWrench, RouteKeys("EvOpener"));
             Door(_shipAfterLugWrench, _shipAfterCorrosive, RouteKeys("SpareKey"));
             Door(_shipAfterCorrosive, _shipExit, RouteKeys("EvCable", "EvOpener", "FuseCh4"));
             NoReturn(_shipExit, _saltMine);
@@ -1927,6 +1927,9 @@ internal class KeyItemLocationModifier : Modifier {
                     return new(_testingArea, LucasBeforePuzzleCarryMasks, "Testing Area before barn");
                 if (IsMainHouseKeycardSetup(placement))
                     return new(_snakeRooms, KeycardSetupCarryMasks, "Main House snake-key rooms and keycard setup");
+                if (PathContains(path, "c03_mainhouse2fgrandma"))
+                    return new(_scorpionRooms, MainHouseCarryMasks | StoneStatuetteMask | DSeriesHeadMask,
+                        "Main House scorpion-key rooms");
                 if (IsSnakeKeyRewardTarget(placement))
                     return new(_oldHouseAfterLantern, SnakeKeyRewardCarryMasks,
                         "Old House cleared / Main House basement police body");
@@ -1965,6 +1968,9 @@ internal class KeyItemLocationModifier : Modifier {
                         "Main House after garage before shadow puzzle");
                 if (IsGarage(path))
                     return new(_garage, OxStatuetteMask, "Garage car fight");
+                if (IsUnderHatchPantryTarget(placement))
+                    return new(_mainHouseBeforeGarage, MainHouseBeforeHatchCarryMasks & ~FloorDoorKeyMask,
+                        "Main House crawlspace after hatch");
                 if (IsMainHouseBeforeHatch(path))
                     return new(_mainHouseBeforeHatch, MainHouseBeforeHatchCarryMasks,
                         "Main House west side before hatch");
@@ -2010,7 +2016,8 @@ internal class KeyItemLocationModifier : Modifier {
         }
 
         private static bool IsUnsafeKeyItemTarget(ItemPlacement placement)
-            => (placement.Guid == _jack2RedDogHeadGuid
+            => _treasureRewardGuids.Contains(placement.Guid)
+               || (placement.Guid == _jack2RedDogHeadGuid
                 && PathContains(placement.SceneFile, "c03_rightareab1ffreezer"))
                || (placement.Guid == _lucasPuzzleCandleGuid
                    && PathContains(placement.SceneFile, "c03_leftarea1fpuzzleroom1"))
@@ -2028,6 +2035,7 @@ internal class KeyItemLocationModifier : Modifier {
         OldHouseAfterStonePuzzle = 11,
         OldHouseAfterCrank = 12,
         OldHouseAfterLantern = 14,
+        LucasPuzzle = 18,
         ShipAfterCorrosive = 22,
     }
 

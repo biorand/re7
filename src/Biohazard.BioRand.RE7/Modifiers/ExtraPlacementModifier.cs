@@ -412,7 +412,8 @@ internal class ExtraPlacementModifier : Modifier {
         var allowExtraItems = randomizer.GetConfigOption<bool>("additional-items");
         var allowExtraCrates = randomizer.GetConfigOption<bool>("additional-wooden-crates");
         var extraPlacements = itemPlacementService.ItemPlacements
-            .Where(placement => placement.Enabled && placement.IsExtra && !string.IsNullOrEmpty(placement.SceneFile))
+            .Where(placement => placement.Enabled && placement.IsExtra && !string.IsNullOrEmpty(placement.SceneFile)
+                                && !placement.Tags.Contains(KeyItemSupplyLocations.PlacementTag))
             .ToList();
         var hasAlwaysOnItemBoxes = extraPlacements.Any(placement => placement.Tags.Contains(ItemBoxTag));
 

@@ -70,6 +70,7 @@ function EnemyDrops:enemy_type(source, game_object)
 end
 
 function EnemyDrops:probability(enemy_type)
+    if Data.bosses[enemy_type] then return 1 end
     local probability = self.context.config:get("enemy-drop-probability", 0.5)
     local config_id = Data.drop_config_ids[enemy_type]
     if config_id ~= nil then
@@ -163,6 +164,9 @@ function EnemyDrops:select(game_object, generation, enemy_type)
 
     local candidates = self:candidates(rng, Data.bosses[enemy_type] == true)
     if #candidates == 0 then
+        -- A boss kill always pays out, including profiles whose weighted pool
+        -- contains no boss-eligible supplies for the current chapter.
+        if Data.bosses[enemy_type] then return "RemedyL", 1 end
         return nil
     end
     local item_id = rng:weighted(candidates)
@@ -330,7 +334,7 @@ function EnemyDrops:death(source, controller)
     local enemy_object = source:call("get_GameObject")
     if enemy_object == nil then return end
     local static_mia = self.context.features.static_mia
-    if static_mia:suppress(controller, enemy_object) then
+    if static_mia:is_killed(controller, enemy_object) then
         return
     end
 
@@ -340,7 +344,7 @@ function EnemyDrops:death(source, controller)
             self:spawn(source, enemy_object, generation)
         end
     end
-    static_mia:remember(controller, enemy_object)
+    static_mia:begin_death(controller, enemy_object)
 end
 
 function EnemyDrops:install()
@@ -369,6 +373,7 @@ function EnemyDrops:install()
     game:hook("app.EnemyActionController", "finishDead(System.Boolean, System.Boolean)", function(args)
         local controller = game:object(args[2])
         self:death(controller, controller)
+        self.context.features.static_mia:finish_death(controller:call("get_GameObject"))
     end)
 
     game:hook("app.EnemyDamageController", "doDie(app.DamageController.DamageRecord)", function(args)

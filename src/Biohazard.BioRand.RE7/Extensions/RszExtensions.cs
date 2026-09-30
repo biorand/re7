@@ -6,7 +6,8 @@ public static class RszExtensions {
     public readonly record struct GameObjectMatch(
         RszGameObject GameObject,
         bool HasFsmInHierarchy,
-        bool HasDrawerContext = false);
+        bool HasDrawerContext = false,
+        bool HasConditionalPickupContext = false);
 
     public static RszGameObject CloneWithNewGuids(
         this RszGameObject rootGameObject,
@@ -150,7 +151,8 @@ public static class RszExtensions {
         }
 
         foreach (var child in scene.Children) {
-            VisitSceneNode(child, hasFsmInHierarchy: false, hasDrawerInHierarchy: false, remaining, result);
+            VisitSceneNode(child, hasFsmInHierarchy: false, hasDrawerInHierarchy: false,
+                hasConditionalPickupInHierarchy: false, remaining, result);
             if (remaining.Count == 0) {
                 break;
             }
@@ -165,12 +167,14 @@ public static class RszExtensions {
         IRszSceneNode node,
         bool hasFsmInHierarchy,
         bool hasDrawerInHierarchy,
+        bool hasConditionalPickupInHierarchy,
         ISet<Guid> remaining,
         IDictionary<Guid, GameObjectMatch> result) {
         switch (node) {
             case RszFolder folder:
                 foreach (var child in folder.Children) {
-                    VisitSceneNode(child, hasFsmInHierarchy, hasDrawerInHierarchy, remaining, result);
+                    VisitSceneNode(child, hasFsmInHierarchy, hasDrawerInHierarchy,
+                        hasConditionalPickupInHierarchy, remaining, result);
                     if (remaining.Count == 0) {
                         break;
                     }
@@ -181,8 +185,11 @@ public static class RszExtensions {
             case RszGameObject gameObject:
                 var hasFsmHere = hasFsmInHierarchy || HasFsmComponent(gameObject);
                 var hasDrawerHere = hasDrawerInHierarchy || HasDrawerComponent(gameObject);
+                var hasConditionalPickupHere = hasConditionalPickupInHierarchy ||
+                    HasConditionalPickupComponent(gameObject);
                 if (remaining.Remove(gameObject.Guid)) {
-                    result[gameObject.Guid] = new GameObjectMatch(gameObject, hasFsmHere, hasDrawerHere);
+                    result[gameObject.Guid] = new GameObjectMatch(gameObject, hasFsmHere, hasDrawerHere,
+                        hasConditionalPickupHere);
                 }
 
                 if (remaining.Count == 0) {
@@ -190,7 +197,7 @@ public static class RszExtensions {
                 }
 
                 foreach (var child in gameObject.Children) {
-                    VisitSceneNode(child, hasFsmHere, hasDrawerHere, remaining, result);
+                    VisitSceneNode(child, hasFsmHere, hasDrawerHere, hasConditionalPickupHere, remaining, result);
                     if (remaining.Count == 0) {
                         break;
                     }
@@ -219,6 +226,15 @@ public static class RszExtensions {
         => gameObject.Name.Contains("Drawer", StringComparison.OrdinalIgnoreCase) ||
            gameObject.Components.Any(component =>
                component.Type.Name.Contains("InteractDrawer", StringComparison.Ordinal));
+
+    private static bool HasConditionalPickupComponent(RszGameObject gameObject)
+        // Clearing the spiders requires damage resources that randomized loadouts do not guarantee.
+        => gameObject.Name.Contains("InsectLocker", StringComparison.OrdinalIgnoreCase)
+           // The deputy's body has mutually exclusive censorship variants. A key in just
+           // one variant would disappear on the other regional editions of the game.
+           || gameObject.Components.Any(component =>
+               component.Type.Name == "via.fsm.Fsm" &&
+               component["Resource"].ToString()?.Contains("Fsm_RatingSelector", StringComparison.OrdinalIgnoreCase) == true);
 
     private static void MarkDrawerReferencedTargets(
         RszScene scene,

@@ -4,7 +4,15 @@ Inventory.__index = Inventory
 local SIZE_LEVELS = { ["12"] = 0, ["16"] = 1, ["20"] = 2 }
 local KEY_ITEM = 4
 local USABLE_KEY_ITEM = 9
+local DISCARDABLE_KEY_ITEM = 10
 local MAX_COMBINE_ROWS = 5
+local STORY_WEAPONS = {
+    handaxe = true, knife = true, chainsaw = true,
+    candle = true, candle_lighted = true, handgun_albert = true,
+}
+local OPTIONAL_VIDEOTAPES = {
+    foundfootage000 = true, foundfootage030 = true, foundfootage040 = true,
+}
 
 function Inventory.new(context)
     return setmetatable({ context = context }, Inventory)
@@ -60,12 +68,17 @@ function Inventory:install_discard_hook()
         if item == nil or sdk.to_int64(retval) % 256 ~= 0 then return retval end
         local item_data = item:call("get_ItemData")
         if item_data == nil then return retval end
+        local data_id = item:get_field("ItemDataID") or item_data:get_field("ItemDataID")
+        local normalized = data_id and data_id:lower()
+        -- Native weapon and car-key restrictions can be progression gates too.
+        -- Preserve them until the game itself says the item can be discarded.
+        if normalized and STORY_WEAPONS[normalized] then return retval end
         local category = item_data:get_field("Category")
-        if category ~= KEY_ITEM and category ~= USABLE_KEY_ITEM then
+        if category ~= KEY_ITEM and category ~= USABLE_KEY_ITEM and category ~= DISCARDABLE_KEY_ITEM then
             return sdk.to_ptr(1)
         end
-        local data_id = item:get_field("ItemDataID") or item_data:get_field("ItemDataID")
-        if data_id ~= nil and data_id:lower():sub(1, 12) == "foundfootage" then
+        -- Old Videotape (050) is mandatory for present-day ship progression.
+        if normalized and OPTIONAL_VIDEOTAPES[normalized] then
             return sdk.to_ptr(1)
         end
         return retval
@@ -122,13 +135,17 @@ end
 
 function Inventory:install_combine_hooks()
     local game = self.context.game
-    game:hook("app.InventoryMenu.DictionaryCombineUIController", "deactivate()", function()
+    local function configure_rows()
         if not self.context.config:get("recipes-add-new", false) then return end
         local type_name = "app.InventoryMenu.DictionaryCombineUIController"
         if game:static_field(type_name, "RowNum") ~= MAX_COMBINE_ROWS then
             game:set_static_field(type_name, "RowNum", MAX_COMBINE_ROWS)
         end
-    end)
+    end
+    -- Configure the first menu setup too: a Main House start bypasses the
+    -- Guest House inventory, so it must not depend on an earlier deactivate.
+    game:hook("app.InventoryMenu.DictionaryCombineUIController", "setup()", configure_rows)
+    game:hook("app.InventoryMenu.DictionaryCombineUIController", "deactivate()", configure_rows)
 
     game:hook("app.InventoryMenu", "DictionaryCombine_UnlockedCombine(app.ItemCombineData.Data)", nil,
         function(retval)

@@ -94,6 +94,7 @@ public sealed class ItemDefinition {
     [JsonIgnore]
     public bool IsStackLimitConfigurable =>
         !IsDlcItem &&
+        !IsStoryProgressionItem &&
         !IsStackLimitExcludedWeapon &&
         !string.IsNullOrWhiteSpace(SourceUserFile) &&
         !string.IsNullOrWhiteSpace(Name) &&

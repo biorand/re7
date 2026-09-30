@@ -128,7 +128,7 @@ public class RandomizerEnemyModifierBehaviorTests {
             molded,
             chapter: 3,
             scenePath: "natives/stm/scenes/chapter/chapter3/chapter3_2/moldeads.scn.20"));
-        Assert.False(BalancedEnemyPoolSelector.IsCompatibleReplacement(
+        Assert.True(BalancedEnemyPoolSelector.IsCompatibleReplacement(
             moldedFat,
             chapter: 3,
             scenePath: "natives/stm/scenes/chapter/chapter3/chapter3_2/moldeads.scn.20"));
@@ -151,6 +151,11 @@ public class RandomizerEnemyModifierBehaviorTests {
     }
 
     [Theory]
+    [InlineData("MoldedFat", 1, "natives/stm/environment/scene/chapter1/c01_3f.scn.20", false)]
+    [InlineData("EvelineElderly", 1, "natives/stm/environment/scene/chapter1/c01_3f.scn.20", false)]
+    [InlineData("MoldedFat", 3, "natives/stm/scenes/chapter/chapter3/chapter3_2/moldeads.scn.20", true)]
+    [InlineData("EvelineElderly", 3, "natives/stm/scenes/chapter/chapter3/chapter3_2/moldeads.scn.20", true)]
+    [InlineData("EvelineElderly", 3, "natives/stm/environment/scene/chapter3/c03_oldhouse1fkitchen01.scn.20", true)]
     [InlineData("MiaChainsaw", 1, "natives/stm/environment/scene/chapter1/c01_3f.scn.20", false)]
     [InlineData("JackShears", 3, "natives/stm/scenes/chapter/chapter3/chapter3_2/moldeads.scn.20", false)]
     [InlineData("JackShears", 3, "natives/stm/scenes/chapter/chapter3/chapter3_3/enemy.scn.20", true)]

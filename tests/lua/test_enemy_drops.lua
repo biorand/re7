@@ -75,6 +75,20 @@ return function()
     assert(drops:enemy_type(controller, unnamed_enemy) == nil)
     assert(drops:enemy_type(object({}, nil, "app.Em4000ActionController"), unnamed_enemy) == "Em4000")
 
+    configuration["enemy-drop-probability"] = 0
+    configuration["enemy-drop-ammo-only-available-weapons"] = false
+    context.game.enemy_identity = constant("boss-test")
+    for _, boss in ipairs({ "Em2000", "Em3001", "Em3600", "Em8000", "Em8001", "Em8100" }) do
+        assert(drops:probability(boss) == 1)
+        local id, amount = drops:select(enemy, 1, boss)
+        assert(id == "RemedyL" and amount == 1, "Bosses must reward even an empty configured pool")
+    end
+    assert(drops:select(enemy, 1, "Em4000") == nil, "Normal enemies still honor zero drop probability")
+    configuration["enemy-drop-ratio-chemicalm"] = 1
+    assert(drops:select(enemy, 1, "Em3600") == "ChemicalM", "Boss rewards must honor configured weights")
+    configuration["enemy-drop-ratio-chemicalm"] = nil
+    configuration["enemy-drop-probability"] = nil
+
     local fixed_rng = { int = function(_, minimum, maximum)
         assert(minimum == 3 and maximum == 3)
         return minimum
@@ -223,4 +237,17 @@ return function()
         end }
     end
     assert(static_mia:suppress(mia_controller, mia) and deactivated)
+
+    static_mia:reset()
+    deactivated = false
+    local mia_action = object({ get_GameObject = constant(mia) }, { SpawnerGuid = guid, ActualUsingGuid = empty_guid })
+    static_mia:install()
+    drops:death(mia_action, mia_action)
+    local update_mia = hooks["app.Em2000.Em2000ActionController:doUpdate()"]
+    assert(update_mia({ nil, mia_action }) == nil and not deactivated,
+        "Lethal damage must allow Mia's native death animation to update")
+    drops:death(mia_action, mia_action)
+    assert(not deactivated, "Duplicate death notifications must not hide the dying actor")
+    hooks["app.EnemyActionController:finishDead(System.Boolean, System.Boolean)"]({ nil, mia_action })
+    assert(update_mia({ nil, mia_action }) == sdk.PreHookResult.SKIP_ORIGINAL and deactivated)
 end
