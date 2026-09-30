@@ -1362,6 +1362,25 @@ public class RandomizerKeyItemLocationBehaviorTests : IClassFixture<DefaultRando
     }
 
     [Fact]
+    public void KeyItemLocations_RejectsUnmaterializableExtraCarriers() {
+        using var result = RandomizerTest.RunState();
+        var mainHallExtras = result.ItemPlacementService.MainGamePlacements
+            .Where(placement => placement.IsExtra && placement.SceneFile == MainHouseHallScenePath &&
+                ExtraPlacementModifier.IsPlainExtraItemPlacement(placement))
+            .Select(ExtraPlacementModifier.GetGeneratedItemGuid).ToHashSet();
+        Assert.NotEmpty(mainHallExtras);
+        Assert.Contains(KeyItemLocationModifier.GetRouteTargetsForTesting(result.Randomizer),
+            target => mainHallExtras.Contains(target.TargetGuid));
+        result.Randomizer.FileRepository.ModifyScnFile(MainHouseHallScenePath, scene => {
+            var parent = scene.FindGameObject(go => go.Name.EndsWith("_dynamic", StringComparison.Ordinal));
+            Assert.NotNull(parent);
+            return scene.UpdateGameObject(parent!.WithName("NoExtraItemParent"));
+        });
+        Assert.DoesNotContain(KeyItemLocationModifier.GetRouteTargetsForTesting(result.Randomizer),
+            target => mainHallExtras.Contains(target.TargetGuid));
+    }
+
+    [Fact]
     public void KeyItemLocations_MainHallExtraPlacementUsesValidIdentityRotation() {
         using var result = RandomizerTest.RunState(config => { config["additional-items"] = true; });
 

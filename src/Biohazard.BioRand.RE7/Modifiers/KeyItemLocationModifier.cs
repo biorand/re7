@@ -344,6 +344,11 @@ internal class KeyItemLocationModifier : Modifier {
                             continue;
                         }
 
+                        if (plan.Kind == ReplacementKind.KeyItem) {
+                            throw new InvalidOperationException(
+                                $"Cannot place progression item {plan.Drop.Id}: pickup {plan.TargetGuid} " +
+                                $"and its extra-item parent are missing from {plan.Placement.SceneFile}.");
+                        }
                         logger.LogLine(
                             $"Skipped replacing {plan.Placement.Id} in {FormatScenePath(plan.Placement.SceneFile)}: GameObject {plan.TargetGuid} was not found.");
                         continue;
@@ -587,10 +592,12 @@ internal class KeyItemLocationModifier : Modifier {
                 .ReadScene(randomizer.FileRepository.TypeRepository);
             var targetMatches = scene.FindGameObjectsByGuidWithFsmContext(
                 sceneTargets.Select(target => target.TargetGuid).ToHashSet());
+            var hasExtraParent = scene.FindGameObject(gameObject =>
+                gameObject.Name.EndsWith("_dynamic", StringComparison.Ordinal)) != null;
 
             foreach (var target in sceneTargets) {
                 if (!targetMatches.TryGetValue(target.TargetGuid, out var match)) {
-                    if (target.Placement.IsExtra &&
+                    if (hasExtraParent && target.Placement.IsExtra &&
                         ExtraPlacementModifier.IsPlainExtraItemPlacement(target.Placement)) {
                         yield return target;
                     }
@@ -1958,6 +1965,9 @@ internal class KeyItemLocationModifier : Modifier {
                         "Main House after garage before shadow puzzle");
                 if (IsGarage(path))
                     return new(_garage, OxStatuetteMask, "Garage car fight");
+                if (IsUnderHatchPantryTarget(placement))
+                    return new(_mainHouseBeforeGarage, MainHouseBeforeHatchCarryMasks & ~FloorDoorKeyMask,
+                        "Main House crawlspace after hatch");
                 if (IsMainHouseBeforeHatch(path))
                     return new(_mainHouseBeforeHatch, MainHouseBeforeHatchCarryMasks,
                         "Main House west side before hatch");
