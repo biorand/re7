@@ -97,6 +97,23 @@ return function()
     item_fields.ItemDataID = "FoundFootage000"
     discard.before({ 0, item })
     assert(discard.after(0) == 1)
+    for _, data_id in ipairs({ "FoundFootage050", "FuseCh4", "SpareKey" }) do
+        item_fields.ItemDataID = data_id
+        discard.before({ 0, item })
+        assert(discard.after(0) == 0, data_id .. " must keep its native discard restriction")
+    end
+    item_data_fields.Category = 10
+    item_fields.ItemDataID = "EthanCarKey"
+    discard.before({ 0, item })
+    assert(discard.after(0) == 0, "The car key is needed before the garage fight")
+    item_data_fields.Category = 1
+    for _, data_id in ipairs({ "Candle", "Candle_Lighted", "HandAxe", "Knife", "ChainSaw", "Handgun_Albert" }) do
+        item_fields.ItemDataID = data_id
+        discard.before({ 0, item })
+        assert(discard.after(0) == 0, data_id .. " must keep its native discard restriction")
+        discard.before({ 0, item })
+        assert(discard.after(1) == 1, "Preserve native permission once the item is no longer needed")
+    end
     item_fields.ItemDataID = nil
     item_data_fields.Category = 1
     discard.before({ 0, item })
