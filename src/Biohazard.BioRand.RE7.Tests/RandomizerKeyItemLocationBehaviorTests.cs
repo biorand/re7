@@ -1856,15 +1856,15 @@ public class RandomizerKeyItemLocationBehaviorTests : IClassFixture<DefaultRando
     private static bool IsShipBeforeLugWrench(string path)
         => !PathContains(path, "past")
            && (PathContains(path, "c04_ship4f")
-               || PathContains(path, "/leveldesign/itemset/chapter4/ship4f/")
-               || PathContains(path, "c04_ship2f")
-               || PathContains(path, "/leveldesign/itemset/chapter4/ship2f/"));
+               || PathContains(path, "/leveldesign/itemset/chapter4/ship4f/"));
 
     private static bool IsShipAfterLugWrenchBeforeCorrosive(string path)
         => !PathContains(path, "past")
            && !IsShipAfterCorrosiveBeforeRepair(path)
            && (PathContains(path, "c04_ship1f")
                || PathContains(path, "/leveldesign/itemset/chapter4/ship1f/")
+               || PathContains(path, "c04_ship2f")
+               || PathContains(path, "/leveldesign/itemset/chapter4/ship2f/")
                || PathContains(path, "c04_ship3f")
                || PathContains(path, "/leveldesign/itemset/chapter4/ship3f/")
                || PathContains(path, "/scenes/chapter/chapter4/c04_shipelevator"));
