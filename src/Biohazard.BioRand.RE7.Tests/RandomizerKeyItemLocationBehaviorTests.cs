@@ -1028,6 +1028,23 @@ public class RandomizerKeyItemLocationBehaviorTests : IClassFixture<DefaultRando
         Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(shipExitExtra, "SpareKey"));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void KeyItemLocations_CorrosiveCoversEveryPresentDayLockOnEveryDifficulty(bool additionalItems) {
+        using var result = RandomizerTest.RunState(config => {
+            config["random-key-item-locations"] = true;
+            config["additional-items"] = additionalItems;
+        }, seed: 895914);
+        var change = Assert.Single(GetChangedPlacements(result), change => change.AfterId == "SpareKey");
+        var pickup = GetItem(result.ReadAfterScene(change.Placement.SceneFile), GetTargetGuid(change.Placement));
+        // 3F Control Room, 2F Bunk Room, 1F Recreation Room, and both S2 cabinets.
+        Assert.Equal(5, pickup.ItemStackNum);
+        Assert.True(pickup._IsOverwriteDifficultItemNumSetting);
+        Assert.Equal(5, pickup._DifficultItemNumSetting.EasyNum);
+        Assert.Equal(5, pickup._DifficultItemNumSetting.HardNum);
+    }
+
     [Fact]
     public void KeyItemLocations_ExcludesSpiderLockersAndRegionalBodyVariantsFromEverySeed() {
         var result = _defaultRun.Result;

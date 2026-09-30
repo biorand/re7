@@ -250,7 +250,9 @@ internal class KeyItemLocationModifier : Modifier {
             EarliestSafePhase: KeyItemRoutePhase.ShipAfterCorrosive), // Power Cable
         new("FuseCh4", 4, ShipFuseMask), // General Purpose Fuse
         new("EvOpener", 4, LugWrenchMask), // Lug Wrench
-        new("SpareKey", 4, CorrosiveMask, Count: 4), // Corrosive
+        // Cover all five present-day locks, so spending on optional rooms/cabinets
+        // cannot exhaust the only randomized supply. VHS supplies remain separate.
+        new("SpareKey", 4, CorrosiveMask, Count: 5), // Corrosive
         new("SerumTypeE", 4, NecrotoxinMask), // E-Necrotoxin
         new("EthanCarKey", 3, CarKeyMask, Priority: 80), // Car Key
         new("SilhouettePazzlePiece", 3, WoodenStatuetteMask, Priority: 80), // Wooden Statuette
