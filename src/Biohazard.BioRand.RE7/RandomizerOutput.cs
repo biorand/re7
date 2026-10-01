@@ -69,6 +69,16 @@ public sealed class RandomizerOutput {
             return _modFile;
 
         var zipFile = BuildZipFile();
+        // Fluffy must install and uninstall the whole seed, including shared visual
+        // assets. Omitting these leaves room loads dependent on a separate manual install.
+        var seedPaths = PakFile.Entries.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var entry in AdditionalAssetPakFile.Entries) {
+            // Match FileRepository.GetFile: seed-specific files override shared assets.
+            if (!seedPaths.Contains(entry.Key)) {
+                zipFile.AddEntry(entry.Key, (byte[])entry.Value);
+            }
+        }
+
         foreach (var entry in PakFile.Entries) {
             zipFile.AddEntry(entry.Key, (byte[])entry.Value);
         }
@@ -139,7 +149,10 @@ public sealed class RandomizerOutput {
         var name = $"BioRand - {Sanitize(Input.ProfileName)} [{Input.Seed}]";
         var description = SanitizeParagraph(
             $"{Sanitize(Input.ProfileName)} by {Sanitize(Input.ProfileAuthor)} [{Input.Seed}]\n" +
-            Input.ProfileDescription);
+            Input.ProfileDescription + "\n\n" +
+            "Requires the Steam RT/DX12 version of RE7. Enable only one BioRand seed at a time. " +
+            "Shared assets are included; do not also install the Patch ZIP." +
+            (IsWithREFramework ? " Install REFramework for RE7 RT separately." : ""));
         var author = "BioRand 7 by IntelOrca, Descole & BioRand Team";
         var version = $"{rf.CurrentVersionNumber} ({rf.GitHash})";
 
