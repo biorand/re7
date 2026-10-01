@@ -42,6 +42,7 @@ return function()
             get_address = function() return address end,
             call = function(self, method, component)
                 if method == "get_Valid" then return not self.destroyed end
+                if method == "get_Update" then return self.active ~= false end
                 if method == "get_Name" then return name end
                 if method == "get_Tag" then return tag end
                 if method == "get_Folder" then return nil end

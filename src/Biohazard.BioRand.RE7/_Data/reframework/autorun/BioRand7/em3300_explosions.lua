@@ -7,6 +7,7 @@ Em3300Explosions.__index = Em3300Explosions
 local EM3300_ID = 7
 local MARKER_TAG = "BioRandExplosiveEm3300"
 local PROXIMITY_SQUARED = 25
+local INACTIVITY_SECONDS = 180
 
 function Em3300Explosions.new(context)
     local self = setmetatable({ context = context, states = {} }, Em3300Explosions)
@@ -54,10 +55,10 @@ end
 
 function Em3300Explosions:near_player(enemy_object)
     local player = self.context.game:player()
-    if player == nil then return false end
+    if player == nil then return nil end
     local player_transform = player:call("get_Transform")
     local enemy_transform = enemy_object:call("get_Transform")
-    if player_transform == nil or enemy_transform == nil then return false end
+    if player_transform == nil or enemy_transform == nil then return nil end
     local player_position = player_transform:call("get_Position")
     local enemy_position = enemy_transform:call("get_Position")
     local x = player_position.x - enemy_position.x
@@ -170,9 +171,22 @@ function Em3300Explosions:update_object(enemy_object)
         return true
     end
     if state.started == nil then
-        if self:near_player(enemy_object) then
+        local nearby = self:near_player(enemy_object)
+        if nearby then
+            state.idle_since = nil
             state.delay = self:delay(enemy_object)
             state.started = now
+        elseif nearby == false and enemy_object:call("get_Update") then
+            state.idle_since = state.idle_since or now
+            if now - state.idle_since >= INACTIVITY_SECONDS then
+                state.exploded = now
+                self:detonate(enemy_object)
+                return true
+            end
+        else
+            -- Inactive pool entries and periods without a player/position are not
+            -- unattended encounters. Start a fresh timer when they become active.
+            state.idle_since = nil
         end
         return false
     end
