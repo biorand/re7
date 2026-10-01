@@ -2,10 +2,10 @@ Enabled,Pool,Count1_Min,Count1_Max,Item1,Count2_Min,Count2_Max,Item2,OutputCount
 TRUE,AlwaysEnabled,1,1,Strong Chem Fluid,1,1,Strong Chem Fluid,1,1,Acid Powder,BioRand 7 | Activates unused item Acid Powder
 TRUE,AlwaysEnabled,1,1,Chem Fluid,1,1,Chem Fluid,1,1,Chilled Chem Fluid,BioRand 7 | Activates unused item Chilled Chem Fluid
 TRUE,AlwaysEnabled,1,1,Chem Fluid,1,1,Strong Chem Fluid,1,1,Weak Acid,BioRand 7 | Activates unused item Weak Acid
-TRUE,AlwaysEnabled,3,5,Antique Coin,1,1,Acid Powder,1,1,Lock Pick,BioRand 7 | Ensures the ability to get lock picks
-TRUE,AlwaysEnabled,20,20,Enhanced Handgun Ammo,2,2,Gunpowder,10,15,Shotgun Shells,BioRand 7 | Easy Pool
-TRUE,AlwaysEnabled,30,30,Machine Gun Ammo,20,20,Handgun Ammo,5,5,44 MAG Ammo,BioRand 7 | Easy Pool
-TRUE,AlwaysEnabled,10,10,Shotgun Shells,2,2,Gunpowder,5,5,44 MAG Ammo,BioRand 7 | Easy Pool
+FALSE,AlwaysEnabled,3,5,Antique Coin,1,1,Acid Powder,1,1,Lock Pick,BioRand 7 | Ensures the ability to get lock picks
+TRUE,Easy,20,20,Enhanced Handgun Ammo,2,2,Gunpowder,10,15,Shotgun Shells,BioRand 7 | Easy Pool
+TRUE,Easy,30,30,Machine Gun Ammo,20,20,Handgun Ammo,5,5,44 MAG Ammo,BioRand 7 | Easy Pool
+TRUE,Easy,10,10,Shotgun Shells,2,2,Gunpowder,5,5,44 MAG Ammo,BioRand 7 | Easy Pool
 TRUE,Easy,20,20,Enhanced Handgun Ammo,1,1,Strong Chem Fluid,10,10,44 MAG Ammo,BioRand 7 | Easy Pool
 TRUE,Easy,1,1,Neuro Rounds,1,1,Chem Fluid,3,3,Flame Rounds,BioRand 7 | Easy Pool
 TRUE,Easy,1,1,Flame Rounds,1,1,Chem Fluid,3,3,Neuro Rounds,BioRand 7 | Easy Pool
@@ -13,7 +13,7 @@ TRUE,Easy,1,1,Knife,1,1,Chilled Chem Fluid,1,1,Axe,BioRand 7 | Easy Pool
 TRUE,Easy,1,1,Axe,1,1,Weak Acid,1,1,Crowbar,BioRand 7 | Easy Pool
 TRUE,Easy,1,1,Knife,1,1,Acid Powder,1,1,Survival Knife,BioRand 7 | Easy Pool
 TRUE,Easy,5,5,Remote Bomb,1,1,Acid Powder,1,1,Chainsaw,BioRand 7 | Easy Pool
-TRUE,Easy,1,1,G17 Handgun,1,1,Weak Acid,1,1,M19 Handgun,BioRand 7 | Easy Pool
+FALSE,Easy,1,1,G17 Handgun,1,1,Weak Acid,1,1,M19 Handgun,BioRand 7 | Easy Pool
 TRUE,Easy,1,1,M19 Handgun,1,1,Weak Acid,1,1,MPM Handgun,BioRand 7 | Easy Pool
 TRUE,Easy,1,1,MPM Handgun,1,1,Weak Acid,5,5,Remote Bomb,BioRand 7 | Easy Pool
 TRUE,Easy,1,1,Psychostimulants,1,1,Psychostimulants,1,1,Herb,BioRand 7 | Easy Pool
