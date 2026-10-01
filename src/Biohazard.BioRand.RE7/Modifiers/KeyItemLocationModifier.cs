@@ -1483,6 +1483,7 @@ internal class KeyItemLocationModifier : Modifier {
         private readonly Dictionary<string, KeyItemRule> _activeRulesById;
         private readonly Dictionary<Node, ItemReplacementTarget> _targetsByNode = [];
         private readonly Dictionary<Node, string> _regionByNode = [];
+        private readonly Dictionary<Node, string> _distributionAreaByNode = [];
         private readonly Dictionary<Node, int> _routeOrderByTargetNode = [];
         private readonly Dictionary<Node, int> _routeOrderByNode = [];
         private readonly Dictionary<Node, string> _diagramNodeIds = [];
@@ -1637,6 +1638,13 @@ internal class KeyItemLocationModifier : Modifier {
                 routeTarget.Room);
             _targetsByNode[node] = target;
             _regionByNode[node] = routeTarget.RegionName;
+            // The kitchen, pantry and crawlspace are one small starting area,
+            // even though the hatch separates two progression nodes. Elsewhere,
+            // room scenes keep several supply anchors from multiplying a room's weight.
+            _distributionAreaByNode[node] = routeTarget.Room == _mainHouseBeforeHatch ||
+                                            routeTarget.Room == _mainHouseBeforeGarage
+                ? "main-house-start"
+                : target.Placement.SceneFile;
             _routeOrderByTargetNode[node] = _routeOrderByNode[routeTarget.Room];
         }
 
@@ -1763,7 +1771,19 @@ internal class KeyItemLocationModifier : Modifier {
             return true;
 
             bool TryAssign(KeyItemRule rule, HashSet<Node> visitedTargets) {
-                foreach (var candidate in candidatesByRule[rule]) {
+                // Prefer spreading Chapter 3 keys over rooms, while keeping the
+                // seeded shuffle as the tie-breaker. This is only a preference:
+                // constrained keys may share an area and every route is still validated.
+                var candidates = rule.Chapter == 3
+                    ? candidatesByRule[rule]
+                        .OrderBy(candidate => targetAssignments.Count(assigned =>
+                            assigned.Value != rule && string.Equals(
+                                _distributionAreaByNode[assigned.Key], _distributionAreaByNode[candidate],
+                                StringComparison.OrdinalIgnoreCase)))
+                        .ThenBy(candidate => targetAssignments.ContainsKey(candidate))
+                        .ToArray()
+                    : candidatesByRule[rule].ToArray();
+                foreach (var candidate in candidates) {
                     if (!visitedTargets.Add(candidate))
                         continue;
 
