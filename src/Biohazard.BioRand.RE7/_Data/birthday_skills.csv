@@ -20,5 +20,5 @@ skl023,Brawler,Prefab/Skill/skl023/Skl023PassiveSkill.user,300% Increased melee 
 skl004,All In One +,Prefab/Skill/skl004/Skl004PassiveSkill.user,Combines all positive effects\r\ninto one.,0.5,3,3,0.25,500,-0.4,30,0.15,0.3,0.15,0.5,0.5,0,0,0,TRUE,TRUE
 skl006,Unlimited Power,Prefab/Skill/skl006/Skl006PassiveSkill.user,"POWER!!!!!!!!!!!!!\r\nUNLIMITED POWER!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\r\nYes, this is a Palpatine reference.",999,999,999,999,999,-999,999,999,1,1,1,3,0,0,0,TRUE,TRUE
 skl005,All In One -,Prefab/Skill/skl005/Skl005PassiveSkill.user,Combines all negative effects\r\ninto one.,-0.2,0,0,-0.2,0,0,0,0,0,-0.25,0,-0.25,0,0,0,FALSE,FALSE
-skl007,Unused 1,Prefab/Skill/skl007/Skl007PassiveSkill.user,Unused. Yet.,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,FALSE,FALSE
-skl020,Unused 2,Prefab/Skill/skl020/Skl020PassiveSkill.user,Unused. Yet.,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,FALSE,FALSE
+skl007,Nothingburger,Prefab/Skill/skl007/Skl007PassiveSkill.user,Does nothing. Sorry.,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,FALSE,FALSE
+skl020,Nothingburger,Prefab/Skill/skl020/Skl020PassiveSkill.user,Does nothing. Sorry.,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,FALSE,FALSE
