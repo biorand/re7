@@ -173,7 +173,7 @@ public class RandomizerBirdCageBehaviorTests {
     }
 
     [Fact]
-    public void BirdCageModifier_BirthdaySkillRewards_EmitSeparateAdditionalAssetDownload() {
+    public void BirdCageModifier_BirthdaySkillRewards_IncludeAssetsInFluffyAndSeparatePatchDownload() {
         using var randomizer = CreateBirthdaySkillBirdCageRandomizer();
         var output = randomizer.Randomize();
         var additionalAsset = output.Assets.SingleOrDefault(asset => asset.Key == "3-assets");
@@ -184,14 +184,27 @@ public class RandomizerBirdCageBehaviorTests {
         Assert.Contains("assets", additionalAsset!.FileName);
 
         using var patchZip = output.Assets.Single(asset => asset.Key == "1-patch").Data.Unzip();
+        using var fluffyZip = output.Assets.Single(asset => asset.Key == "2-fluffy").Data.Unzip();
         using var additionalZip = additionalAsset.Data.Unzip();
-        var patchPak = new PakFile(patchZip.Entries.Single(entry => entry.Name.EndsWith(".pak")).GetBytes());
+        using var patchPak = new PakFile(patchZip.Entries.Single(entry => entry.Name.EndsWith(".pak")).GetBytes());
         var additionalPakEntry = additionalZip.Entries.Single(entry => entry.Name == "re_chunk_000.pak.patch_002.pak");
-        var additionalPak = new PakFile(additionalPakEntry.GetBytes());
+        using var additionalPak = new PakFile(additionalPakEntry.GetBytes());
 
         Assert.Null(patchPak.GetEntryData(overlayPath));
         Assert.NotNull(additionalPak.GetEntryData(overlayPath));
         Assert.NotNull(additionalPak.GetEntryData(unusedOverlayPath));
+
+        foreach (var path in GetBirthdayOverlayEntryPaths()) {
+            var entry = fluffyZip.GetEntry(path);
+            Assert.NotNull(entry);
+            Assert.Equal(additionalPak.GetEntryData(path), entry.GetBytes());
+        }
+        foreach (var (path, bytes) in randomizer.FileRepository.GetOutputFilesSnapshot()) {
+            Assert.Equal(bytes, Assert.IsType<ZipArchiveEntry>(fluffyZip.GetEntry(path)).GetBytes());
+        }
+        foreach (var entry in patchZip.Entries.Where(entry => entry.FullName.StartsWith("reframework/"))) {
+            Assert.Equal(entry.GetBytes(), Assert.IsType<ZipArchiveEntry>(fluffyZip.GetEntry(entry.FullName)).GetBytes());
+        }
     }
 
     [Fact]
