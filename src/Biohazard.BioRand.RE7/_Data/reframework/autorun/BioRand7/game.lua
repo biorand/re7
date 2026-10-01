@@ -132,7 +132,11 @@ end
 function Game:enemy_identity(game_object)
     local controller = self:component(game_object, "app.EnemyActionController")
     local save = self:component(game_object, "app.EnemySave")
-    for _, source in ipairs({ { controller, "SpawnerGuid" }, { save, "SaveGUID" } }) do
+    -- Pooled bosses retain the template's SpawnerGuid. ActualUsingGuid identifies
+    -- the active encounter and survives reloads even if a different pool slot is used.
+    for _, source in ipairs({
+        { controller, "ActualUsingGuid" }, { controller, "SpawnerGuid" }, { save, "SaveGUID" },
+    }) do
         if source[1] ~= nil then
             local value = source[1]:get_field(source[2])
             local guid = self:guid_string(value)

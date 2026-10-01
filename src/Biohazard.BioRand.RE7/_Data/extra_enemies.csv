@@ -66,6 +66,7 @@ TRUE,random,Wrecked Ship - 4F - Bridge,natives/stm/environment/scene/chapter4/c0
 TRUE,random,Wrecked Ship - 4F - Corridor Leading To Power Cable,natives/stm/environment/scene/chapter4/c04_ship4fcorridorc.scn.20,4,55.58,29.4,33.65,0,0,0,1
 TRUE,random,Swamp - Near Ladder,natives/stm/environment/scene/chapter4/c04_cottageswamp01.scn.20,4,47.18,-0.06,-34.71,0,0,0,1
 TRUE,random,Salt Mines -  Before Serum,natives/stm/environment/scene/chapter4/c04_cavepassage05.scn.20,4,-11.04,-45.1,-167.81,0,0,0,1
+TRUE,Em3600,Salt Mines - Fat Molded Area,natives/stm/environment/scene/chapter4/c04_cavemine.scn.20,4,-53.07,-23.37,-128.17,0,0,0,1
 TRUE,random,Salt Mines -  After Double Fat Molded Ladder Above,natives/stm/environment/scene/chapter4/c04_cavemine.scn.20,4,-21.57,-41.23,-178.3,0,0,0,1
 TRUE,random,Guest House - Mia Unconcious,natives/stm/environment/scene/chapter4/c04_c01storeroom01.scn.20,4,-89.57,-9.23,-124.67,0,0,0,1
 TRUE,random,Guest House - Pre Final Evie Shock Waves,natives/stm/environment/scene/chapter4/c04_c013f.scn.20,4,-83.8,-2.75,-138.87,0,0,0,1

@@ -27,7 +27,7 @@ Public references: [managed object field and method access](https://cursey.githu
 
 ## Offline tests
 
-Enemy drop and Em3300 streams use a stable spawner/save GUID (or scene/name fallback), never a memory address or a session respawn counter. The same spawned enemy therefore keeps its roll after loading a save. This changes the old address-dependent runtime rolls; it does not change the seeded System.Random implementation.
+Enemy drop and Em3300 streams use `EnemyActionController.ActualUsingGuid` for the active encounter, falling back to the spawner/save GUID and then scene/name, never a memory address or a session respawn counter. Pooled bosses retain the template's `SpawnerGuid`: live seed 670486 had three defeated Marguerites with the same spawner GUID but distinct `ActualUsingGuid` values. Using the template GUID gave all three identical enhanced-ammo rewards. Keep the encounter GUID first; a pool slot's `EnemySave.SaveGUID` is not a substitute because pool allocation can change after loading. The same encounter therefore keeps its roll after loading a save. This changes the affected runtime rolls; it does not change the seeded System.Random implementation.
 
 Use `Game:guid_string` for `System.Guid` fields. In the live RT build, calling `ToString()` on an unboxed GUID through Lua returned unrelated receiver bytes. Formatting the TDB fields `mData1`, `mData2`, `mData3`, and `mData4_0` through `mData4_7` matches the engine's actual GUID and avoids shared or process-dependent identities.
 

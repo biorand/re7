@@ -116,8 +116,8 @@ internal sealed class ExtraEnemySceneBuilder(
                     request.Enemy)
                 .WithName($"{StaticPrefix}_{enemyId}_{index:000}"),
             rng);
-        // Static instances never receive spawn() to replace the template's SpawnerGuid. Sharing
-        // it makes one Mia's saved death (and runtime RNG) apply to every cloned Mia.
+        // Static instances have no spawn encounter GUID, so their SpawnerGuid must be unique.
+        // Sharing it makes one Mia's saved death (and runtime RNG) apply to every cloned Mia.
         return instance.WithComponents(instance.Components.Select(component =>
             component.Type.FindFieldIndex("SpawnerGuid") >= 0
                 ? component.SetField("SpawnerGuid", instance.Guid)

@@ -12,10 +12,11 @@ TRUE,skl015,1,1,3,5,Coin CoinOld,Impact I
 TRUE,skl016,1,1,5,7,Coin CoinOld,Toughness II
 TRUE,skl017,1,1,3,5,Coin CoinOld,Toughness I
 TRUE,skl018,1,1,3,5,Coin CoinOld,Guard Up
-TRUE,skl019,1,1,3,5,Coin CoinOld,Quick Reload
-TRUE,skl021,1,1,3,5,Coin CoinOld,Vengeance
-TRUE,skl022,1,1,3,5,Coin CoinOld,Narrow Escape
-TRUE,skl023,1,1,3,5,Coin CoinOld,Brawler
+TRUE,GoldenBar,1,1,3,5,Coin CoinOld,Golden Crowbar
+TRUE,GoldenBar,1,1,3,5,Coin CoinOld,Golden Crowbar
+TRUE,GoldenBar,1,1,3,5,Coin CoinOld,Golden Crowbar
+TRUE,GoldenBar,1,1,3,5,Coin CoinOld,Golden Crowbar
+TRUE,GoldenBar,1,1,1,1,Coin CoinOld,Golden Crowbar
 FALSE,MachineGun,1,1,1,1,Coin CoinOld,Disabled until there is a way to display the input item
 FALSE,Shotgun_DB,1,1,1,1,Coin CoinOld,Disabled until there is a way to display the input item
 FALSE,Shotgun_M37,1,1,1,1,Coin CoinOld,Disabled until there is a way to display the input item
