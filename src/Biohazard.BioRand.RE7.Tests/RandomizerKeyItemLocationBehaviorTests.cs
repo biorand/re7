@@ -18,7 +18,6 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
 
     private static readonly IReadOnlyDictionary<string, ExpectedKeyItemRule> ExpectedRules =
         new Dictionary<string, ExpectedKeyItemRule>(StringComparer.OrdinalIgnoreCase){
-            ["FloorDoorKey"] = new(3, ExpectedScope.Chapter3Start),
             ["3CrestKeyB"] = new(3, ExpectedScope.BeforeDogDoor),
             ["3CrestKeyA"] = new(3, ExpectedScope.BeforeDogDoor),
             ["Battery"] = new(3, ExpectedScope.BeforeBarnBatterySocket),
@@ -40,6 +39,7 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
         "EntranceHallKey",
         "Fuse",
         "FuseCh4",
+        "FloorDoorKey",
         "3CrestKeyC",
         "HandAxe",
         "Lantern",
@@ -261,7 +261,7 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
     }
 
     [Fact]
-    public void KeyItemLocations_BoundedSearchRegressionSeedUsesNewSafeHatchLocations() {
+    public void KeyItemLocations_BoundedSearchRegressionSeedPreservesHatchKey() {
         using var result = RandomizerTest.RunState(config => { config["random-key-item-locations"] = true; }, seed: 16);
 
         var randomizedKeyItems = GetChangedPlacements(result)
@@ -270,14 +270,17 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         Assert.NotEmpty(randomizedKeyItems);
-        Assert.Contains("FloorDoorKey", randomizedKeyItems);
+        AssertHatchKeyRemainsVanilla(result);
         Assert.DoesNotContain("Skipped full key item route", result.ProcessLog);
         AssertPhysicalProgression(result);
     }
 
-    [Fact]
-    public void KeyItemLocations_SoftlockSeedUsesAReviewedLocationBeforeTheHatch() {
+    [Theory]
+    [InlineData("Normal")]
+    [InlineData("Main House")]
+    public void KeyItemLocations_SoftlockSeedPreservesNativeHatchKeyWithItemRandomization(string start) {
         using var result = RandomizerTest.RunState(config => {
+            config["start-chapter"] = start;
             config["random-key-item-locations"] = true;
             config["random-items"] = true;
             config["replace-madhouse-tapes"] = true;
@@ -286,8 +289,7 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
             config["additional-wooden-crates"] = true;
         }, seed: 736361);
 
-        var change = Assert.Single(GetChangedPlacements(result), changed => changed.AfterId == "FloorDoorKey");
-        Assert.Empty(PhysicalPickupRequirements[GetTargetGuid(change.Placement)]);
+        AssertHatchKeyRemainsVanilla(result);
         AssertPhysicalProgression(result);
     }
 
@@ -369,26 +371,17 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
     }
 
     [Fact]
-    public void KeyItemLocations_RestrictsHatchKeyToReachablePreHatchRooms() {
+    public void KeyItemLocations_ExcludesHatchKeyAndItsNativePickupFromRandomization() {
         var result = _defaultRun.Result;
-        var diningTable = result.ItemPlacementService.MainGamePlacements.Single(placement =>
-            placement.IsExtra &&
-            placement.Comment == "Dinner Table" &&
-            placement.SceneFile.Equals(MainHouseDiningKitchenScenePath, StringComparison.OrdinalIgnoreCase));
-        var pantryUnderHatch = result.ItemPlacementService.MainGamePlacements.Single(placement =>
-            placement.IsExtra &&
-            placement.Comment == "Pantry" &&
-            placement.SceneFile.Equals(MainHousePantryScenePath, StringComparison.OrdinalIgnoreCase));
         var hatchKeyCarrier = FindPlacement(result, MainHouseWestItemSetScenePath, MainHouseHatchKeyGuid);
-        var mainHallExtra = result.ItemPlacementService.MainGamePlacements.Single(placement =>
-            placement.IsExtra &&
-            placement.Comment == "Main Hall" &&
-            placement.SceneFile.Equals(MainHouseHallScenePath, StringComparison.OrdinalIgnoreCase));
 
-        Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(diningTable, "FloorDoorKey"));
-        Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(pantryUnderHatch, "FloorDoorKey"));
-        Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(hatchKeyCarrier, "FloorDoorKey"));
-        Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(mainHallExtra, "FloorDoorKey"));
+        Assert.All(result.ItemPlacementService.MainGamePlacements, placement =>
+            Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(placement, "FloorDoorKey")));
+        Assert.All(ExpectedRules.Keys, itemId =>
+            Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(hatchKeyCarrier, itemId)));
+        Assert.False(KeyItemCarrierSafety.IsReviewed(hatchKeyCarrier));
+        Assert.DoesNotContain(KeyItemLocationModifier.GetRouteTargetsForTesting(result.Randomizer),
+            target => target.TargetGuid == MainHouseHatchKeyGuid);
     }
 
     [Fact]
@@ -413,7 +406,7 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
     }
 
     [Fact]
-    public void KeyItemLocations_Softlock2SeedKeepsHatchKeyBeforeHatchAndPreservesOxStatuette() {
+    public void KeyItemLocations_Softlock2SeedPreservesHatchKeyAndOxStatuette() {
         using var result = RandomizerTest.RunState(
             config => {
                 config["random-key-item-locations"] = true;
@@ -425,12 +418,9 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
             },
             seed: 736361);
 
-        var randomizedKeyItems = GetChangedPlacements(result)
-            .Where(change => ExpectedRules.ContainsKey(change.AfterId))
-            .ToDictionary(change => change.AfterId, StringComparer.OrdinalIgnoreCase);
         var oxStatuette = GetItem(result.ReadAfterScene(MainHouseGarageScenePath), MainHouseGarageOxStatuetteGuid);
 
-        Assert.Empty(PhysicalPickupRequirements[GetTargetGuid(randomizedKeyItems["FloorDoorKey"].Placement)]);
+        AssertHatchKeyRemainsVanilla(result);
         Assert.Equal("EntranceHallKey", oxStatuette.ItemDataID);
         Assert.DoesNotContain("Ox Statuette ->", result.ProcessLog);
         AssertPhysicalProgression(result);
@@ -1436,6 +1426,49 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
             yield return new ChangedItemPlacement(placement, beforeItem?.ItemDataID ?? placement.Id,
                 afterItem.ItemDataID);
         }
+    }
+
+    private static void AssertHatchKeyRemainsVanilla(RandomizerRunResult result) {
+        var before = result.ReadBeforeScene(MainHouseWestItemSetScenePath).FindGameObject(MainHouseHatchKeyGuid)!;
+        var after = result.ReadAfterScene(MainHouseWestItemSetScenePath).FindGameObject(MainHouseHatchKeyGuid);
+        Assert.NotNull(after);
+        AssertOriginalPickupShapePreserved(before, after, "FloorDoorKey");
+        var beforeItem = before.FindComponent<app.Item>()!;
+        var afterItem = after.FindComponent<app.Item>()!;
+        Assert.Equal(beforeItem.Enabled, afterItem.Enabled);
+        Assert.Equal(beforeItem.SaveGUID, afterItem.SaveGUID);
+        Assert.Equal(beforeItem.ItemStackNum, afterItem.ItemStackNum);
+        Assert.Equal(beforeItem._DifficultItemNumSetting.EasyNum, afterItem._DifficultItemNumSetting.EasyNum);
+        Assert.Equal(beforeItem._DifficultItemNumSetting.HardNum, afterItem._DifficultItemNumSetting.HardNum);
+        var beforeTransform = before.FindComponent<GeneratedViaTransform>()!;
+        var afterTransform = after.FindComponent<GeneratedViaTransform>()!;
+        Assert.Equal((Vector3)beforeTransform.Position, (Vector3)afterTransform.Position);
+        Assert.Equal((Quaternion)beforeTransform.Rotation, (Quaternion)afterTransform.Rotation);
+        Assert.Equal(GetSetBoolActions(before), GetSetBoolActions(after));
+
+        var beforeInteractions = new List<app.InteractDetailSearch>();
+        var afterInteractions = new List<app.InteractDetailSearch>();
+        before.VisitGameObjects(go => {
+            if (go.FindComponent<app.InteractDetailSearch>() is { } interact)
+                beforeInteractions.Add(interact);
+        });
+        after.VisitGameObjects(go => {
+            if (go.FindComponent<app.InteractDetailSearch>() is { } interact)
+                afterInteractions.Add(interact);
+        });
+        Assert.NotEmpty(beforeInteractions);
+        Assert.Equal(beforeInteractions.Count, afterInteractions.Count);
+        foreach (var (original, output) in beforeInteractions.Zip(afterInteractions)) {
+            Assert.Equal(original.IsCheckAngle, output.IsCheckAngle);
+            Assert.Equal(original.IsItemGet, output.IsItemGet);
+            Assert.Equal(original.SetFsmBoolFlag, output.SetFsmBoolFlag);
+            Assert.Equal(original.SetFsmBoolFlagId, output.SetFsmBoolFlagId);
+            Assert.Equal(original.SetFsmBoolFlagValue, output.SetFsmBoolFlagValue);
+        }
+        Assert.DoesNotContain(GetChangedPlacements(result), change =>
+            change.BeforeId == "FloorDoorKey" || change.AfterId == "FloorDoorKey");
+        Assert.Contains("Skipped key item Hatch Key:", result.ProcessLog);
+        Assert.DoesNotContain("Hatch Key ->", result.ProcessLog);
     }
 
     private static ItemPlacement FindPlacement(RandomizerRunResult result, string scenePath, Guid guid)

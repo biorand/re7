@@ -11,7 +11,6 @@ internal static class KeyItemCarrierSafety {
 
     private static readonly Dictionary<Guid, Carrier> Carriers = new() {
         [new("401dbfaa-3469-0702-1c9a-d74a7d185216")] = new("leveldesign/itemset/chapter3/mainhouse_west/mainhouse_west", false), // Book
-        [new("665a86ed-7e9c-4b56-a889-4377fa1d3f47")] = new("leveldesign/itemset/chapter3/mainhouse_west/mainhouse_west", false), // Hatch key
         [new("0da28012-ad6a-0da5-1f0a-cacd2c677ed3")] = new("environment/scene/chapter3/c03_mainhouse1fliving", false), // Clock reward
         [new("7a0710fd-6939-02b3-1a5b-229ce8cf7e77")] = new("environment/scene/chapter3/c03_mainhousehall", false), // Pendulum
         [new("71417782-8c02-4be1-88d2-735fc79e7940")] = new("environment/scene/chapter3/c03_mainhouse2fbath", false), // Bathtub

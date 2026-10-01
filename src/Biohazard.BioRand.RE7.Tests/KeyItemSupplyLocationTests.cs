@@ -125,10 +125,9 @@ public partial class RandomizerKeyItemLocationBehaviorTests {
     }
 
     [Fact]
-    public void KeyItemLocations_HatchHasSeveralCandidatesAboveItsOwnHatch() {
+    public void KeyItemLocations_AdditionalSupplyLocationsCannotCarryHatchKey() {
         var placements = KeyItemSupplyLocations.CreatePlacements().Where(placement =>
             KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(placement, "FloorDoorKey")).ToArray();
-        Assert.True(placements.Length >= 3);
-        Assert.All(placements, placement => Assert.True(placement.PosY >= 0));
+        Assert.Empty(placements);
     }
 }
