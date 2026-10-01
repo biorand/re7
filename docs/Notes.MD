@@ -99,6 +99,12 @@ Birthday skills:
 - For inventory support, the important chain is the original skill inventory prefab `Prefab/Skill/skl###/Skl###.pfb`, its `app.PassiveSkillItem`, the referenced `PlayerPassiveSkill.user`, messages copied into `ui_item_mes.msg.17`, and REFramework handling to avoid the native Birthday-only inventory callback freeze.
 - Birthday skills do not have normal world pickup meshes. Static/random placements should use a known-good pickup shell and override `app.Item.ItemDataID` to the chosen `skl###`.
 
+Golden Crowbar:
+
+- `GoldenBar` is defined in `resourceitemsettings_birthday.user`, which the campaign does not register. `GoldenCrowbarInventoryPatch` imports only its usable entry into campaign resource item settings and copies its name/manual messages. Do not import the locked `GoldenBarNo` entry or treat the weapon-stat restriction as an acquisition filter.
+- Its model, textures, detail-search prefab and item-resource scene exist in the base PAK. Its inventory prefab, `wp1370_goldenbar.rcol`, and `epvc_wp1370.pfb` exist only in the Birthday DLC PAK and must be included in generated patches. Its effect prefab references the shared `epve_objectlanding_blow.pfb`; no Birthday manager component is present on the inventory prefab.
+- Regression tests cover campaign registration, dependency packaging, both start chapters and cage rewards/model preservation. The missing registration was confirmed through live MCP; acquisition, equipping, attacks and save/reload with the corrected patch still require an in-game check.
+
 Not a Hero and End of Zoe enemies:
 
 - DLC enemies need imported enemy templates and spawn-info templates in `template.scn.20`; missing templates should be skipped rather than emitted partially.

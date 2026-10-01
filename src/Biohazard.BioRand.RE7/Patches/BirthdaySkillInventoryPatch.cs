@@ -357,7 +357,7 @@ internal class BirthdaySkillInventoryPatch(IPatchContext context) : IPatch {
             []);
     }
 
-    private static void CopyMessageIfMissing(MsgFile.Builder destination, MsgFile source, Guid guid) {
+    internal static void CopyMessageIfMissing(MsgFile.Builder destination, MsgFile source, Guid guid) {
         if (guid == Guid.Empty || destination.FindMessage(guid) != null) {
             return;
         }

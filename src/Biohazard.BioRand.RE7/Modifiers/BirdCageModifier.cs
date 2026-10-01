@@ -1,5 +1,6 @@
 ﻿using Biohazard.BioRand.RE7.Items;
 using Biohazard.BioRand.RE7.REEngine;
+using Biohazard.BioRand.RE7.Patches;
 using Biohazard.BioRand.RE7.Serialization;
 using Biohazard.BioRand.RE7.Services;
 using Enums.app;
@@ -265,6 +266,12 @@ internal class BirdCage {
 
                 newItemHolder = newItemHolder.AddOrUpdateComponent(mesh);
                 newItemHolder = BirthdaySkillVisuals.ApplyRotationCorrection(newItemHolder);
+            } else if (Item.ItemDataID == GoldenCrowbarInventoryPatch.ItemId) {
+                // Birthday weapons have no campaign placement row to supply their model.
+                mesh = mesh
+                    .Set("Mesh", new RszResourceNode(GoldenCrowbarInventoryPatch.MeshPath))
+                    .Set("Material", new RszResourceNode(GoldenCrowbarInventoryPatch.MaterialPath));
+                newItemHolder = newItemHolder.AddOrUpdateComponent(mesh);
             } else {
                 var newItem = randomizer.ItemPlacementService.FromId(Item.ItemDataID)
                     .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.Mesh) && !string.IsNullOrWhiteSpace(x.Material));
