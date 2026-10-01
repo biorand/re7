@@ -31,6 +31,7 @@ I've gathered this information while working on the randomizer.
 - `RandomizerConfigurationDefinition.cs` is the source of truth for the `random-key-item-locations` option. Do not only edit profile JSON when changing the option.
 - Do not emulate trigger-driven room-entry flags as pickup side effects. Stone Statuette (`SilhouettePazzlePieceOldHouse`) remains randomizable, but its former `c03_3_Main_EnterMiaCapturedRoom` pickup side effect is intentionally skipped because the original writer is `150_Main_EnterMiaCapturedRoom`, a physical `TriggerInAction` in `levelfsm_c03_3.scn.20`. The randomizer adds an equivalent fallback trigger on the natural Old House shadow-puzzle path so players do not need to detour through the vanilla Stone Statuette room just to advance hidden progression.
 - Current unsafe preserved items include:
+  - Hatch Key (`FloorDoorKey`): relocation breaks Jack's Main House progression triggers. Preserve the native pickup and its interaction/flag sequence; even reachable pre-hatch supply locations are unsafe replacements. Its original pickup must not carry another randomized key either.
   - Red Dog Head (`3CrestKeyC`): its `c03_2_Main_GetCrestInFreezerRoom` flag is the Jack 2/freezer reward progression state, not just an item-acquired flag.
   - Candle (`Candle_Lighted`): its `c03_4_Main_PazzleRoom_CandleOn` flag is part of the Lucas birthday puzzle state machine.
   - Lantern, Ox Statuette, keycards, Chapter 1 key items, Chapter 4 fuse, and complete serum remain vanilla until exact access-sphere and FSM side effects are proven safe.

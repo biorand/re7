@@ -53,6 +53,8 @@ internal class KeyItemLocationModifier : Modifier {
         "HandAxe",
         "Fuse",
         "FuseCh4",
+        // Relocating this pickup breaks Jack's Main House progression triggers.
+        "FloorDoorKey",
         "3CrestKeyC",
         "Lantern",
         "LucasCardKey",
