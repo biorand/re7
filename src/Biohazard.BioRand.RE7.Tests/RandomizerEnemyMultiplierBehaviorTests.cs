@@ -107,6 +107,30 @@ public class RandomizerEnemyMultiplierBehaviorTests {
 
         Assert.Equal(beforeSlots.Length, newSlots.Count);
         Assert.Equal(beforePooledEnemyCount + newSlots.Count, afterPooledEnemyCount);
+        var poolGuids = beforeSlots.Select(slot => slot.EnemyPoolGuid).Distinct();
+        foreach (var poolGuid in poolGuids) {
+            var pool = afterScene.FindGameObject(poolGuid)!;
+            var copies = pool.Children.Where(child => child.FindComponent<app.EnemySave>() != null &&
+                scene.FindGameObject(child.Guid) == null).ToArray();
+            if (copies.Length == 0) continue;
+            EnemyCloneIsolationTests.AssertIndependentState(copies);
+            var originalIds = scene.FindGameObject(poolGuid)!.Children
+                .Where(child => child.FindComponent<app.EnemySave>() != null)
+                .SelectMany(EnemyCloneIsolationTests.GetStateIds).ToHashSet();
+            foreach (var copy in copies) {
+                copy.VisitComponents(component => {
+                    foreach (var field in new[] { "SaveGUID", "InstanceGuid" }) {
+                        var index = component.Type.FindFieldIndex(field);
+                        if (index >= 0) {
+                            var guid = component.Get<Guid>(field);
+                            Assert.True(guid == Guid.Empty || !originalIds.Contains(guid),
+                                $"{scenePath}: {copy.Name} {component.Type.Name}.{component.Type.Fields[index].Name} still shares {guid}");
+                        }
+                    }
+                    return component;
+                });
+            }
+        }
         foreach (var newSlot in newSlots) {
             Assert.DoesNotContain(newSlot.GenerationGameObjectGuid, beforeGenerationGuids);
             Assert.Contains("_BioRandMultiplier", newSlot.SpawnInfoGameObject.Name);

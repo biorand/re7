@@ -282,6 +282,29 @@ public class RandomizerExtraEnemyGenerationBehaviorTests {
         Assert.NotEqual(Guid.Empty, staticMia.FindComponent<app.EnemySave>()!.SaveGUID);
     }
 
+    [Theory]
+    [InlineData("Em2000")]
+    [InlineData("Em8001")]
+    public void ExtraEnemies_RepeatedBosses_HaveIndependentSaveAndFsmState(string enemyId) {
+        using var result = RunWithExtraEnemies(
+            BuildExtraEnemiesCsv(ExtraEnemyScenePath, 1, enemyId, enemyId, enemyId));
+        var beforeScene = result.ReadBeforeScene(ExtraEnemyScenePath);
+        var afterScene = result.ReadAfterScene(ExtraEnemyScenePath);
+        var copies = enemyId == "Em2000"
+            ? GetNewRootGameObjects(afterScene, beforeScene)
+                .Where(gameObject => gameObject.Name.StartsWith(EnemyModifier.ExtraEnemyStaticPrefix, StringComparison.Ordinal))
+                .ToList()
+            : GetNewExtraEnemyInstances(afterScene, beforeScene);
+
+        Assert.Equal(3, copies.Count);
+        EnemyCloneIsolationTests.AssertIndependentState(copies);
+        if (enemyId == "Em2000") {
+            Assert.All(copies, copy => Assert.Equal(copy.Guid,
+                Assert.Single(copy.Components, component => component.Type.FindFieldIndex("SpawnerGuid") >= 0)
+                    .Get<Guid>("SpawnerGuid")));
+        }
+    }
+
     [Fact]
     public void ExtraEnemies_RandomId_UsesConfiguredEnemyRatios() {
         using var result = RunWithExtraEnemies(
