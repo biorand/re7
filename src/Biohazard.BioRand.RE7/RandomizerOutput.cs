@@ -10,12 +10,10 @@ public sealed class RandomizerOutput {
     private static readonly HttpClient Http = new();
     private byte[]? _zipFile;
     private byte[]? _modFile;
-    private byte[]? _additionalAssetsFile;
 
     public RandomizerInput Input { get; }
     public PakFileBuilder PakFile { get; }
     public PakFileBuilder AdditionalAssetPakFile { get; }
-    public const string AdditionalAssetPakVersion = "05-2026";
     public Dictionary<string, string> LogFiles { get; }
     public int PakVersion { get; }
     public bool IsWithREFramework { get; }
@@ -58,9 +56,12 @@ public sealed class RandomizerOutput {
         if (_zipFile != null)
             return _zipFile;
 
-        _zipFile = BuildZipFile()
-            .AddEntry($"re_chunk_000.pak.patch_{PakVersion:000}.pak", PakFile.ToByteArray())
-            .Build();
+        var zipFile = BuildZipFile()
+            .AddEntry($"re_chunk_000.pak.patch_{PakVersion:000}.pak", PakFile.ToByteArray());
+        if (HasAdditionalAssets) {
+            zipFile.AddEntry($"re_chunk_000.pak.patch_{PakVersion + 1:000}.pak", AdditionalAssetPakFile.ToByteArray());
+        }
+        _zipFile = zipFile.Build();
         return _zipFile;
     }
 
@@ -88,16 +89,6 @@ public sealed class RandomizerOutput {
             .AddEntry("modinfo.ini", GetModInfo())
             .Build();
         return _modFile;
-    }
-
-    public byte[] GetAdditionalAssetsZip() {
-        if (_additionalAssetsFile != null)
-            return _additionalAssetsFile;
-
-        _additionalAssetsFile = new ZipFileBuilder()
-            .AddEntry($"re_chunk_000.pak.patch_{PakVersion + 1:000}.pak", AdditionalAssetPakFile.ToByteArray())
-            .Build();
-        return _additionalAssetsFile;
     }
 
     private ZipFileBuilder BuildZipFile(string logPrefix = "") {

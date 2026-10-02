@@ -11,7 +11,7 @@ public class RandomizerOutputPackagingTests {
     [InlineData(false, true)]
     [InlineData(true, false)]
     [InlineData(true, true)]
-    public void FluffyArchive_ContainsSeedAndSharedAssetsInOneInstall(bool withRuntime, bool withAssets) {
+    public void Archives_ContainSeedAndSharedAssetsInOneInstall(bool withRuntime, bool withAssets) {
         var seed = new PakFileBuilder();
         seed.AddEntry("natives/stm/leveldesign/test.scn.20", "scene"u8.ToArray());
         var assets = new PakFileBuilder();
@@ -36,14 +36,21 @@ public class RandomizerOutputPackagingTests {
         Assert.Equal(fluffy.Entries.Count, fluffy.Entries.Select(entry => entry.FullName)
             .Distinct(StringComparer.OrdinalIgnoreCase).Count());
 
-        // Manual installation keeps the separate asset PAK contract.
         using var patch = new ZipArchive(new MemoryStream(output.GetOutputZip()));
-        Assert.NotNull(patch.GetEntry("re_chunk_000.pak.patch_001.pak"));
+        using var seedPak = new PakFile(ReadBytes(patch, "re_chunk_000.pak.patch_001.pak"));
+        Assert.Equal("scene"u8.ToArray(), seedPak.GetEntryData("natives/stm/leveldesign/test.scn.20"));
         Assert.DoesNotContain(patch.Entries, entry => entry.FullName.StartsWith("natives/"));
+        Assert.Equal(withRuntime, patch.GetEntry("reframework/autorun/BioRand7.lua") != null);
+        Assert.Equal(withRuntime, patch.GetEntry("reframework/data/BioRand7/config.json") != null);
+        Assert.Equal(withAssets ? 2 : 1, patch.Entries.Count(entry => entry.FullName.EndsWith(".pak")));
         if (withAssets) {
-            using var assetZip = new ZipArchive(new MemoryStream(output.GetAdditionalAssetsZip()));
-            Assert.NotNull(assetZip.GetEntry("re_chunk_000.pak.patch_002.pak"));
+            using var assetPak = new PakFile(ReadBytes(patch, "re_chunk_000.pak.patch_002.pak"));
+            Assert.Equal("mesh"u8.ToArray(), assetPak.GetEntryData("natives/stm/props/test.mesh.220128762"));
+            Assert.Equal("texture"u8.ToArray(), assetPak.GetEntryData("natives/stm/streaming/props/test.tex.35"));
         }
+        Assert.DoesNotContain(patch.Entries, entry => entry.FullName.EndsWith(".zip"));
+        Assert.Equal(patch.Entries.Count, patch.Entries.Select(entry => entry.FullName)
+            .Distinct(StringComparer.OrdinalIgnoreCase).Count());
     }
 
     [Fact]
@@ -68,5 +75,12 @@ public class RandomizerOutputPackagingTests {
     private static string ReadText(ZipArchive zip, string path) {
         using var reader = new StreamReader(Assert.IsType<ZipArchiveEntry>(zip.GetEntry(path)).Open(), Encoding.UTF8);
         return reader.ReadToEnd();
+    }
+
+    private static byte[] ReadBytes(ZipArchive zip, string path) {
+        using var stream = Assert.IsType<ZipArchiveEntry>(zip.GetEntry(path)).Open();
+        using var output = new MemoryStream();
+        stream.CopyTo(output);
+        return output.ToArray();
     }
 }

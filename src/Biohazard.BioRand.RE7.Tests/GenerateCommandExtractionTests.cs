@@ -20,7 +20,7 @@ public class GenerateCommandExtractionTests {
     [InlineData("seed.pak")]
     [InlineData("seed.zip")]
     [InlineData("loose")]
-    public void Output_IncludesRuntimeAndAdditionalAssetsAtRequestedDestination(string name) {
+    public void LegacyOutput_IncludesRuntimeAndAdditionalAssetsAtRequestedDestination(string name) {
         var root = CreateTemporaryDirectory();
         try {
             var output = new IntelOrca.Biohazard.BioRand.RandomizerOutput([
@@ -50,6 +50,64 @@ public class GenerateCommandExtractionTests {
             Assert.Empty(Directory.GetFiles(root));
         } finally { Directory.Delete(root, true); }
     }
+
+    [Theory]
+    [InlineData("seed.pak")]
+    [InlineData("seed.PAK")]
+    [InlineData("seed.zip")]
+    [InlineData("loose")]
+    public void BundledOutput_IncludesRuntimeAndSharedAssetsWithoutCompanionDownload(string name) {
+        var root = CreateTemporaryDirectory();
+        try {
+            var output = CreateBundledOutput();
+            var target = Path.Combine(root, "destination", name);
+            GenerateCommand.WriteOutput(output, target);
+            var directory = name == "loose" ? target : Path.GetDirectoryName(target)!;
+            Assert.Equal("hints", File.ReadAllText(Path.Combine(directory, "hints.html")));
+            Assert.False(File.Exists(Path.Combine(directory, "assets.zip")));
+            if (name == "seed.zip") {
+                using var zip = ZipFile.OpenRead(target);
+                Assert.NotNull(zip.GetEntry("reframework/autorun/BioRand7.lua"));
+                Assert.NotNull(zip.GetEntry("natives/stm/test.mesh.220128762"));
+            } else {
+                Assert.Equal("lua", File.ReadAllText(Path.Combine(directory, "reframework/autorun/BioRand7.lua")));
+                Assert.Equal("{}", File.ReadAllText(Path.Combine(directory, "reframework/data/BioRand7/config.json")));
+                Assert.Equal("log", File.ReadAllText(Path.Combine(directory, "process.log")));
+                if (name == "loose") {
+                    Assert.Equal("native", File.ReadAllText(Path.Combine(directory, "natives/stm/test.user.2")));
+                    Assert.Equal("mesh", File.ReadAllText(Path.Combine(directory, "natives/stm/test.mesh.220128762")));
+                } else {
+                    Assert.Equal("pak", File.ReadAllText(target));
+                    Assert.Equal("assets", File.ReadAllText(Path.Combine(directory, "re_chunk_000.pak.patch_002.pak")));
+                    Assert.False(File.Exists(Path.Combine(directory, "re_chunk_000.pak.patch_001.pak")));
+                }
+            }
+            Assert.Empty(Directory.GetFiles(root));
+        } finally { Directory.Delete(root, true); }
+    }
+
+    [Fact]
+    public void BundledOutput_RejectsPakNameThatWouldOverwriteSharedAssets() {
+        var root = CreateTemporaryDirectory();
+        try {
+            var target = Path.Combine(root, "re_chunk_000.pak.patch_002.pak");
+            File.WriteAllText(target, "previous install");
+            Assert.Throws<InvalidDataException>(() => GenerateCommand.WriteOutput(CreateBundledOutput(), target));
+            Assert.Equal("previous install", File.ReadAllText(target));
+        } finally { Directory.Delete(root, true); }
+    }
+
+    private static IntelOrca.Biohazard.BioRand.RandomizerOutput CreateBundledOutput() => new([
+        new("1-patch", "Patch", "", "seed.zip", ZipBytes(
+            ("re_chunk_000.pak.patch_001.pak", "pak"), ("re_chunk_000.pak.patch_002.pak", "assets"),
+            ("reframework/autorun/BioRand7.lua", "lua"), ("reframework/data/BioRand7/config.json", "{}"),
+            ("process.log", "log"))),
+        new("2-fluffy", "Fluffy", "", "seed-mod.zip", ZipBytes(
+            ("natives/stm/test.user.2", "native"), ("natives/stm/test.mesh.220128762", "mesh"),
+            ("reframework/autorun/BioRand7.lua", "lua"), ("reframework/data/BioRand7/config.json", "{}"),
+            ("process.log", "log"))),
+        new("4-key-hints", "Hints", "", "hints.html", "hints"u8.ToArray()),
+    ], "");
 
     private static byte[] ZipBytes(params (string Name, string Content)[] entries) {
         using var stream = new MemoryStream();

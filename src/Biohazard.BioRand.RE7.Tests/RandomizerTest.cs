@@ -115,7 +115,7 @@ public static class RandomizerTest {
             new PakFile(
                 zipAsset
                     .Entries
-                    .Single(entry => entry.Name.EndsWith(".pak"))
+                    .Single(entry => entry.Name == "re_chunk_000.pak.patch_001.pak")
                     .GetBytes()
             )
         );
