@@ -48,8 +48,14 @@ internal class TemplateService {
     public RszGameObject GetEnemyFsmGenerator()
         => GetObject(EnemyFsmGeneratorTemplateName);
 
-    // TODO: DLC item support
     public RszGameObject GetItemTemplate(string id) {
+        if (!_itemTemplates.ContainsKey(id) && ItemDrops.DlcCoinDrops.Any(coin => coin.Id == id)) {
+            // Purchased DLC coins have no scene templates. Reuse the base-game coin pickup
+            // while retaining the purchased reward ID, including its _Buy suffix.
+            var template = GetItemTemplate("Coin");
+            var item = template.FindComponent("app.Item")!.Set("ItemDataID", id);
+            _itemTemplates.Add(id, template.AddOrUpdateComponent(item));
+        }
         if (!_itemTemplates.ContainsKey(id) && BirthdaySkillVisuals.TryGetResources(id, out var resources)) {
             BirthdaySkillVisuals.CopyRequiredFiles(_randomizer.FileRepository, id);
             var template = GetItemTemplate("Coin");

@@ -489,7 +489,8 @@ internal static class RandomizerConfigurationDefinition {
         group.Items.Add(new GroupItem(){
             Id = $"enemy-evelineelderly-explosive-behavior",
             Label = "Explosive Eveline Elderly",
-            Description = "Make Eveline Elderly detonate after the player gets close, then despawn.",
+            Description = "Make Eveline Elderly detonate after the player gets close, or after three minutes " +
+                "without approaching her, then despawn.",
             Type = "switch",
             Default = true
         });

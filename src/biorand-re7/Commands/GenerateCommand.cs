@@ -89,7 +89,23 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings> {
         var fluffy = output.Assets.First(asset => asset.Key == "2-fluffy").Data;
 
         if (isPak) {
+            using var patchZip = new ZipArchive(new MemoryStream(patch));
+            // Rename the seed PAK to the requested output, but keep bundled asset PAKs beside it.
+            var companionPaks = patchZip.Entries
+                .Where(entry => HasExtension(entry.FullName, ".pak"))
+                .Skip(1)
+                .ToArray();
+            var comparison = OperatingSystem.IsWindows() ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal;
+            foreach (var entry in companionPaks) {
+                if (string.Equals(Path.GetFullPath(Path.Combine(directory, entry.FullName)), outputPath, comparison)) {
+                    throw new InvalidDataException(
+                        $"Output filename conflicts with bundled asset PAK '{entry.FullName}'. Choose another filename.");
+                }
+            }
             GetPakFile(patch).WriteToFile(outputPath);
+            foreach (var entry in companionPaks) {
+                ExtractEntryToDirectory(entry, directory);
+            }
             ExtractLogFiles(fluffy, directory);
         } else if (isZip) {
             fluffy.WriteToFile(outputPath);
@@ -98,8 +114,7 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings> {
         }
 
         foreach (var asset in output.Assets.Where(asset => asset.Key != "1-patch" && asset.Key != "2-fluffy")) {
-            // An archive output carries companion downloads next to it. Direct installations need
-            // the shared asset PAK extracted, alongside the runtime and the generated game files.
+            // Support older outputs that still provide the shared assets as a separate download.
             if (asset.Key == "3-assets" && !isZip) {
                 ExtractEntries(asset.Data, directory, _ => true);
             } else {

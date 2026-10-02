@@ -99,7 +99,9 @@ internal class Randomizer : IDisposable {
                 new(
                     "1-patch",
                     "Patch",
-                    "Extract the contents of this zip into your RE 7 install folder.",
+                    "Extract all contents of this ZIP into the folder containing re7.exe. Includes all required shared assets. " +
+                    "Install REFramework separately when required, and remove any previous BioRand seed first. " +
+                    "Use this instead of the Fluffy Mod ZIP.",
                     $"biorand-re7-{input.Seed}.zip",
                     output.GetOutputZip()),
                 new(
@@ -111,18 +113,6 @@ internal class Randomizer : IDisposable {
                     $"biorand-re7-{input.Seed}-mod.zip",
                     output.GetOutputMod())
             };
-            if (output.HasAdditionalAssets) {
-                assets.Add(new RandomizerOutputAsset(
-                    "3-assets",
-                    $"Additional Assets (Version {RandomizerOutput.AdditionalAssetPakVersion})",
-                    "Required with the Patch ZIP for large assets, such as Jack's 55th Birthday skill patches. " +
-                    "Extract into the RE7 game folder; missing assets can cause infinite loading screens. " +
-                    "Already included in the Fluffy Mod ZIP. " +
-                    "Only needs to be updated if the version changes.",
-                    $"biorand-re7-assets-{RandomizerOutput.AdditionalAssetPakVersion}.zip",
-                    output.GetAdditionalAssetsZip()));
-            }
-
             assets.AddRange(_seedOutputAssets.Values.OrderBy(asset => asset.Key, StringComparer.Ordinal));
 
             result = new IntelOrca.Biohazard.BioRand.RandomizerOutput(
