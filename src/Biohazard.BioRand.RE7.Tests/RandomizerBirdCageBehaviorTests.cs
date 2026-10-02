@@ -173,35 +173,48 @@ public class RandomizerBirdCageBehaviorTests {
     }
 
     [Fact]
-    public void BirdCageModifier_BirthdaySkillRewards_EmitSeparateAdditionalAssetDownload() {
+    public void BirdCageModifier_BirthdaySkillRewards_IncludeAssetsInBothInstallationArchives() {
         using var randomizer = CreateBirthdaySkillBirdCageRandomizer();
         var output = randomizer.Randomize();
-        var additionalAsset = output.Assets.SingleOrDefault(asset => asset.Key == "3-assets");
         var overlayPath = "natives/stm/props/sm9959_skillpatch02/skl002/skl002.mdf2.21";
         var unusedOverlayPath = "natives/stm/props/sm9960_skillpatch03/skl003/skl003.mdf2.21";
 
-        Assert.NotNull(additionalAsset);
-        Assert.Contains("assets", additionalAsset!.FileName);
+        Assert.DoesNotContain(output.Assets, asset => asset.Key == "3-assets");
 
         using var patchZip = output.Assets.Single(asset => asset.Key == "1-patch").Data.Unzip();
-        using var additionalZip = additionalAsset.Data.Unzip();
-        var patchPak = new PakFile(patchZip.Entries.Single(entry => entry.Name.EndsWith(".pak")).GetBytes());
-        var additionalPakEntry = additionalZip.Entries.Single(entry => entry.Name == "re_chunk_000.pak.patch_002.pak");
-        var additionalPak = new PakFile(additionalPakEntry.GetBytes());
+        using var fluffyZip = output.Assets.Single(asset => asset.Key == "2-fluffy").Data.Unzip();
+        using var patchPak = new PakFile(Assert.IsType<ZipArchiveEntry>(
+            patchZip.GetEntry("re_chunk_000.pak.patch_001.pak")).GetBytes());
+        var additionalPakEntry = patchZip.Entries.Single(entry => entry.Name == "re_chunk_000.pak.patch_002.pak");
+        using var additionalPak = new PakFile(additionalPakEntry.GetBytes());
 
         Assert.Null(patchPak.GetEntryData(overlayPath));
         Assert.NotNull(additionalPak.GetEntryData(overlayPath));
         Assert.NotNull(additionalPak.GetEntryData(unusedOverlayPath));
+
+        foreach (var path in GetBirthdayOverlayEntryPaths()) {
+            var entry = fluffyZip.GetEntry(path);
+            Assert.NotNull(entry);
+            Assert.Equal(additionalPak.GetEntryData(path), entry.GetBytes());
+        }
+        foreach (var (path, bytes) in randomizer.FileRepository.GetOutputFilesSnapshot()) {
+            Assert.Equal(bytes, Assert.IsType<ZipArchiveEntry>(fluffyZip.GetEntry(path)).GetBytes());
+        }
+        foreach (var entry in patchZip.Entries.Where(entry => entry.FullName.StartsWith("reframework/"))) {
+            Assert.Equal(entry.GetBytes(), Assert.IsType<ZipArchiveEntry>(fluffyZip.GetEntry(entry.FullName)).GetBytes());
+        }
     }
 
     [Fact]
-    public void BirdCageModifier_BirthdaySkillRewards_EmitAdditionalAssetsWhenPreservingItemModels() {
+    public void BirdCageModifier_BirthdaySkillRewards_BundleAssetsWhenPreservingItemModels() {
         using var randomizer =
             CreateBirthdaySkillBirdCageRandomizer(config => { config["preserve-item-models"] = true; });
         var output = randomizer.Randomize();
-        var additionalAsset = output.Assets.SingleOrDefault(asset => asset.Key == "3-assets");
-
-        Assert.NotNull(additionalAsset);
+        Assert.DoesNotContain(output.Assets, asset => asset.Key == "3-assets");
+        using var patchZip = output.Assets.Single(asset => asset.Key == "1-patch").Data.Unzip();
+        using var assetsPak = new PakFile(Assert.IsType<ZipArchiveEntry>(
+            patchZip.GetEntry("re_chunk_000.pak.patch_002.pak")).GetBytes());
+        Assert.NotNull(assetsPak.GetEntryData("natives/stm/props/sm9959_skillpatch02/skl002/skl002.mdf2.21"));
     }
 
     private static List<BirdCageState> GetChangedBirdCageStates(RandomizerRunResult result) {

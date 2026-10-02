@@ -3,11 +3,13 @@ print("Runtime: " .. _VERSION)
 
 local suites = {
     "test_em3300",
+    "test_em3300_idle",
     "test_object_cache",
     "test_enemy_targets",
     "test_inventory",
     "test_enemy_drops",
     "test_enemy_identity",
+    "test_static_mia",
     "test_rng",
     "test_session_state",
     "test_random_events",

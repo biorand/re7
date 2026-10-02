@@ -362,6 +362,8 @@ internal class EnemyMultiplierModifier : Modifier {
         Rng rng) {
         var spawnInfoClone = CloneGameObject(sourceSlot.SpawnInfoGameObject, rng)
             .WithName(sourceSlot.SpawnInfoGameObject.Name + "_BioRandMultiplier");
+        spawnInfoClone = EnemyTemplateFactory.RefreshRuntimeGuids(spawnInfoClone,
+            randomizer.GetRng("enemy-multiplier/spawn-state", spawnInfoClone.Guid));
 
         var enemyInstanceClone = CreateEnemyInstanceClone(scene, randomizer, sourceSlot, rng);
         if (enemyInstanceClone == null) {
@@ -419,11 +421,16 @@ internal class EnemyMultiplierModifier : Modifier {
             .Skip(1)
             .FirstOrDefault(child => IsEnemyInstance(child) && IsMatchingEnemyInstance(child, sourceSlot.UnitAlias));
 
-        if (existingInstance != null)
-            return CloneGameObject(existingInstance, rng).WithName(existingInstance.Name + "_BioRandMultiplier");
+        if (existingInstance != null) {
+            var clone = CloneGameObject(existingInstance, rng).WithName(existingInstance.Name + "_BioRandMultiplier");
+            return EnemyTemplateFactory.RefreshRuntimeGuids(clone,
+                randomizer.GetRng("enemy-multiplier/instance-state", clone.Guid));
+        }
 
         try {
-            return CloneGameObject(randomizer.TemplateService.GetEnemyTemplate(sourceSlot.UnitAlias), rng);
+            var clone = CloneGameObject(randomizer.TemplateService.GetEnemyTemplate(sourceSlot.UnitAlias), rng);
+            return EnemyTemplateFactory.RefreshRuntimeGuids(clone,
+                randomizer.GetRng("enemy-multiplier/instance-state", clone.Guid));
         }
         catch {
             return null;

@@ -99,27 +99,20 @@ internal class Randomizer : IDisposable {
                 new(
                     "1-patch",
                     "Patch",
-                    "Extract the contents of this zip into your RE 7 install folder.",
+                    "Extract all contents of this ZIP into the folder containing re7.exe. Includes all required shared assets. " +
+                    "Install REFramework separately when required, and remove any previous BioRand seed first. " +
+                    "Use this instead of the Fluffy Mod ZIP.",
                     $"biorand-re7-{input.Seed}.zip",
                     output.GetOutputZip()),
                 new(
                     "2-fluffy",
                     "Fluffy Mod",
-                    "Drop this zip file into Fluffy Mod Manager's mod folder and enable it.",
+                    "Enable this ZIP in Fluffy Mod Manager for RE7 RT/DX12. Includes shared assets. " +
+                    "Install REFramework separately when required, and disable any previous BioRand seed first. " +
+                    "Use this instead of the Patch ZIP.",
                     $"biorand-re7-{input.Seed}-mod.zip",
                     output.GetOutputMod())
             };
-            if (output.HasAdditionalAssets) {
-                assets.Add(new RandomizerOutputAsset(
-                    "3-assets",
-                    $"Additional Assets (Version {RandomizerOutput.AdditionalAssetPakVersion})",
-                    "Required for large assets, such as Jack's 55th Birthday skill patches. " +
-                    "Must be installed, otherwise infinite loading screens can occur! " +
-                    "Only needs to be updated if the version changes.",
-                    $"biorand-re7-assets-{RandomizerOutput.AdditionalAssetPakVersion}.zip",
-                    output.GetAdditionalAssetsZip()));
-            }
-
             assets.AddRange(_seedOutputAssets.Values.OrderBy(asset => asset.Key, StringComparer.Ordinal));
 
             result = new IntelOrca.Biohazard.BioRand.RandomizerOutput(
