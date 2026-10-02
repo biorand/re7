@@ -311,6 +311,49 @@ public class RandomizerItemRandomizationTests {
         Assert.Equal(visuals.Material, GetVisualResource(afterGameObject, "Material"));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void RandomItems_DlcCoinValuableDrops_PreserveEachRewardAndUsablePickup(bool preserveItemModels) {
+        using var result = RandomizerTest.RunState(config => {
+            config["random-items"] = true;
+            config["allow-dlc-items"] = true;
+            config["item-drop-valuable-dlc-coin"] = true;
+            config["preserve-item-models"] = preserveItemModels;
+            ConfigureSingleDrop(config, ForcedDropId);
+        });
+
+        var templateService = result.Randomizer.TemplateService;
+        var coinTemplate = templateService.GetItemTemplate("Coin");
+        foreach (var (coinId, _, _) in ItemDrops.DlcCoinDrops) {
+            var template = templateService.GetItemTemplate(coinId);
+            Assert.Equal(coinId, template.FindComponent<app.Item>()!.ItemDataID);
+            AssertVisualResourcesMatch(coinTemplate, template);
+            Assert.True(HasPickupInteractions(template));
+
+            var (placement, beforeItem, afterItem) = FindChangedPlacementByAfterItem(result, id => id == coinId);
+            var beforeScene = result.ReadBeforeScene(placement.SceneFile);
+            var afterGameObject = result.ReadAfterScene(placement.SceneFile).FindGameObject(placement.Guid)!;
+            Assert.Equal(coinId, afterItem.ItemDataID);
+            Assert.Equal(1, afterItem.ItemStackNum);
+            Assert.Equal(1, afterItem._DifficultItemNumSetting.EasyNum);
+            Assert.Equal(1, afterItem._DifficultItemNumSetting.HardNum);
+            Assert.NotEqual(beforeItem.SaveGUID, afterItem.SaveGUID);
+            AssertVisualResourcesMatch(
+                preserveItemModels ? beforeScene.FindGameObject(placement.Guid)! : template,
+                afterGameObject);
+
+            if (!HasFsmInHierarchy(beforeScene, placement.Guid)) {
+                AssertTemplateChildShape(template, afterGameObject);
+                AssertNoSharedDescendantGuids(template, afterGameObject);
+                AssertNoSharedSaveGuids(template, afterGameObject);
+                AssertPickupInteractionsAreReadyForFreshPlacement(afterGameObject, coinId);
+            }
+        }
+
+        Assert.Equal("Coin", coinTemplate.FindComponent<app.Item>()!.ItemDataID);
+    }
+
     [Fact]
     public void RandomItems_ValuableWeaponDrop_PlacesWeaponBeforeGeneralPool() {
         using var result = RandomizerTest.RunState(config => {
