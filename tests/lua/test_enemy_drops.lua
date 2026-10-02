@@ -227,7 +227,7 @@ return function()
     local guid_only = object({ get_Name = constant("BioRandExtraEnemyStatic_Em2000_1") })
     assert(static_mia:is_killed(mia_controller, guid_only), "Known GUIDs must not read folder or transform")
     assert(static_mia:is_killed(object({}, { SpawnerGuid = empty_guid, ActualUsingGuid = empty_guid }), mia),
-        "Position-based fallback must still work when neither GUID matches")
+        "Position-based fallback must still work when neither GUID is available")
     local deactivated = false
     context.game.method = function(_, type_name, signature)
         assert(type_name == "app.Util" and signature == "setActive(via.GameObject, System.Boolean, System.Boolean)")
