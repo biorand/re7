@@ -42,6 +42,9 @@ internal sealed class EnemyTemplateFactory(Randomizer randomizer) {
             template = template.AddOrUpdateComponent(templateTransform);
         }
 
+        // Cloning the GameObject GUIDs does not clone the enemy's save or FSM identities.
+        // Use a separate stream so isolating those identities does not reshuffle enemy choices.
+        template = RefreshRuntimeGuids(template, randomizer.GetRng("enemy-instance/state", template.Guid));
         return DisableEnemyStampSerialization(MarkExplosiveEm3300Template(enemyId, template.WithName(enemyId)));
     }
 

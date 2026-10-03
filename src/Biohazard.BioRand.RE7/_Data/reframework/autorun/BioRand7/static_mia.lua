@@ -63,11 +63,20 @@ function StaticMia:save(save, data)
     data:set_field("IsDraw", false)
 end
 
-function StaticMia:keys(controller, game_object)
+function StaticMia:instance_key(controller, game_object)
+    -- Static clones own a save record. Template/encounter GUIDs can be shared,
+    -- so never let a lower-priority alias override a living instance's identity.
+    local save = self.context.game:component(game_object, "app.EnemySave")
+    local save_key = self:guid_key(save, "SaveGUID", "guid:save:")
+    if save_key ~= nil then return save_key end
     controller = controller or self.context.game:component(game_object, "app.EnemyActionController")
+    return self:guid_key(controller, "SpawnerGuid", "guid:spawner:")
+        or self:guid_key(controller, "ActualUsingGuid", "guid:actual:")
+end
+
+function StaticMia:keys(controller, game_object)
     local keys = {}
-    keys[#keys + 1] = self:guid_key(controller, "SpawnerGuid", "guid:spawner:")
-    keys[#keys + 1] = self:guid_key(controller, "ActualUsingGuid", "guid:actual:")
+    keys[#keys + 1] = self:instance_key(controller, game_object)
     keys[#keys + 1] = self:fallback_key(game_object)
     return keys
 end
@@ -77,10 +86,9 @@ function StaticMia:is_killed(controller, game_object)
     if not self:is_static(game_object) then
         return false
     end
-    controller = controller or self.context.game:component(game_object, "app.EnemyActionController")
-    return self.killed[self:guid_key(controller, "SpawnerGuid", "guid:spawner:")]
-        or self.killed[self:guid_key(controller, "ActualUsingGuid", "guid:actual:")]
-        or self.killed[self:fallback_key(game_object)] or false
+    local key = self:instance_key(controller, game_object)
+    if key ~= nil then return self.killed[key] or false end
+    return self.killed[self:fallback_key(game_object)] or false
 end
 
 function StaticMia:remember(controller, game_object)
