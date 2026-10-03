@@ -226,6 +226,7 @@ internal class Randomizer : IDisposable {
             new MadhouseSaveModifier(this),
             new ChapterJumpDataModifier(this),
             new MessageModifier(this),
+            new PlayerGuideModifier(this),
             new UvarDefaultsModifier(this),
         ];
     }
