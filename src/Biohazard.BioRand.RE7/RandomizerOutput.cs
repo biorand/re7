@@ -23,6 +23,7 @@ public sealed class RandomizerOutput {
         "BioRand7.lua",
         "BioRand7/config.lua",
         "BioRand7/context.lua",
+        "BioRand7/crafting.lua",
         "BioRand7/data.lua",
         "BioRand7/em3300_explosions.lua",
         "BioRand7/em8000_knee_down.lua",

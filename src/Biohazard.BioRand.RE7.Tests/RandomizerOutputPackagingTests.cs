@@ -31,6 +31,7 @@ public class RandomizerOutputPackagingTests {
         Assert.NotNull(fluffy.GetEntry("config.json"));
         Assert.Contains("Shared assets are included", ReadText(fluffy, "modinfo.ini"));
         Assert.Equal(withRuntime, fluffy.GetEntry("reframework/autorun/BioRand7.lua") != null);
+        Assert.Equal(withRuntime, fluffy.GetEntry("reframework/autorun/BioRand7/crafting.lua") != null);
         Assert.Equal(withRuntime, fluffy.GetEntry("reframework/data/BioRand7/config.json") != null);
         Assert.DoesNotContain(fluffy.Entries, entry => entry.FullName.EndsWith(".pak"));
         Assert.Equal(fluffy.Entries.Count, fluffy.Entries.Select(entry => entry.FullName)
@@ -41,6 +42,7 @@ public class RandomizerOutputPackagingTests {
         Assert.Equal("scene"u8.ToArray(), seedPak.GetEntryData("natives/stm/leveldesign/test.scn.20"));
         Assert.DoesNotContain(patch.Entries, entry => entry.FullName.StartsWith("natives/"));
         Assert.Equal(withRuntime, patch.GetEntry("reframework/autorun/BioRand7.lua") != null);
+        Assert.Equal(withRuntime, patch.GetEntry("reframework/autorun/BioRand7/crafting.lua") != null);
         Assert.Equal(withRuntime, patch.GetEntry("reframework/data/BioRand7/config.json") != null);
         Assert.Equal(withAssets ? 2 : 1, patch.Entries.Count(entry => entry.FullName.EndsWith(".pak")));
         if (withAssets) {
