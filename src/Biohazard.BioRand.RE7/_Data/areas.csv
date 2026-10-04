@@ -354,13 +354,11 @@ natives/stm/ch9/scenes/items/resource/numaitem022.scn.20,,,,EndOfZoe,Item,FALSE
 natives/stm/ch9/scenes/items/resource/numaitem030.scn.20,,,,EndOfZoe,Item,FALSE
 natives/stm/ch9/scenes/items/resource/numaitem031.scn.20,,,,EndOfZoe,Item,FALSE
 natives/stm/ch9/scenes/items/resource/numaitem072.scn.20,,,,EndOfZoe,Item,FALSE
-natives/stm/environment/scene/chapter1/c01_outside09.scn.20,,,,EndOfZoe,General,FALSE
+natives/stm/environment/scene/chapter1/c01_outside09.scn.20,1,,,,General,FALSE
 natives/stm/environment/scene/chapter99/c99_vrtutorial.scn.20,,,,EndOfZoe,General,FALSE
-natives/stm/environment/scene/ff000/c01_outside09.scn.20,,,,EndOfZoe,General,FALSE
+natives/stm/environment/scene/ff000/c01_outside09.scn.20,1,,,,General,FALSE
 natives/stm/prefab/character/em9200/c01f01/pos_c01f01_em9200.scn.20,,,,EndOfZoe,General,FALSE
 natives/stm/scenes/dlc/dlc_chapter9.scn.20,,,,EndOfZoe,General,FALSE
-natives/stm/scenes/items/resources/brokenhandgun_m19.scn.20,,,,EndOfZoe,Item,FALSE
-natives/stm/scenes/items/resources/handgun_m19.scn.20,,,,EndOfZoe,Item,FALSE
 natives/stm/scenes/imd/aimap_imd/cowshed.scn.20,,,,EthanMustDie,General,FALSE
 natives/stm/scenes/imd/aimap_imd/gardenarea.scn.20,,,,EthanMustDie,General,FALSE
 natives/stm/scenes/imd/aimap_imd/greenhouse.scn.20,,,,EthanMustDie,General,FALSE
@@ -1206,37 +1204,37 @@ natives/stm/ch8/scenes/residentweapons.scn.20,,,,NotAHero,General,FALSE
 natives/stm/ch8/scenes/savepoints/laboarea.scn.20,,,,NotAHero,General,FALSE
 natives/stm/ch8/scenes/savepoints/prevmineelevator.scn.20,,,,NotAHero,General,FALSE
 natives/stm/ch8/scenes/savepoints/prevshieldmachine.scn.20,,,,NotAHero,General,FALSE
-natives/stm/ch9/scenes/items/resource/numaitem008.scn.20,,,,NotAHero,Item,FALSE
-natives/stm/environment/scene/chapter1/c01_outside08.scn.20,,,,NotAHero,General,FALSE
-natives/stm/environment/scene/ff000/c01_outside08.scn.20,,,,NotAHero,General,FALSE
-natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/0/0/vfx_c03_rightareab1fhallway4.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/0/1/vfx_c03_rightareab1fstorageroom1.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/0/2/vfx_c03_rightareab1ffreezer.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/0/3/vfx_c03_rightareab1fstorageroom2.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/0/4/vfx_c03_rightareab1fpowerroom.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/0/vfx_c03_rightareab1fmoldedcreationroom/vfx_c03_rightareab1fmoldedcreationroom.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/0/vfx_c03_taxidermyroomb1f.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/1/0/vfx_c03_rightarea1fparlor.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/1/1/vfx_c03_rightarea1fmonitorroom.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/1/vfx_c03_taxidermyroom1f.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/vfx_c03_taxidermyroom.scn.20,,,,NotAHero,General,TRUE
+natives/stm/ch9/scenes/items/resource/numaitem008.scn.20,,,,EndOfZoe,Item,FALSE
+natives/stm/environment/scene/chapter1/c01_outside08.scn.20,1,,,,General,FALSE
+natives/stm/environment/scene/ff000/c01_outside08.scn.20,1,,,,General,FALSE
+natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/0/0/vfx_c03_rightareab1fhallway4.scn.20,,,,Jacks55thBirthday,General,TRUE
+natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/0/1/vfx_c03_rightareab1fstorageroom1.scn.20,,,,Jacks55thBirthday,General,TRUE
+natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/0/2/vfx_c03_rightareab1ffreezer.scn.20,,,,Jacks55thBirthday,General,TRUE
+natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/0/3/vfx_c03_rightareab1fstorageroom2.scn.20,,,,Jacks55thBirthday,General,TRUE
+natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/0/4/vfx_c03_rightareab1fpowerroom.scn.20,,,,Jacks55thBirthday,General,TRUE
+natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/0/vfx_c03_rightareab1fmoldedcreationroom/vfx_c03_rightareab1fmoldedcreationroom.scn.20,,,,Jacks55thBirthday,General,TRUE
+natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/0/vfx_c03_taxidermyroomb1f.scn.20,,,,Jacks55thBirthday,General,TRUE
+natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/1/0/vfx_c03_rightarea1fparlor.scn.20,,,,Jacks55thBirthday,General,TRUE
+natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/1/1/vfx_c03_rightarea1fmonitorroom.scn.20,,,,Jacks55thBirthday,General,TRUE
+natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/1/vfx_c03_taxidermyroom1f.scn.20,,,,Jacks55thBirthday,General,TRUE
+natives/stm/scenes/birthday/stage3/copyasset/vfx_c03/8/vfx_c03_taxidermyroom.scn.20,,,,Jacks55thBirthday,General,TRUE
 natives/stm/scenes/chapter/chapter3/enemy_em8000.scn.20,,,,NotAHero,Enemy,FALSE
 natives/stm/scenes/dlc/dlc_chapter8.scn.20,,,,NotAHero,General,FALSE
 natives/stm/scenes/enemy/em8100.scn.20,,,,NotAHero,Enemy,FALSE
 natives/stm/scenes/enemy/em8900.scn.20,,,,NotAHero,Enemy,FALSE
 natives/stm/scenes/enemy/em8940.scn.20,,,,NotAHero,Enemy,FALSE
-natives/stm/scenes/imd/copyscene/itemset_c03/8/mainhouse_hall.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/imd/copyscene/vfx_c03/8/0/0/vfx_c03_rightareab1fhallway4.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/imd/copyscene/vfx_c03/8/0/1/vfx_c03_rightareab1fstorageroom1.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/imd/copyscene/vfx_c03/8/0/2/vfx_c03_rightareab1ffreezer.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/imd/copyscene/vfx_c03/8/0/3/vfx_c03_rightareab1fstorageroom2.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/imd/copyscene/vfx_c03/8/0/4/vfx_c03_rightareab1fpowerroom.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/imd/copyscene/vfx_c03/8/0/5/vfx_c03_rightareab1fmoldedcreationroom.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/imd/copyscene/vfx_c03/8/0/vfx_c03_taxidermyroomb1f.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/imd/copyscene/vfx_c03/8/1/0/vfx_c03_rightarea1fparlor.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/imd/copyscene/vfx_c03/8/1/1/vfx_c03_rightarea1fmonitorroom.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/imd/copyscene/vfx_c03/8/1/vfx_c03_taxidermyroom1f.scn.20,,,,NotAHero,General,TRUE
-natives/stm/scenes/imd/copyscene/vfx_c03/8/vfx_c03_taxidermyroom.scn.20,,,,NotAHero,General,TRUE
+natives/stm/scenes/imd/copyscene/itemset_c03/8/mainhouse_hall.scn.20,,,,EthanMustDie,General,TRUE
+natives/stm/scenes/imd/copyscene/vfx_c03/8/0/0/vfx_c03_rightareab1fhallway4.scn.20,,,,EthanMustDie,General,TRUE
+natives/stm/scenes/imd/copyscene/vfx_c03/8/0/1/vfx_c03_rightareab1fstorageroom1.scn.20,,,,EthanMustDie,General,TRUE
+natives/stm/scenes/imd/copyscene/vfx_c03/8/0/2/vfx_c03_rightareab1ffreezer.scn.20,,,,EthanMustDie,General,TRUE
+natives/stm/scenes/imd/copyscene/vfx_c03/8/0/3/vfx_c03_rightareab1fstorageroom2.scn.20,,,,EthanMustDie,General,TRUE
+natives/stm/scenes/imd/copyscene/vfx_c03/8/0/4/vfx_c03_rightareab1fpowerroom.scn.20,,,,EthanMustDie,General,TRUE
+natives/stm/scenes/imd/copyscene/vfx_c03/8/0/5/vfx_c03_rightareab1fmoldedcreationroom.scn.20,,,,EthanMustDie,General,TRUE
+natives/stm/scenes/imd/copyscene/vfx_c03/8/0/vfx_c03_taxidermyroomb1f.scn.20,,,,EthanMustDie,General,TRUE
+natives/stm/scenes/imd/copyscene/vfx_c03/8/1/0/vfx_c03_rightarea1fparlor.scn.20,,,,EthanMustDie,General,TRUE
+natives/stm/scenes/imd/copyscene/vfx_c03/8/1/1/vfx_c03_rightarea1fmonitorroom.scn.20,,,,EthanMustDie,General,TRUE
+natives/stm/scenes/imd/copyscene/vfx_c03/8/1/vfx_c03_taxidermyroom1f.scn.20,,,,EthanMustDie,General,TRUE
+natives/stm/scenes/imd/copyscene/vfx_c03/8/vfx_c03_taxidermyroom.scn.20,,,,EthanMustDie,General,TRUE
 natives/stm/environment/scene/chapter7/c07_leftarea1fbackstage_7_2.scn.20,,,,TwentyOne,General,FALSE
 natives/stm/environment/scene/chapter7/c07_leftarea1fmonitorroom_7_2.scn.20,,,,TwentyOne,General,FALSE
 natives/stm/environment/scene/chapter7/c07_leftarea1fpuzzleroom1_7_2.scn.20,,,,TwentyOne,General,FALSE
@@ -1740,3 +1738,13 @@ natives/stm/scenes/items/resources/fusech4.scn.20,4,,,,Item,FALSE
 natives/stm/scenes/loadtempscene/loadtemp_chapter1.scn.20,1,,,,General,FALSE
 natives/stm/scenes/loadtempscene/loadtemp_chapter3.scn.20,3,,,,General,FALSE
 natives/stm/scenes/loadtempscene/loadtemp_chapter4.scn.20,4,,,,General,FALSE
+natives/stm/leveldesign/itemset/ff050/2f/2f.scn.20,4,Chapter 4 / 2F,,,Item,FALSE
+natives/stm/leveldesign/itemset/ff050/2f/easy.scn.20,4,Chapter 4 / 2F Easy,Easy,,Item,FALSE
+natives/stm/leveldesign/itemset/ff050/2f/hard.scn.20,4,Chapter 4 / 2F Hard,Madhouse,,Item,FALSE
+natives/stm/leveldesign/itemset/ff050/2f/normal.scn.20,4,Chapter 4 / 2F Normal,Normal,,Item,FALSE
+natives/stm/leveldesign/itemset/ff050/bf/bf.scn.20,4,Chapter 4 / Bf,,,Item,FALSE
+natives/stm/leveldesign/itemset/ff050/itemset_ff050.scn.20,4,Chapter 4 / Item Set Ff 50,,,Item,FALSE
+natives/stm/scenes/chapter/chapter7/chapter7intromovie.scn.20,7,Chapter 7 / Intromovie,,,General,FALSE
+natives/stm/scenes/chapter/chapter7/chapter7object.scn.20,7,Chapter 7 / Object,,,General,FALSE
+natives/stm/scenes/chapter/chapter7/chapter7resident.scn.20,7,Chapter 7 / Resident,,,General,FALSE
+natives/stm/scenes/dlc/dlc_chapter7.scn.20,7,Chapter 7 / Dlc Chapter 07,,,General,FALSE

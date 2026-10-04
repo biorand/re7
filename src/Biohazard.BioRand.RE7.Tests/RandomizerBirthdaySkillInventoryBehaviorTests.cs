@@ -103,7 +103,7 @@ public class RandomizerBirthdaySkillInventoryBehaviorTests {
         Assert.NotNull(uiItemMessages.FindMessage(skillSetting.ManualMsg));
         Assert.Equal("Infinite Ammo", uiItemMessages.GetString(skillSetting.NameMsg, LanguageId.English));
         Assert.Equal(
-            "Infinite ammo. Reload your weapon\r\nas many times as you want.",
+            "Infinite ammo.\r\n50% Increased reload speed.",
             uiItemMessages.GetString(skillSetting.ManualMsg, LanguageId.English));
     }
 

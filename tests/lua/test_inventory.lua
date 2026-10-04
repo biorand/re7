@@ -155,6 +155,15 @@ return function()
     assert(static_fields.RowNum == 5)
     assert(unlocked.after(256) == 1)
 
+    settings["recipes-add-new"] = false
+    settings["debug-recipes-enabled"] = true
+    static_fields.RowNum = 4
+    hooks["app.InventoryMenu.DictionaryCombineUIController:setup()"].before()
+    assert(static_fields.RowNum == 5, "Exact debug recipes also require the expanded combine UI")
+    assert(unlocked.after(256) == 256, "Debug recipe flags must override the normal global unlock option")
+    assert(unlocked.after(1) == 1)
+    settings["debug-recipes-enabled"] = false
+
     local madhouse = MadhouseSaves.new(context)
     madhouse:install()
     for _ = 1, 60 do
