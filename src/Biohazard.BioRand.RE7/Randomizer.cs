@@ -18,6 +18,13 @@ internal class Randomizer : IDisposable {
     private readonly Lock _servicesLock = new();
     private readonly Dictionary<string, string> _logFiles = [];
     private readonly Dictionary<string, RandomizerOutputAsset> _seedOutputAssets = [];
+    private DebugRecipeTable? _debugRecipes;
+
+    internal bool IsDebugger => UserTags.Contains("re7:debugger");
+    internal DebugRecipeTable DebugRecipes => _debugRecipes ??= IsDebugger
+        ? DebugRecipeTable.Parse(DynamicData.GetData(DynamicDataName.DebugRecipes)
+            ?? throw new InvalidDataException("Unable to get Debug Recipes data."))
+        : DebugRecipeTable.Disabled;
 
     public int PakVersion { get; set; } = 1;
     public RandomizerInput Input { get; }
@@ -54,7 +61,8 @@ internal class Randomizer : IDisposable {
     ];
 
     internal bool IsREFrameworkRequired()
-        => GetConfigOption<bool>("random-enemies")
+        => DebugRecipes.Enabled
+           || GetConfigOption<bool>("random-enemies")
            || GetConfigOption<double>("extra-enemy-amount") > 0
            || (GetConfigOption<bool>("random-items") && GetConfigOption<bool>("replace-weapons"))
            || GetConfigOption<bool>("random-enemy-drops")
@@ -68,7 +76,8 @@ internal class Randomizer : IDisposable {
         _inputGamePath = inputGamePath;
         Reporter = reporter;
 
-        DynamicData = new DynamicData(Input.Configuration.GetValueOrDefault<bool>("debug-download-data"));
+        DynamicData = new DynamicData(Input.Configuration.GetValueOrDefault<bool>("debug-download-data"),
+            downloadDebuggerData: IsDebugger);
         _modifiers = GetModifiers();
     }
 
@@ -93,7 +102,8 @@ internal class Randomizer : IDisposable {
                 _fileRepository.GetAdditionalOutputPakFile(),
                 _logFiles,
                 PakVersion,
-                IsREFrameworkRequired()
+                IsREFrameworkRequired(),
+                DebugRecipes.Enabled
             );
             var assets = new List<RandomizerOutputAsset>{
                 new(

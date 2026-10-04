@@ -61,6 +61,11 @@ internal class RecipeModifier : Modifier {
 
     public override void Apply(RandomizerLogger logger) {
         var randomizer = _randomizer;
+        var debug = randomizer.DebugRecipes;
+        if (debug.Enabled) {
+            ApplyDebugRecipes(debug, logger);
+            return;
+        }
         var addNewRecipes = randomizer.GetConfigOption<bool>("recipes-add-new");
 
         if (!addNewRecipes) {
@@ -139,6 +144,21 @@ internal class RecipeModifier : Modifier {
 
         // Finally, write the spoiler log.
         LogRecipeState(logger, addedRecipes, newDict, beforeModifications: false);
+    }
+
+    private void ApplyDebugRecipes(DebugRecipeTable table, RandomizerLogger logger) {
+        var files = _randomizer.FileRepository;
+        var recipes = files.DeserializeUserFile<ItemCombineData>(ItemCombineDataPath);
+        var dictionary = files.DeserializeUserFile<DictionaryCombineData>(DictionaryCombineDataPath);
+        table.ValidateItems(recipes._Datas);
+
+        recipes._Datas = table.Entries.Select(x => x.Recipe).ToList();
+        dictionary._Datas = table.VisibleResultIds.Select(id => new DictionaryCombineData.Data { ItemDataID = id }).ToList();
+        files.ModifyUserFile<ItemCombineData>(ItemCombineDataPath, _ => recipes);
+        files.ModifyUserFile<DictionaryCombineData>(DictionaryCombineDataPath, _ => dictionary);
+        _randomizer.AddLogFile("debug-recipes.csv", table.SourceCsv);
+        logger.LogLine($"Debug Recipes: exact table mode ({recipes._Datas.Count} recipes, {dictionary._Datas.Count} visible result items). Normal recipe options are bypassed.");
+        LogRecipeState(logger, recipes._Datas, dictionary._Datas, beforeModifications: false);
     }
 
     private static List<DictionaryCombineData.Data> RebuildDictionary(Randomizer randomizer, List<Recipe> newRecipes) {

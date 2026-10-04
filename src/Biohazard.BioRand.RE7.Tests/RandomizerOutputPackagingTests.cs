@@ -68,6 +68,23 @@ public class RandomizerOutputPackagingTests {
         Assert.Equal("seed override", ReadText(fluffy, entry.FullName));
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void RuntimeRecipeMode_IsDerivedAndDoesNotChangeInputProfile(bool active) {
+        var config = RandomizerTest.CreateFeatureTestConfiguration();
+        config["recipes-add-new"] = false;
+        config["debug-recipes-enabled"] = !active;
+        var output = new RandomizerOutput(new RandomizerInput { Configuration = config },
+            new PakFileBuilder(), new PakFileBuilder(), [], 1, true, active);
+        using var zip = new ZipArchive(new MemoryStream(output.GetOutputZip()));
+        using var runtime = System.Text.Json.JsonDocument.Parse(ReadText(zip, "reframework/data/BioRand7/config.json"));
+        using var input = System.Text.Json.JsonDocument.Parse(ReadText(zip, "config.json"));
+        Assert.Equal(active, runtime.RootElement.GetProperty("debug-recipes-enabled").GetBoolean());
+        Assert.False(runtime.RootElement.GetProperty("recipes-add-new").GetBoolean());
+        Assert.Equal(!active, input.RootElement.GetProperty("debug-recipes-enabled").GetBoolean());
+    }
+
     private static RandomizerOutput CreateOutput(PakFileBuilder seed, PakFileBuilder assets, bool withRuntime)
         => new(new RandomizerInput {
             Seed = 895914,

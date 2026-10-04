@@ -22,6 +22,7 @@ public class ConfigurationIdUsageTest {
 
     private static readonly HashSet<string> RuntimeConfigIds = new(StringComparer.Ordinal){
         "biorand-seed",
+        "debug-recipes-enabled", // Derived from the authorized Debug Recipes snapshot when packaging the runtime.
         "username",
         "special",
         "tags",

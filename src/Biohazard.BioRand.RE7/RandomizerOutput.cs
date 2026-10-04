@@ -17,6 +17,7 @@ public sealed class RandomizerOutput {
     public Dictionary<string, string> LogFiles { get; }
     public int PakVersion { get; }
     public bool IsWithREFramework { get; }
+    internal bool DebugRecipesEnabled { get; }
     public bool HasAdditionalAssets => AdditionalAssetPakFile.Entries.Count != 0;
 
     private static readonly string[] REFrameworkScriptPaths = [
@@ -44,13 +45,14 @@ public sealed class RandomizerOutput {
         "https://github.com/praydog/REFramework-nightly/releases/latest/download/RE7.zip";
 
     internal RandomizerOutput(RandomizerInput input, PakFileBuilder pakFile, PakFileBuilder additionalAssetPakFile,
-        Dictionary<string, string> logFiles, int pakVersion, bool isWithREFramework) {
+        Dictionary<string, string> logFiles, int pakVersion, bool isWithREFramework, bool debugRecipesEnabled = false) {
         Input = input;
         PakFile = pakFile;
         AdditionalAssetPakFile = additionalAssetPakFile;
         LogFiles = logFiles;
         PakVersion = pakVersion;
         IsWithREFramework = isWithREFramework;
+        DebugRecipesEnabled = debugRecipesEnabled;
     }
 
     public byte[] GetOutputZip() {
@@ -132,6 +134,8 @@ public sealed class RandomizerOutput {
     private byte[] GetREFrameworkConfigBytes() {
         var config = JsonNode.Parse(Input.Configuration.ToJson())?.AsObject() ?? [];
         config["biorand-seed"] = Input.Seed;
+        // Derived from the authorized sheet snapshot, never trusted from profile JSON.
+        config["debug-recipes-enabled"] = DebugRecipesEnabled;
         return Encoding.UTF8.GetBytes(config.ToJsonString());
     }
 
