@@ -356,18 +356,19 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
     }
 
     [Fact]
-    public void KeyItemLocations_DoesNotTreatDiningRoomExtraAsChapter3StartTarget() {
+    public void KeyItemLocations_DiningRoomExtraNeedsReviewBeforeCarryingKeys() {
         var result = _defaultRun.Result;
         var diningTable = result.ItemPlacementService.MainGamePlacements.Single(placement =>
             placement.IsExtra &&
             placement.Comment == "Dinner Table" &&
             placement.SceneFile.Equals(MainHouseDiningKitchenScenePath, StringComparison.OrdinalIgnoreCase));
 
-        Assert.Equal(1, diningTable.Chapter);
-        Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(diningTable, "FloorDoorKey"));
-        Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(diningTable, "EthanCarKey"));
-        Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(diningTable, "MorgueKey"));
-        Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(diningTable, "MasterKey"));
+        Assert.Equal(3, diningTable.Chapter);
+        // Chapter metadata alone must not admit an unreviewed extra into the key-item pool.
+        Assert.False(KeyItemCarrierSafety.IsReviewed(diningTable));
+        var diningTableGuid = ExtraPlacementModifier.GetGeneratedItemGuid(diningTable);
+        Assert.DoesNotContain(KeyItemLocationModifier.GetRouteTargetsForTesting(result.Randomizer),
+            target => target.TargetGuid == diningTableGuid);
     }
 
     [Fact]
