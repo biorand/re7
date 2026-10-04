@@ -1408,6 +1408,10 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
     }
 
     private static IEnumerable<ChangedItemPlacement> GetChangedPlacements(RandomizerRunResult result) {
+        // These checks only read scenes. Deserialize each binary once per scan,
+        // while keeping fresh scene objects for other assertions and test runs.
+        var beforeScenes = new Dictionary<string, RszScene>(StringComparer.OrdinalIgnoreCase);
+        var afterScenes = new Dictionary<string, RszScene>(StringComparer.OrdinalIgnoreCase);
         foreach (var placement in result.ItemPlacementService.MainGamePlacements
                      .Where(placement =>
                          placement.Enabled &&
@@ -1419,13 +1423,22 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
             var targetGuid = GetTargetGuid(placement);
             var beforeItem = placement.IsExtra
                 ? null
-                : GetItemOrNull(result.ReadBeforeScene(placement.SceneFile), targetGuid);
-            var afterItem = GetItemOrNull(result.ReadAfterScene(placement.SceneFile), targetGuid);
+                : GetItemOrNull(ReadScene(placement.SceneFile, before: true), targetGuid);
+            var afterItem = GetItemOrNull(ReadScene(placement.SceneFile, before: false), targetGuid);
             if (afterItem == null || beforeItem?.ItemDataID == afterItem.ItemDataID)
                 continue;
 
             yield return new ChangedItemPlacement(placement, beforeItem?.ItemDataID ?? placement.Id,
                 afterItem.ItemDataID);
+        }
+
+        RszScene ReadScene(string path, bool before) {
+            var scenes = before ? beforeScenes : afterScenes;
+            if (!scenes.TryGetValue(path, out var scene)) {
+                scene = before ? result.ReadBeforeScene(path) : result.ReadAfterScene(path);
+                scenes.Add(path, scene);
+            }
+            return scene;
         }
     }
 
