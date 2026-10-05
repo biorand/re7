@@ -51,7 +51,7 @@ return function()
             if value == nil then return default end
             return value
         end },
-        log = { warn = function() end },
+        log = { warn = function() end, info = function() end },
     }
 
     local inventory = Inventory.new(context)
@@ -162,7 +162,71 @@ return function()
     assert(static_fields.RowNum == 5, "Exact debug recipes also require the expanded combine UI")
     assert(unlocked.after(256) == 256, "Debug recipe flags must override the normal global unlock option")
     assert(unlocked.after(1) == 1)
+
+    local dictionary_entries = { count = 17 }
+    local dictionary = object({ _Datas = dictionary_entries })
+    singletons["app.ItemManager"] = object({}, {
+        get_DictionaryCombineData = function() return dictionary end,
+    })
+    local discovered, writes, guid_parses = 4105, 0, 0
+    local unlock_guid = {}
+    local unlock_variable = object({}, {
+        get_U32 = function() return discovered end,
+        ["set_U32(System.UInt32)"] = function(_, mask)
+            assert(not math.type or math.type(mask) == "integer", "REFramework UInt32 arguments require a Lua integer")
+            discovered, writes = mask, writes + 1
+        end,
+    })
+    local variables_hub = object({}, {
+        ["findVariable(System.Guid)"] = function(_, guid)
+            assert(guid == unlock_guid, "Only the dictionary discovery flag may change")
+            return unlock_variable
+        end,
+    })
+    game.list_storage = function(_, entries)
+        assert(entries == dictionary_entries)
+        return {}, entries.count
+    end
+    game.method = function(_, type_name, signature)
+        if type_name == "via.userdata.GlobalUserData" then
+            assert(signature == "get_VariablesHub()")
+            return { call = function(_, receiver) assert(receiver == nil); return variables_hub end }
+        end
+        assert(type_name == "System.Guid" and signature == "Parse(System.String)")
+        return { call = function(_, receiver, text)
+            assert(receiver == nil and text == "419a0691-1219-4447-b927-e31ac6e35486")
+            guid_parses = guid_parses + 1
+            return unlock_guid
+        end }
+    end
+    local menu_setup = hooks["app.InventoryMenu:setup(app.Inventory, app.InventoryMenu.ModeType, app.InventoryMenu.SelectItemResult, System.Boolean)"]
+    local menu_open = hooks["app.InventoryMenu:openProc()"]
+    menu_setup.before()
+    assert(discovered == 131071, "All 17 ShowInUI slots must open even on a save with only three discovered recipes")
+    menu_open.before()
+    assert(writes == 1 and guid_parses == 1, "An already unlocked menu must not rewrite flags or parse GUIDs repeatedly")
+    assert(unlocked.after(0) == 0, "Discovery must not bypass a recipe's unmet EnableFlag")
+    assert(unlocked.after(1) == 1, "An enabled, discovered recipe must stay available")
+    discovered = 0 -- Loading an earlier save restores its discovery flags.
+    menu_open.before()
+    assert(discovered == 131071, "Reopening after a save load must restore the exact table's visibility")
+    dictionary_entries.count = 20
+    menu_open.before()
+    assert(discovered == 1048575, "All supported dictionary slots must be discovered")
+    dictionary_entries.count = 0
+    menu_setup.before()
+    assert(discovered == 0, "An empty visible dictionary must not leave a selectable empty tab")
+    dictionary_entries.count = 1
+    menu_setup.before()
+    assert(discovered == 1, "Shrinking the dictionary must discard stale discovery bits")
+    variables_hub = nil
+    menu_setup.before()
+    singletons["app.ItemManager"] = nil
+    menu_setup.before()
     settings["debug-recipes-enabled"] = false
+    game.method = function() error("Disabled debug mode must not access or modify discovery flags") end
+    menu_setup.before()
+    menu_open.before()
 
     local madhouse = MadhouseSaves.new(context)
     madhouse:install()

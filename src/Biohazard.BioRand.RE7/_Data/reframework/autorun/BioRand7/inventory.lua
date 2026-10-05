@@ -6,6 +6,7 @@ local KEY_ITEM = 4
 local USABLE_KEY_ITEM = 9
 local DISCARDABLE_KEY_ITEM = 10
 local MAX_COMBINE_ROWS = 5
+local DICTIONARY_UNLOCK_FLAG = "419a0691-1219-4447-b927-e31ac6e35486"
 local STORY_WEAPONS = {
     handaxe = true, knife = true, chainsaw = true,
     candle = true, candle_lighted = true, handgun_albert = true,
@@ -133,6 +134,42 @@ function Inventory:install_size_hooks()
     end)
 end
 
+function Inventory:unlock_debug_dictionary()
+    if not self.context.config:get("debug-recipes-enabled", false) then return end
+    local game = self.context.game
+    local manager = game:singleton("app.ItemManager")
+    local dictionary = manager and manager:call("get_DictionaryCombineData")
+    local entries = dictionary and dictionary:get_field("_Datas")
+    if entries == nil then return end
+    local _, count = game:list_storage(entries)
+    if count < 0 or count > MAX_COMBINE_ROWS * 4 then return end
+
+    local hub = game:method("via.userdata.GlobalUserData", "get_VariablesHub()"):call(nil)
+    if hub == nil then return end
+    self.dictionary_unlock_guid = self.dictionary_unlock_guid
+        or game:method("System.Guid", "Parse(System.String)"):call(nil, DICTIONARY_UNLOCK_FLAG)
+    local variable = hub:call("findVariable(System.Guid)", self.dictionary_unlock_guid)
+    if variable == nil then
+        self.context.log:warn("Unable to resolve the debug recipe discovery flag")
+        return
+    end
+
+    -- Native menu access and icon visibility also require a discovery bit per
+    -- dictionary position. ShowInUI replaces discovery in exact mode, including
+    -- on existing saves. Leave each recipe's EnableFlag to the native check.
+    -- Exponentiation produces a Lua float. REFramework requires an integer for
+    -- UInt32 arguments; passing the float sends its raw bits (zero here).
+    local mask = math.floor(2 ^ count - 1)
+    if variable:call("get_U32") ~= mask then
+        variable:call("set_U32(System.UInt32)", mask)
+        if variable:call("get_U32") == mask then
+            self.context.log:info(("Debug Recipes: discovered all %d visible results"):format(count))
+        else
+            self.context.log:warn("The game did not apply the debug recipe discovery mask")
+        end
+    end
+end
+
 function Inventory:install_combine_hooks()
     local game = self.context.game
     local function configure_rows()
@@ -147,6 +184,13 @@ function Inventory:install_combine_hooks()
     -- Guest House inventory, so it must not depend on an earlier deactivate.
     game:hook("app.InventoryMenu.DictionaryCombineUIController", "setup()", configure_rows)
     game:hook("app.InventoryMenu.DictionaryCombineUIController", "deactivate()", configure_rows)
+
+    -- setup only runs when the menu is created. openProc runs on each opening,
+    -- including after ScriptRunner reset or loading an existing save.
+    local function unlock_debug_dictionary() self:unlock_debug_dictionary() end
+    game:hook("app.InventoryMenu", "setup(app.Inventory, app.InventoryMenu.ModeType, app.InventoryMenu.SelectItemResult, System.Boolean)",
+        unlock_debug_dictionary)
+    game:hook("app.InventoryMenu", "openProc()", unlock_debug_dictionary)
 
     game:hook("app.InventoryMenu", "DictionaryCombine_UnlockedCombine(app.ItemCombineData.Data)", nil,
         function(retval)
