@@ -59,12 +59,12 @@ public sealed class RandomizerOutput {
         if (_zipFile != null)
             return _zipFile;
 
-        var zipFile = BuildZipFile()
-            .AddEntry($"re_chunk_000.pak.patch_{PakVersion:000}.pak", PakFile.ToByteArray());
+        var entries = GetCommonZipEntries();
+        entries.Add($"re_chunk_000.pak.patch_{PakVersion:000}.pak", PakFile.ToByteArray());
         if (HasAdditionalAssets) {
-            zipFile.AddEntry($"re_chunk_000.pak.patch_{PakVersion + 1:000}.pak", AdditionalAssetPakFile.ToByteArray());
+            entries.Add($"re_chunk_000.pak.patch_{PakVersion + 1:000}.pak", AdditionalAssetPakFile.ToByteArray());
         }
-        _zipFile = zipFile.Build();
+        _zipFile = BuildZipFile(entries);
         return _zipFile;
     }
 
@@ -72,44 +72,54 @@ public sealed class RandomizerOutput {
         if (_modFile != null)
             return _modFile;
 
-        var zipFile = BuildZipFile();
+        var entries = GetCommonZipEntries();
         // Fluffy must install and uninstall the whole seed, including shared visual
         // assets. Omitting these leaves room loads dependent on a separate manual install.
         var seedPaths = PakFile.Entries.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
         foreach (var entry in AdditionalAssetPakFile.Entries) {
             // Match FileRepository.GetFile: seed-specific files override shared assets.
             if (!seedPaths.Contains(entry.Key)) {
-                zipFile.AddEntry(entry.Key, (byte[])entry.Value);
+                entries.Add(entry.Key, (byte[])entry.Value);
             }
         }
 
         foreach (var entry in PakFile.Entries) {
-            zipFile.AddEntry(entry.Key, (byte[])entry.Value);
+            entries.Add(entry.Key, (byte[])entry.Value);
         }
 
-        _modFile = zipFile
-            .AddEntry("pic.jpg", EmbeddedData.GetFile("modimage.jpg"))
-            .AddEntry("modinfo.ini", GetModInfo())
-            .Build();
+        entries.Add("pic.jpg", EmbeddedData.GetFile("modimage.jpg"));
+        entries.Add("modinfo.ini", GetModInfo());
+        _modFile = BuildZipFile(entries);
         return _modFile;
     }
 
-    private ZipFileBuilder BuildZipFile(string logPrefix = "") {
-        var builder = new ZipFileBuilder();
+    private static byte[] BuildZipFile(Dictionary<string, byte[]> entries) {
+        using var stream = new MemoryStream();
+        using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, leaveOpen: true)) {
+            foreach (var (path, data) in entries) {
+                using var entry = zip.CreateEntry(path, CompressionLevel.Fastest).Open();
+                entry.Write(data);
+            }
+        }
+        return stream.ToArray();
+    }
+
+    private Dictionary<string, byte[]> GetCommonZipEntries(string logPrefix = "") {
+        var entries = new Dictionary<string, byte[]>();
         var configBytes = Encoding.UTF8.GetBytes(Input.Configuration.ToJson());
-        builder.AddEntry($"{logPrefix}config.json", configBytes);
+        entries.Add($"{logPrefix}config.json", configBytes);
 
         foreach (var logFile in LogFiles) {
-            builder.AddEntry($"{logPrefix}{logFile.Key}", Encoding.UTF8.GetBytes(logFile.Value));
+            entries.Add($"{logPrefix}{logFile.Key}", Encoding.UTF8.GetBytes(logFile.Value));
         }
 
         if (IsWithREFramework) {
             foreach (var scriptPath in REFrameworkScriptPaths) {
                 var autorunPath = $"reframework/autorun/{scriptPath}";
-                builder.AddEntry(autorunPath, EmbeddedData.GetFile(autorunPath));
+                entries.Add(autorunPath, EmbeddedData.GetFile(autorunPath));
             }
 
-            builder.AddEntry("reframework/data/BioRand7/config.json", GetREFrameworkConfigBytes());
+            entries.Add("reframework/data/BioRand7/config.json", GetREFrameworkConfigBytes());
         }
 
         if (Input.Configuration.GetValueOrDefault<bool>("debug-download-reframework-nightly")) {
@@ -125,10 +135,10 @@ public sealed class RandomizerOutput {
             using var entryStream = entry.Open();
             using var entryMs = new MemoryStream();
             entryStream.CopyTo(entryMs);
-            builder.AddEntry("dinput8.dll", entryMs.ToArray());
+            entries.Add("dinput8.dll", entryMs.ToArray());
         }
 
-        return builder;
+        return entries;
     }
 
     private byte[] GetREFrameworkConfigBytes() {

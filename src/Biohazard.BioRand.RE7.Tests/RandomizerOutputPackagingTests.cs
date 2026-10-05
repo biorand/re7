@@ -71,6 +71,34 @@ public class RandomizerOutputPackagingTests {
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
+    public void Archives_RoundTripBinaryAssetsAndEmptyFiles(bool fluffy) {
+        const string binaryPath = "natives/stm/props/binary.tex.35";
+        const string emptyPath = "natives/stm/props/empty.bin";
+        // Cross compression-buffer boundaries and include every byte value.
+        var binary = Enumerable.Range(0, 256 * 1024).Select(i => (byte)(i * 31 + i / 257)).ToArray();
+        var seed = new PakFileBuilder();
+        seed.AddEntry(emptyPath, []);
+        var assets = new PakFileBuilder();
+        assets.AddEntry(binaryPath, binary);
+        var output = CreateOutput(seed, assets, false);
+
+        using var zip = new ZipArchive(new MemoryStream(fluffy ? output.GetOutputMod() : output.GetOutputZip()));
+        if (fluffy) {
+            Assert.Equal(binary, ReadBytes(zip, binaryPath));
+            Assert.Empty(ReadBytes(zip, emptyPath));
+        } else {
+            using var seedPak = new PakFile(ReadBytes(zip, "re_chunk_000.pak.patch_001.pak"));
+            using var assetPak = new PakFile(ReadBytes(zip, "re_chunk_000.pak.patch_002.pak"));
+            Assert.Equal(binary, assetPak.GetEntryData(binaryPath));
+            var empty = seedPak.GetEntryData(emptyPath);
+            Assert.NotNull(empty);
+            Assert.Empty(empty);
+        }
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
     public void RuntimeRecipeMode_IsDerivedAndDoesNotChangeInputProfile(bool active) {
         var config = RandomizerTest.CreateFeatureTestConfiguration();
         config["recipes-add-new"] = false;

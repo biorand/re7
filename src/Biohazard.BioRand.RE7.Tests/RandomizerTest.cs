@@ -159,7 +159,9 @@ public static class RandomizerTest {
         randomizer.DynamicData.SetData(DynamicDataName.DebugStartItems, EmbeddedData.GetFile("debug_start_items.csv"));
         prepareRandomizer?.Invoke(randomizer);
         var beforeRepository = new FileRepository(randomizer, InputPakPath, randomizer.DynamicData);
-        randomizer.Randomize();
+        // Behavior assertions read serialized repository files. Archive and
+        // executor tests use Run/RunOutput to exercise the full packaging path.
+        randomizer.RandomizeFiles();
 
         return new RandomizerRunResult(randomizer, beforeRepository);
     }

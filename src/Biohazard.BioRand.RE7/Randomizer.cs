@@ -86,13 +86,8 @@ internal class Randomizer : IDisposable {
     }
 
     public IntelOrca.Biohazard.BioRand.RandomizerOutput Randomize() {
+        RandomizeFiles();
         var input = Input;
-        _fileRepository = new FileRepository(this, _inputGamePath, DynamicData);
-
-        var log = Randomize(input);
-        AddLogFile($"input.log", log.Input.Output);
-        AddLogFile($"process.log", log.Process.Output);
-        AddLogFile($"output.log", log.Output.Output);
 
         IntelOrca.Biohazard.BioRand.RandomizerOutput? result = null;
         Reporter.RunTask("Building mod", () => {
@@ -136,6 +131,17 @@ internal class Randomizer : IDisposable {
                 """);
         });
         return result!;
+    }
+
+    // The complete generation pipeline, including binary serialization and saved
+    // flags. Callers inspecting generated files can stop before building install ZIPs.
+    internal void RandomizeFiles() {
+        _fileRepository = new FileRepository(this, _inputGamePath, DynamicData);
+
+        var log = Randomize(Input);
+        AddLogFile($"input.log", log.Input.Output);
+        AddLogFile($"process.log", log.Process.Output);
+        AddLogFile($"output.log", log.Output.Output);
     }
 
     public RandomizerLoggerIO Randomize(RandomizerInput input) {
