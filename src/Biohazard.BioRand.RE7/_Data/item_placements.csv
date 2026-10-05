@@ -1,6 +1,4 @@
 IsExtra,Tags,Comment,Id,Enabled,StackNum,EasyNum,HardNum,Difficulty,Chapter,Guid,SaveGuid,PosX,PosY,PosZ,RotX,RotY,RotZ,RotW,GameObjectName,SceneFile,Mesh,Material,Dlc
-TRUE,item_box,Guest House Bathroom - Before Mia Axe Fight,,TRUE,1,1,1,,1,00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,-1.6,0,-6.1,0,0,0,1,,natives/stm/environment/scene/chapter1/c01_bathroom01.scn.20,,,
-TRUE,item_box,Lucas Puzzle Room - Inside Entrance,,TRUE,1,1,1,,3,00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,51.1,-0.6,22.4,0,0,0,1,,natives/stm/environment/scene/chapter3/c03_leftarea1fpuzzleroom1.scn.20,,,
 TRUE,weapon_chest,Boat House Before Jack 3,,TRUE,1,1,1,,3,00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,108,0.5,73,0,0.7071,0,0.7071,,natives/stm/environment/scene/chapter3/c03_boat1fentrance01.scn.20,,,
 TRUE,weapon_chest,"Snake Key Door, Staircase",,TRUE,1,1,1,,3,00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,-1.749,-6.836,16.159,-0.00153,1,0,-0.00433,,natives/stm/environment/scene/chapter3/c03_rightareab1ffreezer.scn.20,,,
 TRUE,crate,Salt Mine Exit,,TRUE,1,1,1,,4,00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,-67.628,-15.406,-107.545,0,0,0,1,,natives/stm/environment/scene/chapter4/c04_caveev03.scn.20,,,
@@ -43,6 +41,7 @@ FALSE,crate,Laundry Room,,FALSE,1,1,1,,3,00000000-0000-0000-0000-000000000000,00
 TRUE,random,Pantry,,TRUE,1,1,1,,3,00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,10.2,-1.2,11.05,0,0,0,1,,natives/stm/environment/scene/chapter3/c03_mainhouse1fpantry.scn.20,,,
 TRUE,random,Dinner Table,,TRUE,1,1,1,,3,00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,20.34,0.855,2.524,0,0,0,1,,natives/stm/environment/scene/chapter3/c03_mainhouse1fldk.scn.20,,,
 TRUE,item_box,Dining Room,,TRUE,1,1,1,,3,00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,20.38,0,-0.71,0,0,0,1,,natives/stm/environment/scene/chapter3/c03_mainhouse1fldk.scn.20,,,
+TRUE,item_box,Guest House Bathroom - Before Mia Axe Fight,,TRUE,1,1,1,,1,00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,-1.6,0,-6.1,0,0,0,1,,natives/stm/environment/scene/chapter1/c01_bathroom01.scn.20,,,
 TRUE,crate,Basement,,TRUE,1,1,1,,1,00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,-0.553,-6.994,13.455,0,0,0,1,,natives/stm/environment/scene/chapter1/c01_b1g.scn.20,,,
 TRUE,random,Mia's Cell,,TRUE,1,1,1,,1,00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,13.7,-6.8,6.45,0,0,0,1,,natives/stm/environment/scene/chapter1/c01_b1f.scn.20,,,
 TRUE,random,Sewer Gators Car,,TRUE,1,1,1,,1,00000000-0000-0000-0000-000000000000,00000000-0000-0000-0000-000000000000,-28.424,4.107,58.83,0,0,0,1,,natives/stm/environment/scene/chapter1/c01_outside05.scn.20,,,
