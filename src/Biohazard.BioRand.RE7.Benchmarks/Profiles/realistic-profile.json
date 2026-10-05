@@ -437,7 +437,7 @@
   "inventory-stack-limit-valve": 1,
   "inventory-stack-limit-workroomkey": 1,
   "username": "Descole",
-  "tags": "admin,re7:tester,re7:debugstartitems",
+  "tags": "admin,re7:tester,re7:debugger",
   "special": "",
   "weapon-reload-speed-multiplier-handgun-m19": 1.684,
   "weapon-reload-speed-multiplier-handgun-g17": 1.722,

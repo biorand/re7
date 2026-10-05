@@ -153,9 +153,10 @@ public class RandomizerStartingInventoryAdditionalBehaviorTests {
     }
 
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void StartingInventory_DebugItems_RequireUserTag(bool authorized) {
+    [InlineData("re7:debugger", true)]
+    [InlineData("re7:debugstartitems", false)]
+    [InlineData("", false)]
+    public void StartingInventory_DebugItems_RequireUserTag(string tags, bool authorized) {
         var debugCsv = """
                        ItemId,Quantity
                        Coin,2
@@ -165,7 +166,7 @@ public class RandomizerStartingInventoryAdditionalBehaviorTests {
         using var result = RandomizerTest.RunState(
             config => {
                 config["username"] = "captainezekiel";
-                config["tags"] = authorized ? "re7:debugstartitems" : "";
+                config["tags"] = tags;
                 config["random-starting-inventory-ethan"] = true;
                 config["inventory-weapon-handgun-ethan"] = false;
                 config["random-starting-inventory-give-ammo"] = false;

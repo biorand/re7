@@ -1,5 +1,5 @@
 ItemDataID,Name,PassiveSkillUserPath,InventoryDescription,AttackChangeRate,MeleeAttackChangeRate,DyingAttackChangeRate,StunChangeRate,MaxHealthChangeValue,DamageChangeRate,IdleAutoRecoverySpeedChangeValue,GuardDamageCutRateChangeValue,WalkSpeedChangeRate,MoveSpeedChangeRate,DyingMoveSpeedChangeRate,ReloadSpeedChangeRate,HitTimeBonusChangeRate,KillTimeBonusChangeRate,DamageTimeBonusChangeRate,IsBulletStackNumInfinity,IsPsychostimulantEffectInfinity
-skl001,Infinite Ammo,Prefab/Skill/skl001/Skl001PassiveSkill.user,Infinite ammo. Reload your weapon\r\nas many times as you want.,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,TRUE,FALSE
+skl001,Infinite Ammo,Prefab/Skill/skl001/Skl001PassiveSkill.user,Infinite ammo.\r\n50% Increased reload speed.,0,0,0,0,0,0,0,0,0,0,0,0.5,0,0,0,TRUE,FALSE
 skl002,Health Regen,Prefab/Skill/skl002/Skl002PassiveSkill.user,Stand still and watch that health\r\nrecover!,0,0,0,0,0,0,30,0,0,0,0,0,0,0,0,FALSE,FALSE
 skl003,Clairvoyance,Prefab/Skill/skl003/Skl003PassiveSkill.user,Lets you see where items are.,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,FALSE,TRUE
 skl008,Defense II,Prefab/Skill/skl008/Skl008PassiveSkill.user,40% Reduced damage taken.\r\n20% Reduced enemy stun rate.,0,0,0,-0.2,0,-0.4,0,0,0,0,0,0,0,0,0,FALSE,FALSE
@@ -8,7 +8,7 @@ skl010,Speed Up II,Prefab/Skill/skl010/Skl010PassiveSkill.user,40% Increased run
 skl011,Speed Up I,Prefab/Skill/skl011/Skl011PassiveSkill.user,15% Increased running speed.\r\n20% Increased walking speed.,0,0,0,0,0,0,0,0,0.2,0.15,0,0,0,0,0,FALSE,FALSE
 skl012,Firepower Up II,Prefab/Skill/skl012/Skl012PassiveSkill.user,50% Increased firepower damage.\r\n25% Reduced reload speed.,0.5,0,0,0,0,0,0,0,0,0,0,-0.25,0,0,0,FALSE,FALSE
 skl013,Firepower Up I,Prefab/Skill/skl013/Skl013PassiveSkill.user,25% Increased firepower damage.,0.25,0,0,0,0,0,0,0,0,0,0,0,0,0,0,FALSE,FALSE
-skl014,Impact II,Prefab/Skill/skl014/Skl014PassiveSkill.user,Makes it much easier to knock\r\nback the enemy...but greatly\r\nreduces your max health.,0,0,0,0.25,0,0,0,0,0,0,0,0,0,0,0,FALSE,FALSE
+skl014,Impact II,Prefab/Skill/skl014/Skl014PassiveSkill.user,25% Increased enemy stun rate.,0,0,0,0.25,0,0,0,0,0,0,0,0,0,0,0,FALSE,FALSE
 skl015,Impact I,Prefab/Skill/skl015/Skl015PassiveSkill.user,15% Increased enemy stun rate.,0,0,0,0.15,0,0,0,0,0,0,0,0,0,0,0,FALSE,FALSE
 skl016,Toughness II,Prefab/Skill/skl016/Skl016PassiveSkill.user,50% Increased max health.\r\n20% Reduced firepower.,-0.2,0,0,0,500,0,0,0,0,0,0,0,0,0,0,FALSE,FALSE
 skl017,Toughness I,Prefab/Skill/skl017/Skl017PassiveSkill.user,25% Increased max health.,0,0,0,0,250,0,0,0,0,0,0,0,0,0,0,FALSE,FALSE

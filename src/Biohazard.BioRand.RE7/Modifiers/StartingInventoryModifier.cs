@@ -194,7 +194,7 @@ internal class StartingInventoryModifier : Modifier {
                 }
             }
 
-            if (randomizeInventory && randomizer.UserTags.Contains("re7:debugstartitems")) {
+            if (randomizeInventory && randomizer.IsDebugger) {
                 if (debugItems.Count > 0) {
                     logger.LogLine(
                         $"Adding debug items: {string.Join(", ", debugItems.Select(x => $"{x.Num}x {x.ItemDataID}"))}");
@@ -399,7 +399,7 @@ internal class StartingInventoryModifier : Modifier {
     }
 
     private static IReadOnlyList<StartingInventoryItem> LoadDebugStartItems(Randomizer randomizer) {
-        if (!randomizer.UserTags.Contains("re7:debugstartitems"))
+        if (!randomizer.IsDebugger)
         {
             return [];
         }

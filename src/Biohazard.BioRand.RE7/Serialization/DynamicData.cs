@@ -16,9 +16,10 @@ public enum DynamicDataName {
     BirdCages,
     DebugStartItems,
     BirthdaySkills,
+    DebugRecipes,
 }
 
-public sealed class DynamicData(bool download) {
+public sealed class DynamicData(bool download, bool downloadDebuggerData = false) {
     private const string GoogleSheetUrl =
         "https://docs.google.com/spreadsheets/d/1YNdX9LWrhh6KDKd8Mx7JpTCMq8XY8u6BfX20YYNx9jk/export?format=csv&gid={0}";
 
@@ -33,12 +34,16 @@ public sealed class DynamicData(bool download) {
             [DynamicDataName.BirdCages] = ("bird_cages.csv", 1920824337),
             [DynamicDataName.DebugStartItems] = ("debug_start_items.csv", 639198893),
             [DynamicDataName.BirthdaySkills] = ("birthday_skills.csv", 1933511558),
+            [DynamicDataName.DebugRecipes] = ("debug_recipes.csv", 1413280780),
         }.ToImmutableDictionary();
 
     private static readonly HttpClient s_httpClient = new();
     private readonly ConcurrentDictionary<DynamicDataName, Lazy<byte[]?>> _map = [];
 
-    public bool DownloadEnabled => download;
+    public bool DownloadEnabled => download || downloadDebuggerData;
+
+    internal bool ShouldDownload(DynamicDataName name)
+        => download || (downloadDebuggerData && name is DynamicDataName.DebugStartItems or DynamicDataName.DebugRecipes);
 
     public static string? GetFileName(DynamicDataName name) {
         if (g_map.TryGetValue(name, out var entry)) {
@@ -56,10 +61,10 @@ public sealed class DynamicData(bool download) {
     }
 
     public void PrefetchAll() {
-        if (!download)
+        if (!DownloadEnabled)
             return;
 
-        Parallel.ForEach(g_map.Keys, name => _ = GetData(name));
+        Parallel.ForEach(g_map.Keys.Where(ShouldDownload), name => _ = GetData(name));
     }
 
     internal void SetData(DynamicDataName name, byte[] data) {
@@ -68,7 +73,7 @@ public sealed class DynamicData(bool download) {
 
     private byte[]? LoadData(DynamicDataName name) {
         var (fileName, gid) = g_map[name];
-        if (download && gid.HasValue) {
+        if (ShouldDownload(name) && gid.HasValue) {
             var downloadUrl = string.Format(GoogleSheetUrl, gid.Value);
             return Download(downloadUrl);
         }

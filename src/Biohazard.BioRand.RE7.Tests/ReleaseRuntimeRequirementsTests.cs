@@ -10,6 +10,7 @@ public class ReleaseRuntimeRequirementsTests {
     [InlineData("random-starting-inventory-ethan")]
     [InlineData("random-starting-inventory-additional-gun-ethan")]
     [InlineData("additional-items")]
+    [InlineData("recipes-add-new")]
     [InlineData("random-bird-cage-magnum")]
     [InlineData("extra-enemy-amount")]
     public void IndependentWeaponAndEnemyFeatures_IncludeRuntime(string option) {
@@ -29,6 +30,7 @@ public class ReleaseRuntimeRequirementsTests {
         using var zip = new ZipArchive(new MemoryStream(output.GetOutputZip()));
         Assert.NotNull(zip.GetEntry("reframework/autorun/BioRand7/em8000_knee_down.lua"));
         Assert.NotNull(zip.GetEntry("reframework/autorun/BioRand7/em3300_explosions.lua"));
+        Assert.NotNull(zip.GetEntry("reframework/autorun/BioRand7/crafting.lua"));
         Assert.NotNull(zip.GetEntry("reframework/data/BioRand7/config.json"));
     }
 

@@ -1,4 +1,5 @@
 local Context = require("BioRand7/context")
+local Crafting = require("BioRand7/crafting")
 local Em3300Explosions = require("BioRand7/em3300_explosions")
 local Em8000KneeDown = require("BioRand7/em8000_knee_down")
 local EnemyDrops = require("BioRand7/enemy_drops")
@@ -12,6 +13,7 @@ local UI = require("BioRand7/ui")
 local context = Context.new()
 
 context:add("inventory", Inventory.new(context))
+context:add("crafting", Crafting.new(context))
 context:add("madhouse_saves", MadhouseSaves.new(context))
 context:add("reload_speed", ReloadSpeed.new(context))
 context:add("em8000_knee_down", Em8000KneeDown.new(context))

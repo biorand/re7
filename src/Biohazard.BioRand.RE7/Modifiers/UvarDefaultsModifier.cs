@@ -9,7 +9,7 @@ internal class UvarDefaultsModifier : Modifier {
     }
 
     private void ApplyRecipeUnlocks(Randomizer randomizer) {
-        if (!randomizer.GetConfigOption<bool>("recipes-unlock-from-start"))
+        if (randomizer.DebugRecipes.Enabled || !randomizer.GetConfigOption<bool>("recipes-unlock-from-start"))
             return;
 
         // Immediately unlock the combine menu right from the start

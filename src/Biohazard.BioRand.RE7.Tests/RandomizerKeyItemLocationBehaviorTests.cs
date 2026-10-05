@@ -356,18 +356,19 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
     }
 
     [Fact]
-    public void KeyItemLocations_DoesNotTreatDiningRoomExtraAsChapter3StartTarget() {
+    public void KeyItemLocations_DiningRoomExtraNeedsReviewBeforeCarryingKeys() {
         var result = _defaultRun.Result;
         var diningTable = result.ItemPlacementService.MainGamePlacements.Single(placement =>
             placement.IsExtra &&
             placement.Comment == "Dinner Table" &&
             placement.SceneFile.Equals(MainHouseDiningKitchenScenePath, StringComparison.OrdinalIgnoreCase));
 
-        Assert.Equal(1, diningTable.Chapter);
-        Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(diningTable, "FloorDoorKey"));
-        Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(diningTable, "EthanCarKey"));
-        Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(diningTable, "MorgueKey"));
-        Assert.False(KeyItemLocationModifier.CanPlaceKeyItemInPlacementForTesting(diningTable, "MasterKey"));
+        Assert.Equal(3, diningTable.Chapter);
+        // Chapter metadata alone must not admit an unreviewed extra into the key-item pool.
+        Assert.False(KeyItemCarrierSafety.IsReviewed(diningTable));
+        var diningTableGuid = ExtraPlacementModifier.GetGeneratedItemGuid(diningTable);
+        Assert.DoesNotContain(KeyItemLocationModifier.GetRouteTargetsForTesting(result.Randomizer),
+            target => target.TargetGuid == diningTableGuid);
     }
 
     [Fact]
@@ -1407,6 +1408,10 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
     }
 
     private static IEnumerable<ChangedItemPlacement> GetChangedPlacements(RandomizerRunResult result) {
+        // These checks only read scenes. Deserialize each binary once per scan,
+        // while keeping fresh scene objects for other assertions and test runs.
+        var beforeScenes = new Dictionary<string, RszScene>(StringComparer.OrdinalIgnoreCase);
+        var afterScenes = new Dictionary<string, RszScene>(StringComparer.OrdinalIgnoreCase);
         foreach (var placement in result.ItemPlacementService.MainGamePlacements
                      .Where(placement =>
                          placement.Enabled &&
@@ -1418,13 +1423,22 @@ public partial class RandomizerKeyItemLocationBehaviorTests : IClassFixture<Defa
             var targetGuid = GetTargetGuid(placement);
             var beforeItem = placement.IsExtra
                 ? null
-                : GetItemOrNull(result.ReadBeforeScene(placement.SceneFile), targetGuid);
-            var afterItem = GetItemOrNull(result.ReadAfterScene(placement.SceneFile), targetGuid);
+                : GetItemOrNull(ReadScene(placement.SceneFile, before: true), targetGuid);
+            var afterItem = GetItemOrNull(ReadScene(placement.SceneFile, before: false), targetGuid);
             if (afterItem == null || beforeItem?.ItemDataID == afterItem.ItemDataID)
                 continue;
 
             yield return new ChangedItemPlacement(placement, beforeItem?.ItemDataID ?? placement.Id,
                 afterItem.ItemDataID);
+        }
+
+        RszScene ReadScene(string path, bool before) {
+            var scenes = before ? beforeScenes : afterScenes;
+            if (!scenes.TryGetValue(path, out var scene)) {
+                scene = before ? result.ReadBeforeScene(path) : result.ReadAfterScene(path);
+                scenes.Add(path, scene);
+            }
+            return scene;
         }
     }
 
