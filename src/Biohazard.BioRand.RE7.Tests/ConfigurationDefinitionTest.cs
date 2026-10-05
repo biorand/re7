@@ -251,6 +251,21 @@ public class ConfigurationDefinitionTest {
         Assert.Contains("enemy-drop-valuable-birthday-skill", ids);
     }
 
+    [Theory]
+    [InlineData("item-drop-ratio-flower")]
+    [InlineData("enemy-drop-ratio-flower")]
+    public void Test_Supplements_Are_Configurable_Materials_With_Enabled_Defaults(string configId) {
+        var item = Assert.Single(items, item => item.Id == configId);
+
+        Assert.Equal("Supplements", item.Label);
+        Assert.Equal(ItemDrops.CategoryMaterial, item.Category!.Label);
+        Assert.Equal("range", item.Type);
+        Assert.Equal(0.05, Convert.ToDouble(item.Default));
+
+        using var profile = System.Text.Json.JsonDocument.Parse(RandomizerFactory.GetDefaultProfile());
+        Assert.Equal(0.05, profile.RootElement.GetProperty(configId).GetDouble());
+    }
+
     [Fact]
     public void Test_RandomEvent_Configuration_Items_Exist() {
         var ids = items

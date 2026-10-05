@@ -228,9 +228,10 @@ public class RandomizerItemRandomizationTests {
         Assert.NotEqual(beforeItem.SaveGUID, afterItem.SaveGUID);
     }
 
-    [Fact]
-    public void RandomItems_SingleDropPool_UsesReplacementTemplateInteractionChildren() {
-        const string replacementId = "BurnerBullet";
+    [Theory]
+    [InlineData("BurnerBullet")]
+    [InlineData("Flower")]
+    public void RandomItems_SingleDropPool_UsesReplacementTemplateInteractionChildren(string replacementId) {
         using var result = RandomizerTest.RunState(config => {
             config["random-items"] = true;
             ConfigureSingleDrop(config, replacementId);

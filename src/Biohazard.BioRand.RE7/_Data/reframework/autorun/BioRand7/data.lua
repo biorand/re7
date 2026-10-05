@@ -3,7 +3,7 @@ local Data = {}
 Data.generic_drop_items = {
     "EasyBoots", "AlphaGrass", "LiquidBomb", "HandgunBullet", "HandgunBulletL", "ShotgunBullet",
     "MachineGunBullet", "MagnumBullet", "BurnerBullet", "FlameBulletS", "AcidBulletS", "RemedyM",
-    "RemedyL", "EyeDrops", "Herb", "ChemicalM", "ChemicalL", "ChemicalS", "Gunpowder", "Coin", "Alcohol",
+    "RemedyL", "EyeDrops", "Herb", "ChemicalM", "ChemicalL", "ChemicalS", "Gunpowder", "Coin", "Alcohol", "Flower",
 }
 
 Data.ammo = {
@@ -15,7 +15,7 @@ Data.stack_limits = {
     HandgunBullet = 30, HandgunBulletL = 20, ShotgunBullet = 30, MachineGunBullet = 300,
     MagnumBullet = 20, BurnerBullet = 500, FlameBulletS = 5, AcidBulletS = 5, Coin = 999,
     CylinderKey = 20, EyeDrops = 5, Gunpowder = 10, Herb = 5, LiquidBomb = 20, RemedyL = 3,
-    RemedyM = 3, Alcohol = 5,
+    RemedyM = 3, Alcohol = 5, Flower = 5,
 }
 
 local handgun = { HandgunBullet = true, HandgunBulletL = true }

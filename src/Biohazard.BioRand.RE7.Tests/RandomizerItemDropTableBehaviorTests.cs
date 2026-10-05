@@ -4,6 +4,25 @@ namespace Biohazard.BioRand.RE7.Tests;
 
 [Trait("Category", "RequiresPak")]
 public class RandomizerItemDropTableBehaviorTests {
+    [Theory]
+    [InlineData(0.05)]
+    [InlineData(0.0)]
+    public void ItemDropTable_Supplements_RespectConfiguredWeight(double ratio) {
+        using var result = RandomizerTest.RunState(config => {
+            config["item-drop-ratio-flower"] = ratio;
+        });
+        var table = result.ReadAfterUserFile<app.ReliefItemTable>(RandomizerTestPaths.Chapter4DropTablePath);
+
+        if (ratio == 0) {
+            Assert.DoesNotContain(table.DataList, drop => drop.ItemID == "Flower");
+            return;
+        }
+
+        var drop = Assert.Single(table.DataList, drop => drop.ItemID == "Flower");
+        Assert.Equal((5u, 5u, 5u), (drop.EasyDropRate, drop.NormalDropRate, drop.HardDropRate));
+        Assert.Equal((1u, 1u, 1u), (drop.ReliefNum, drop.NormalDropNum, drop.ReliefDropNum));
+    }
+
     [Fact]
     public void ItemDropTable_AvailableWeaponsOnly_FiltersUnavailableAmmoAndAddsLockPick() {
         using var result = RandomizerTest.RunState(config => {
