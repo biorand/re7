@@ -234,6 +234,9 @@ public class RandomizerItemRandomizationTests {
     [Theory]
     [InlineData("BurnerBullet")]
     [InlineData("Flower")]
+    [InlineData("AlloyClay")]
+    [InlineData("Magnesium")]
+    [InlineData("SyntheticDetergent")]
     public void RandomItems_SingleDropPool_UsesReplacementTemplateInteractionChildren(string replacementId) {
         using var result = RandomizerTest.RunState(config => {
             config["random-items"] = true;

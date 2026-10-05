@@ -89,12 +89,15 @@ return function()
     configuration["enemy-drop-ratio-chemicalm"] = nil
 
     configuration["enemy-drop-probability"] = 1
-    configuration["enemy-drop-ratio-flower"] = 0.05
-    local supplements_id, supplements_amount = drops:select(enemy, 1, "Em4000")
-    assert(supplements_id == "Flower" and supplements_amount == 1, "Normal enemies must be able to drop Supplements")
-    configuration["enemy-drop-ratio-flower"] = 0
-    assert(drops:select(enemy, 1, "Em4000") == nil, "Zero weight must exclude Supplements")
-    configuration["enemy-drop-ratio-flower"] = nil
+    for _, item_id in ipairs({ "Flower", "AlloyClay", "Magnesium", "SyntheticDetergent" }) do
+        local config_key = "enemy-drop-ratio-" .. item_id:lower()
+        configuration[config_key] = 0.05
+        local id, amount = drops:select(enemy, 1, "Em4000")
+        assert(id == item_id and amount == 1, "Normal enemies must be able to drop " .. item_id)
+        configuration[config_key] = 0
+        assert(drops:select(enemy, 1, "Em4000") == nil, "Zero weight must exclude " .. item_id)
+        configuration[config_key] = nil
+    end
     configuration["enemy-drop-probability"] = nil
 
     local fixed_rng = { int = function(_, minimum, maximum)
