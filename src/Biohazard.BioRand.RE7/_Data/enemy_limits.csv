@@ -4,16 +4,16 @@ natives/stm/scenes/chapter/chapter0/c00_cullingcollision.scn.20,,0,Non-environme
 natives/stm/scenes/chapter/chapter0/c00_loadcollistion.scn.20,,0,Non-environment controller/helper scene
 natives/stm/environment/scene/chapter1/c01_2f.scn.20,Guest House / 2F / Stairs up / Safe Room,1,Safe or hub scene
 natives/stm/environment/scene/chapter1/c01_3f.scn.20,Guest House / 3F / Mia 2,5,Default playable area
-natives/stm/environment/scene/chapter1/c01_b1a.scn.20,Guest House / B / Ladder,5,Default playable area
-natives/stm/environment/scene/chapter1/c01_b1b.scn.20,Guest House / B / Water Corridor 1,2,Connector or medium area
-natives/stm/environment/scene/chapter1/c01_b1c.scn.20,Guest House / B / Water Corridor 2 / André's body,2,Connector or medium area
-natives/stm/environment/scene/chapter1/c01_b1d.scn.20,Guest House / B / Water Exit / Missing people placards,5,Default playable area
-natives/stm/environment/scene/chapter1/c01_b1e.scn.20,Guest House / B / Corridor,2,Connector or medium area
-natives/stm/environment/scene/chapter1/c01_b1f.scn.20,Guest House / B / Mia Cell,2,Small room
-natives/stm/environment/scene/chapter1/c01_b1g.scn.20,Guest House / B / Mia Follow 1,5,Default playable area
-natives/stm/environment/scene/chapter1/c01_b1h.scn.20,Guest House / B / Mia Follow 2,5,Default playable area
-natives/stm/environment/scene/chapter1/c01_b1i.scn.20,Guest House / B / Mia Follow 3 / Wall Break,5,Default playable area
-natives/stm/environment/scene/chapter1/c01_b1j.scn.20,Guest House / B / Staircase,2,Connector or medium area
+natives/stm/environment/scene/chapter1/c01_b1a.scn.20,Guest House / B1 / Ladder,5,Default playable area
+natives/stm/environment/scene/chapter1/c01_b1b.scn.20,Guest House / B1 / Water Corridor 1,2,Connector or medium area
+natives/stm/environment/scene/chapter1/c01_b1c.scn.20,Guest House / B1 / Water Corridor 2 / Andre's body,2,Connector or medium area
+natives/stm/environment/scene/chapter1/c01_b1d.scn.20,Guest House / B1 / Water Exit / Missing people placards,5,Default playable area
+natives/stm/environment/scene/chapter1/c01_b1e.scn.20,Guest House / B1 / Corridor,2,Connector or medium area
+natives/stm/environment/scene/chapter1/c01_b1f.scn.20,Guest House / B1 / Mia Cell,2,Small room
+natives/stm/environment/scene/chapter1/c01_b1g.scn.20,Guest House / B1 / Mia Follow 1,5,Default playable area
+natives/stm/environment/scene/chapter1/c01_b1h.scn.20,Guest House / B1 / Mia Follow 2,5,Default playable area
+natives/stm/environment/scene/chapter1/c01_b1i.scn.20,Guest House / B1 / Mia Follow 3 / Wall Break,5,Default playable area
+natives/stm/environment/scene/chapter1/c01_b1j.scn.20,Guest House / B1 / Staircase,2,Connector or medium area
 natives/stm/environment/scene/chapter1/c01_bathroom01.scn.20,Guest House / 1F / Bathroom,2,Small room
 natives/stm/environment/scene/chapter1/c01_corridor01.scn.20,Guest House / 1F / Entrance Corridor,5,Connector or medium area
 natives/stm/environment/scene/chapter1/c01_corridor02.scn.20,Guest House / 1F / Corridor at the back,5,Connector or medium area
@@ -65,22 +65,22 @@ natives/stm/environment/scene/chapter3/c03_gardenarea1sub02.scn.20,Terrain,99,La
 natives/stm/environment/scene/chapter3/c03_gardenarea1sub03.scn.20,Terrain,99,Large or combat-capable area
 natives/stm/environment/scene/chapter3/c03_gardenareaboat01.scn.20,Terrain,99,Large or combat-capable area
 natives/stm/environment/scene/chapter3/c03_gardenareaboat02.scn.20,Terrain,99,Large or combat-capable area
-natives/stm/environment/scene/chapter3/c03_gh1fentrance01.scn.20,Green House / Exit,5,Default playable area
-natives/stm/environment/scene/chapter3/c03_gh1fentrance02.scn.20,Green House / 1F / Ladder,5,Default playable area
-natives/stm/environment/scene/chapter3/c03_gh1fhallway01.scn.20,Green House / 1F / Corridor,5,Connector or medium area
-natives/stm/environment/scene/chapter3/c03_gh1flowerroom01.scn.20,Green House / 1F / Yard,99,Large or combat-capable area
-natives/stm/environment/scene/chapter3/c03_gh1froom01.scn.20,Green House / 1F / Room 1,1,Small room
-natives/stm/environment/scene/chapter3/c03_gh1froom02.scn.20,Green House / 1F / Room 2,1,Small room
-natives/stm/environment/scene/chapter3/c03_gh1froom03.scn.20,Green House / 1F / Room 3,1,Small room
-natives/stm/environment/scene/chapter3/c03_gh1fstairs01.scn.20,Green House / 1F / Stairs / Marge Trigger,5,Connector or medium area
-natives/stm/environment/scene/chapter3/c03_gh2fhallway01.scn.20,Green House / 2F / Stairs,5,Connector or medium area
-natives/stm/environment/scene/chapter3/c03_gh2froom01.scn.20,Green House / 1F / Room 1,1,Small room
-natives/stm/environment/scene/chapter3/c03_gh2fsaferoom01.scn.20,Green House / 2F / Entrance / Loot,5,Connector or medium area
-natives/stm/environment/scene/chapter3/c03_gh2fsaferoom02.scn.20,Green House / 2F / Entrance / Hole,5,Connector or medium area
-natives/stm/environment/scene/chapter3/c03_gh2fterrace01.scn.20,Green House / 2F / Terrace,5,Default playable area
+natives/stm/environment/scene/chapter3/c03_gh1fentrance01.scn.20,Greenhouse / Exit,5,Default playable area
+natives/stm/environment/scene/chapter3/c03_gh1fentrance02.scn.20,Greenhouse / 1F / Ladder,5,Default playable area
+natives/stm/environment/scene/chapter3/c03_gh1fhallway01.scn.20,Greenhouse / 1F / Corridor,5,Connector or medium area
+natives/stm/environment/scene/chapter3/c03_gh1flowerroom01.scn.20,Greenhouse / 1F / Yard,99,Large or combat-capable area
+natives/stm/environment/scene/chapter3/c03_gh1froom01.scn.20,Greenhouse / 1F / Room 1,1,Small room
+natives/stm/environment/scene/chapter3/c03_gh1froom02.scn.20,Greenhouse / 1F / Room 2,1,Small room
+natives/stm/environment/scene/chapter3/c03_gh1froom03.scn.20,Greenhouse / 1F / Room 3,1,Small room
+natives/stm/environment/scene/chapter3/c03_gh1fstairs01.scn.20,Greenhouse / 1F / Stairs / Marguerite Trigger,5,Connector or medium area
+natives/stm/environment/scene/chapter3/c03_gh2fhallway01.scn.20,Greenhouse / 2F / Stairs,5,Connector or medium area
+natives/stm/environment/scene/chapter3/c03_gh2froom01.scn.20,Greenhouse / 1F / Room 1,1,Small room
+natives/stm/environment/scene/chapter3/c03_gh2fsaferoom01.scn.20,Greenhouse / 2F / Entrance / Loot,5,Connector or medium area
+natives/stm/environment/scene/chapter3/c03_gh2fsaferoom02.scn.20,Greenhouse / 2F / Entrance / Hole,5,Connector or medium area
+natives/stm/environment/scene/chapter3/c03_gh2fterrace01.scn.20,Greenhouse / 2F / Terrace,5,Default playable area
 natives/stm/environment/scene/chapter3/c03_ghinsidelow01.scn.20,,0,Environment support scene
-natives/stm/environment/scene/chapter3/c03_ghoutside01.scn.20,Green House / Exterior,99,Large or combat-capable area
-natives/stm/environment/scene/chapter3/c03_ghoutsidegarden.scn.20,Green House / Exterior Yard,99,Large or combat-capable area
+natives/stm/environment/scene/chapter3/c03_ghoutside01.scn.20,Greenhouse / Exterior,99,Large or combat-capable area
+natives/stm/environment/scene/chapter3/c03_ghoutsidegarden.scn.20,Greenhouse / Exterior Yard,99,Large or combat-capable area
 natives/stm/environment/scene/chapter3/c03_leftarea1fbackstage.scn.20,Testing Area / 2F / Backstage,5,Default playable area
 natives/stm/environment/scene/chapter3/c03_leftarea1fhallway.scn.20,Testing Area / 2F / Staircase down,5,Connector or medium area
 natives/stm/environment/scene/chapter3/c03_leftarea1fmonitorroom.scn.20,Testing Area / 1F / Monitor Room,1,Small room
@@ -93,24 +93,24 @@ natives/stm/environment/scene/chapter3/c03_leftarea2froom1.scn.20,Testing Area /
 natives/stm/environment/scene/chapter3/c03_leftarea2froom2.scn.20,Testing Area / 2F / Room 2,1,Small room
 natives/stm/environment/scene/chapter3/c03_leftarea2ftvroom.scn.20,Testing Area / 2F / TV Room,1,Small room
 natives/stm/environment/scene/chapter3/c03_mainhouse1fgarage.scn.20,Main House / 1F / Garage,5,Connector or medium area
-natives/stm/environment/scene/chapter3/c03_mainhouse1fgaragehallway.scn.20,Main House  / 1F / Garage Entrance,5,Connector or medium area
-natives/stm/environment/scene/chapter3/c03_mainhouse1fgarageoutside.scn.20,Main House  / 1F / Garage Outside,99,Large or combat-capable area
-natives/stm/environment/scene/chapter3/c03_mainhouse1fhallway.scn.20,Main House  / 1F / Main Hallway,5,Connector or medium area
-natives/stm/environment/scene/chapter3/c03_mainhouse1fldk.scn.20,Main House  / 1F / Dining Room / Kitchen,1,Small room
-natives/stm/environment/scene/chapter3/c03_mainhouse1fliving.scn.20,Main House  / 1F / Living Room / Pendulum,1,Small room
-natives/stm/environment/scene/chapter3/c03_mainhouse1fpantry.scn.20,Main House  / 1F / Pantry / Hatch,5,Connector or medium area
-natives/stm/environment/scene/chapter3/c03_mainhouse1fwash.scn.20,Main House  / 1F / Laundry / Safe Room,0,Safe or hub scene
+natives/stm/environment/scene/chapter3/c03_mainhouse1fgaragehallway.scn.20,Main House / 1F / Garage Entrance,5,Connector or medium area
+natives/stm/environment/scene/chapter3/c03_mainhouse1fgarageoutside.scn.20,Main House / 1F / Garage Outside,99,Large or combat-capable area
+natives/stm/environment/scene/chapter3/c03_mainhouse1fhallway.scn.20,Main House / 1F / Main Hallway,5,Connector or medium area
+natives/stm/environment/scene/chapter3/c03_mainhouse1fldk.scn.20,Main House / 1F / Dining Room / Kitchen,1,Small room
+natives/stm/environment/scene/chapter3/c03_mainhouse1fliving.scn.20,Main House / 1F / Living Room / Pendulum,1,Small room
+natives/stm/environment/scene/chapter3/c03_mainhouse1fpantry.scn.20,Main House / 1F / Pantry / Hatch,5,Connector or medium area
+natives/stm/environment/scene/chapter3/c03_mainhouse1fwash.scn.20,Main House / 1F / Laundry / Safe Room,0,Safe or hub scene
 natives/stm/environment/scene/chapter3/c03_mainhouse2fbath.scn.20,Main House / 2F / Bathroom,1,Small room
 natives/stm/environment/scene/chapter3/c03_mainhouse2fbedroom.scn.20,Main House / 2F / Bedroom / Clock Puzzle,1,Small room
 natives/stm/environment/scene/chapter3/c03_mainhouse2fgrandma.scn.20,Main House / 2F / Grandma's Room / Shotgun,1,Small room
 natives/stm/environment/scene/chapter3/c03_mainhouse2fhallway.scn.20,Main House / 2F / Corridor 1 / Both Molded and Non-Molded,5,Connector or medium area
 natives/stm/environment/scene/chapter3/c03_mainhouse2fhallway2.scn.20,Main House / 2F / Corridor 2,5,Connector or medium area
-natives/stm/environment/scene/chapter3/c03_mainhouse2fkids.scn.20,Main House / 2F / Lucas' teenage room,1,Small room
-natives/stm/environment/scene/chapter3/c03_mainhouse2fkids02.scn.20,Main House / 2F / Lucas' teenage room / Attic,1,Small room
-natives/stm/environment/scene/chapter3/c03_mainhouse2fplay.scn.20,Main House / 2F / Play Room,1,Small room
+natives/stm/environment/scene/chapter3/c03_mainhouse2fkids.scn.20,Main House / 2F / Kid's Room,1,Small room
+natives/stm/environment/scene/chapter3/c03_mainhouse2fkids02.scn.20,Main House / 2F / Kid's Room / Attic,1,Small room
+natives/stm/environment/scene/chapter3/c03_mainhouse2fplay.scn.20,Main House / 2F / Recreation Room,1,Small room
 natives/stm/environment/scene/chapter3/c03_mainhouse2fstoreroom.scn.20,Main House / 2F / Storage Room,1,Small room
 natives/stm/environment/scene/chapter3/c03_mainhousefakeset01.scn.20,Main House / Fake Set,5,Default playable area
-natives/stm/environment/scene/chapter3/c03_mainhousehall.scn.20,Main House / Hall,99,Large or combat-capable area
+natives/stm/environment/scene/chapter3/c03_mainhousehall.scn.20,Main House / Main Hall,99,Large or combat-capable area
 natives/stm/environment/scene/chapter3/c03_mainhousestair01.scn.20,Main House / 2F / Stair leading to basement,5,Connector or medium area
 natives/stm/environment/scene/chapter3/c03_mainhousoutside.scn.20,Main House / Exterior,99,Large or combat-capable area
 natives/stm/environment/scene/chapter3/c03_mainhousoutsidesub01.scn.20,Main House / Exterior / Windows,99,Large or combat-capable area
@@ -121,7 +121,7 @@ natives/stm/environment/scene/chapter3/c03_mainhousoutsideterrace2f3.scn.20,Main
 natives/stm/environment/scene/chapter3/c03_oldhouse1fbridge01.scn.20,Old House / Entrance Bridge,99,Large or combat-capable area
 natives/stm/environment/scene/chapter3/c03_oldhouse1fbridge02.scn.20,Old House / 1F / Bridges at the back,99,Large or combat-capable area
 natives/stm/environment/scene/chapter3/c03_oldhouse1fbridgestorag01.scn.20,Old House / 1F / Bridges / Storage Room,99,Large or combat-capable area
-natives/stm/environment/scene/chapter3/c03_oldhouse1fbridgewc01.scn.20,Old House / 1F / Bridges /Toilet,99,Large or combat-capable area
+natives/stm/environment/scene/chapter3/c03_oldhouse1fbridgewc01.scn.20,Old House / 1F / Bridges / Toilet,99,Large or combat-capable area
 natives/stm/environment/scene/chapter3/c03_oldhouse1fentrance01.scn.20,Old House / 1F / Entrance,5,Connector or medium area
 natives/stm/environment/scene/chapter3/c03_oldhouse1fhallway01.scn.20,Old House / 1F / Corridor,5,Connector or medium area
 natives/stm/environment/scene/chapter3/c03_oldhouse1fhole01.scn.20,Old House / 1F / Hole Area / Crank,5,Default playable area
@@ -133,7 +133,7 @@ natives/stm/environment/scene/chapter3/c03_oldhouse1froom02.scn.20,Old House / 1
 natives/stm/environment/scene/chapter3/c03_oldhouse1fstairs01.scn.20,Old House / 1F / Altar / D-Series Arm,5,Default playable area
 natives/stm/environment/scene/chapter3/c03_oldhouse1fstorage.scn.20,Old House / 1F / Storage Room / Unused?,1,Small room
 natives/stm/environment/scene/chapter3/c03_oldhouse1funderfloor01.scn.20,Old House / 1F / Underground Tunnel / Crank,5,Connector or medium area
-natives/stm/environment/scene/chapter3/c03_oldhouse1fwallinside01.scn.20,Old House / 1F / Centipide Wall,5,Default playable area
+natives/stm/environment/scene/chapter3/c03_oldhouse1fwallinside01.scn.20,Old House / 1F / Centipede Wall,5,Default playable area
 natives/stm/environment/scene/chapter3/c03_oldhouse2fbedroom.scn.20,Old House / 2F / Bedroom,1,Small room
 natives/stm/environment/scene/chapter3/c03_oldhouse2fhallway02.scn.20,Old House / 2F / Corridor / D-Series Case,5,Connector or medium area
 natives/stm/environment/scene/chapter3/c03_oldhouse2fhallway03.scn.20,Old House / 2F / Corridor / Lantern Placement,5,Connector or medium area
@@ -141,34 +141,34 @@ natives/stm/environment/scene/chapter3/c03_oldhouse2fhallway04.scn.20,Old House 
 natives/stm/environment/scene/chapter3/c03_oldhouse2fkidsroom01.scn.20,Old House / 2F / Child's room / Alligator,1,Small room
 natives/stm/environment/scene/chapter3/c03_oldhouse2fkidsroom02.scn.20,Old House / 2F / Child's room / Toys,1,Small room
 natives/stm/environment/scene/chapter3/c03_oldhouse2fstudy01.scn.20,Old House / 2F / Moldy study room,1,Small room
-natives/stm/environment/scene/chapter3/c03_oldhousecave01.scn.20,Old House / Tunnel / Mutated Marge,5,Connector or medium area
+natives/stm/environment/scene/chapter3/c03_oldhousecave01.scn.20,Old House / Tunnel / Mutated Marguerite,5,Connector or medium area
 natives/stm/environment/scene/chapter3/c03_oldhouseoutside.scn.20,Old House / Exterior,99,Large or combat-capable area
 natives/stm/environment/scene/chapter3/c03_oldhousesaferoom01.scn.20,Old House / Bridges / Safe Room,0,Safe or hub scene
 natives/stm/environment/scene/chapter3/c03_rightarea1fhallway1.scn.20,Main House / 1F / Right Side Corridor / Scorpion Key,5,Connector or medium area
-natives/stm/environment/scene/chapter3/c03_rightarea1fhallway2.scn.20,Main House / 1F / Right Side Corridor/ Staircase leading to basement,5,Connector or medium area
+natives/stm/environment/scene/chapter3/c03_rightarea1fhallway2.scn.20,Main House / 1F / Right Side Corridor / Staircase leading to basement,5,Connector or medium area
 natives/stm/environment/scene/chapter3/c03_rightarea1fmonitorroom.scn.20,Main House / 1F / Moldy Monitor Room,1,Small room
 natives/stm/environment/scene/chapter3/c03_rightarea1foffice.scn.20,Main House / 1F / Office / Unused?,1,Small room
 natives/stm/environment/scene/chapter3/c03_rightarea1fopeninghallway.scn.20,Main House / 1F / Wall after Shadow Puzzle,5,Default playable area
 natives/stm/environment/scene/chapter3/c03_rightarea1fparlor.scn.20,Main House / 1F / Right Side Parlor,5,Default playable area
 natives/stm/environment/scene/chapter3/c03_rightarea1fstorageroom.scn.20,Main House / 1F / Right Side Storage Room,1,Small room
 natives/stm/environment/scene/chapter3/c03_rightarea1fstudy.scn.20,Main House / 1F / Safe Room,0,Safe or hub scene
-natives/stm/environment/scene/chapter3/c03_rightareab1ffreezer.scn.20,Main House / B / Jack 2,99,Large or combat-capable area
-natives/stm/environment/scene/chapter3/c03_rightareab1fhallway1.scn.20,Main House / B / Corridor / After going down,5,Connector or medium area
-natives/stm/environment/scene/chapter3/c03_rightareab1fhallway2.scn.20,Main House / B / Corridor / Workshop / Green barrier,5,Connector or medium area
-natives/stm/environment/scene/chapter3/c03_rightareab1fhallway3.scn.20,Main House / B / Staircase / Snake key,5,Connector or medium area
-natives/stm/environment/scene/chapter3/c03_rightareab1fhallway4.scn.20,Main House / B / Corridor / Jack Cutscene,5,Connector or medium area
-natives/stm/environment/scene/chapter3/c03_rightareab1fmoldedcreationroom.scn.20,Main House / B / Molded Creation Room / Bath tubs,1,Small room
-natives/stm/environment/scene/chapter3/c03_rightareab1fmorgue.scn.20,Main House / B / Morgue / Dissection Room Key,1,Small room
-natives/stm/environment/scene/chapter3/c03_rightareab1fpowerroom.scn.20,Main House / B / Carcasses / Red Keycard,5,Default playable area
-natives/stm/environment/scene/chapter3/c03_rightareab1fstorageroom1.scn.20,Main House / B / Electricity Room / Four-Legged Moldeds,1,Small room
-natives/stm/environment/scene/chapter3/c03_rightareab1fstorageroom2.scn.20,Main House / B / Storage Room / Scorpion Key / Treasure Photo,1,Small room
-natives/stm/environment/scene/chapter3/c03_rightareab1fstoreroom.scn.20,Main House / B / Police Officer's body / Snake Key,1,Small room
+natives/stm/environment/scene/chapter3/c03_rightareab1ffreezer.scn.20,Processing Area / B1 / Jack 2,99,Large or combat-capable area
+natives/stm/environment/scene/chapter3/c03_rightareab1fhallway1.scn.20,Processing Area / B1 / Corridor / After going down,5,Connector or medium area
+natives/stm/environment/scene/chapter3/c03_rightareab1fhallway2.scn.20,Processing Area / B1 / Corridor / Workshop / Green barrier,5,Connector or medium area
+natives/stm/environment/scene/chapter3/c03_rightareab1fhallway3.scn.20,Processing Area / B1 / Staircase / Snake key,5,Connector or medium area
+natives/stm/environment/scene/chapter3/c03_rightareab1fhallway4.scn.20,Processing Area / B1 / Corridor / Jack Cutscene,5,Connector or medium area
+natives/stm/environment/scene/chapter3/c03_rightareab1fmoldedcreationroom.scn.20,Processing Area / B1 / Molded Creation Room / Bath tubs,1,Small room
+natives/stm/environment/scene/chapter3/c03_rightareab1fmorgue.scn.20,Processing Area / B1 / Morgue / Dissection Room Key,1,Small room
+natives/stm/environment/scene/chapter3/c03_rightareab1fpowerroom.scn.20,Processing Area / B1 / Carcasses / Red Keycard,5,Default playable area
+natives/stm/environment/scene/chapter3/c03_rightareab1fstorageroom1.scn.20,Processing Area / B1 / Electricity Room / Four-Legged Moldeds,1,Small room
+natives/stm/environment/scene/chapter3/c03_rightareab1fstorageroom2.scn.20,Processing Area / B1 / Storage Room / Scorpion Key / Treasure Photo,1,Small room
+natives/stm/environment/scene/chapter3/c03_rightareab1fstoreroom.scn.20,Processing Area / B1 / Police Officer's body / Snake Key,1,Small room
 natives/stm/environment/scene/chapter3/c03_trailerhouse.scn.20,Yard / Trailer,99,Large or combat-capable area
 natives/stm/environment/scene/chapter4/c04_c012f.scn.20,Guest House / 2F / Stairs up,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_c013f.scn.20,Guest House / 3F / Evie,5,Default playable area
-natives/stm/environment/scene/chapter4/c04_c01b1h.scn.20,Guest House / B / Corridor,10,Connector or medium area
-natives/stm/environment/scene/chapter4/c04_c01b1i.scn.20,Guest House / B / Mia Wall Break,5,Default playable area
-natives/stm/environment/scene/chapter4/c04_c01b1j.scn.20,Guest House / B / Staircase,10,Connector or medium area
+natives/stm/environment/scene/chapter4/c04_c01b1h.scn.20,Guest House / B1 / Corridor,10,Connector or medium area
+natives/stm/environment/scene/chapter4/c04_c01b1i.scn.20,Guest House / B1 / Mia Wall Break,5,Default playable area
+natives/stm/environment/scene/chapter4/c04_c01b1j.scn.20,Guest House / B1 / Staircase,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_c01bathroom01.scn.20,Guest House / 1F / Bathroom,1,Small room
 natives/stm/environment/scene/chapter4/c04_c01corridor01.scn.20,Guest House / 1F / Corridor / Ethan threatens Evie,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_c01corridor02.scn.20,Guest House / 1F / Corridor at the back,10,Connector or medium area
@@ -198,7 +198,7 @@ natives/stm/environment/scene/chapter4/c04_cottage.scn.20,Swamp / Mine Office,99
 natives/stm/environment/scene/chapter4/c04_cottageswamp01.scn.20,Swamp / Dead Fish,99,Large or combat-capable area
 natives/stm/environment/scene/chapter4/c04_cottageswamp02.scn.20,Swamp / Mine Entrance Path,99,Large or combat-capable area
 natives/stm/environment/scene/chapter4/c04_mainhouse1flivingjack.scn.20,Main House / 1F / Living Room,1,Small room
-natives/stm/environment/scene/chapter4/c04_outsidepastfront.scn.20,Ship / Deck,5,Default playable area
+natives/stm/environment/scene/chapter4/c04_outsidepastfront.scn.20,Wrecked Ship / Deck,5,Default playable area
 natives/stm/environment/scene/chapter4/c04_ship1fcabina.scn.20,Wrecked Ship / 1F / Recreation Room,1,Small room
 natives/stm/environment/scene/chapter4/c04_ship1fcabinb.scn.20,Wrecked Ship / 1F / Cabin,5,Default playable area
 natives/stm/environment/scene/chapter4/c04_ship1fcorridor.scn.20,Wrecked Ship / 1F / Corridor,10,Connector or medium area
@@ -239,40 +239,40 @@ natives/stm/environment/scene/chapter4/c04_ship1fstairs.scn.20,Wrecked Ship / S1
 natives/stm/environment/scene/chapter4/c04_ship1fwarehousea.scn.20,Wrecked Ship / 1F / Storage,1,Small room
 natives/stm/environment/scene/chapter4/c04_ship1fwarehouseb.scn.20,Wrecked Ship / 1F / Storage,1,Small room
 natives/stm/environment/scene/chapter4/c04_ship2fcabina.scn.20,Wrecked Ship / 2F / Bunk Room,1,Small room
-natives/stm/environment/scene/chapter4/c04_ship2fcabinapast.scn.20,Ship / 2F / Bunk Room Past,1,Small room
+natives/stm/environment/scene/chapter4/c04_ship2fcabinapast.scn.20,Wrecked Ship / 2F / Bunk Room Past,1,Small room
 natives/stm/environment/scene/chapter4/c04_ship2fcabinmia.scn.20,Wrecked Ship / 2F / Guest Room / Safe Room,1,Safe or hub scene
-natives/stm/environment/scene/chapter4/c04_ship2fcabinmiapast.scn.20,Ship / 2F / Guest Room Past,1,Small room
+natives/stm/environment/scene/chapter4/c04_ship2fcabinmiapast.scn.20,Wrecked Ship / 2F / Guest Room Past,1,Small room
 natives/stm/environment/scene/chapter4/c04_ship2fcorridorc.scn.20,Wrecked Ship / 2F / Corridor,10,Connector or medium area
-natives/stm/environment/scene/chapter4/c04_ship2fcorridorcpast.scn.20,Ship / 2F / Corridor Past,10,Connector or medium area
+natives/stm/environment/scene/chapter4/c04_ship2fcorridorcpast.scn.20,Wrecked Ship / 2F / Corridor Past,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_ship2fkitchen.scn.20,Wrecked Ship / 2F / Kitchen,1,Small room
-natives/stm/environment/scene/chapter4/c04_ship2fkitchenpast.scn.20,Ship / 2F / Kitchen Past,1,Small room
+natives/stm/environment/scene/chapter4/c04_ship2fkitchenpast.scn.20,Wrecked Ship / 2F / Kitchen Past,1,Small room
 natives/stm/environment/scene/chapter4/c04_ship2freceptionroom.scn.20,Wrecked Ship / 2F / Lounge,5,Default playable area
-natives/stm/environment/scene/chapter4/c04_ship2freceptionroompast.scn.20,Ship / 2F / Lounge Past,5,Default playable area
+natives/stm/environment/scene/chapter4/c04_ship2freceptionroompast.scn.20,Wrecked Ship / 2F / Lounge Past,5,Default playable area
 natives/stm/environment/scene/chapter4/c04_ship2frestaurant.scn.20,Wrecked Ship / 2F / Dining Room,1,Small room
-natives/stm/environment/scene/chapter4/c04_ship2frestaurantpast.scn.20,Ship / 2F / Dining Room Past,1,Small room
+natives/stm/environment/scene/chapter4/c04_ship2frestaurantpast.scn.20,Wrecked Ship / 2F / Dining Room Past,1,Small room
 natives/stm/environment/scene/chapter4/c04_ship2fshaft.scn.20,Wrecked Ship / 2F / Shaft,10,Connector or medium area
-natives/stm/environment/scene/chapter4/c04_ship2fshaftpast.scn.20,Ship / 2F / Shaft Past,10,Connector or medium area
+natives/stm/environment/scene/chapter4/c04_ship2fshaftpast.scn.20,Wrecked Ship / 2F / Shaft Past,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_ship2ftearoom.scn.20,Wrecked Ship / 2F / Break Room,1,Small room
-natives/stm/environment/scene/chapter4/c04_ship2ftearoompast.scn.20,Ship / 2F / Break Room Past,1,Small room
+natives/stm/environment/scene/chapter4/c04_ship2ftearoompast.scn.20,Wrecked Ship / 2F / Break Room Past,1,Small room
 natives/stm/environment/scene/chapter4/c04_ship3fcorridor01.scn.20,Wrecked Ship / 3F / Corridor at the back,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_ship3fcorridor01past.scn.20,Wrecked Ship / 3F / Corridor at the back / Evie cutscene,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_ship3fcorridor02.scn.20,Wrecked Ship / 3F / Corridor,10,Connector or medium area
-natives/stm/environment/scene/chapter4/c04_ship3fcorridor02past.scn.20,Ship / 3F / Corridor Past,10,Connector or medium area
+natives/stm/environment/scene/chapter4/c04_ship3fcorridor02past.scn.20,Wrecked Ship / 3F / Corridor Past,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_ship3fcorridor03.scn.20,Wrecked Ship / 3F / Broken Elevator Door Corridor,10,Connector or medium area
-natives/stm/environment/scene/chapter4/c04_ship3fcorridor03past.scn.20,Ship / 3F / Broken Elevator Door Corridor Past,10,Connector or medium area
+natives/stm/environment/scene/chapter4/c04_ship3fcorridor03past.scn.20,Wrecked Ship / 3F / Broken Elevator Door Corridor Past,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_ship3fcorridor04.scn.20,Wrecked Ship / 3F / Corridor,10,Connector or medium area
-natives/stm/environment/scene/chapter4/c04_ship3fcorridor04past.scn.20,Ship / 3F / Corridor Past,10,Connector or medium area
+natives/stm/environment/scene/chapter4/c04_ship3fcorridor04past.scn.20,Wrecked Ship / 3F / Corridor Past,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_ship3felectricdistributionroom.scn.20,Wrecked Ship / 3F / Control Room,1,Small room
-natives/stm/environment/scene/chapter4/c04_ship3felectricdistributionroompast.scn.20,Ship / 3F / Control Room Pest,1,Small room
+natives/stm/environment/scene/chapter4/c04_ship3felectricdistributionroompast.scn.20,Wrecked Ship / 3F / Control Room Past,1,Small room
 natives/stm/environment/scene/chapter4/c04_ship3finfirmary.scn.20,Wrecked Ship / 3F / Sick Bay,5,Default playable area
-natives/stm/environment/scene/chapter4/c04_ship3finfirmarypa.scn.20,Ship / 3F / Sick Bay Past,5,Default playable area
-natives/stm/environment/scene/chapter4/c04_ship3finfirmarypast.scn.20,Ship / 3F / Sick Bay Past,5,Default playable area
+natives/stm/environment/scene/chapter4/c04_ship3finfirmarypa.scn.20,Wrecked Ship / 3F / Sick Bay Past,5,Default playable area
+natives/stm/environment/scene/chapter4/c04_ship3finfirmarypast.scn.20,Wrecked Ship / 3F / Sick Bay Past,5,Default playable area
 natives/stm/environment/scene/chapter4/c04_ship3fsecurityroom.scn.20,Wrecked Ship / 3F / Security,5,Default playable area
-natives/stm/environment/scene/chapter4/c04_ship3fsecurityroompast.scn.20,Ship / 3F / Security Past,5,Default playable area
+natives/stm/environment/scene/chapter4/c04_ship3fsecurityroompast.scn.20,Wrecked Ship / 3F / Security Past,5,Default playable area
 natives/stm/environment/scene/chapter4/c04_ship3fshaft.scn.20,Wrecked Ship / 3F / Shaft,10,Connector or medium area
-natives/stm/environment/scene/chapter4/c04_ship3fshaftpast.scn.20,Ship / 3F / Shaft Past,10,Connector or medium area
+natives/stm/environment/scene/chapter4/c04_ship3fshaftpast.scn.20,Wrecked Ship / 3F / Shaft Past,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_ship3fshowerroom.scn.20,Wrecked Ship / 3F / Shower Room,1,Small room
-natives/stm/environment/scene/chapter4/c04_ship3fshowerroompast.scn.20,Ship / 3F / Shower Room Past,1,Small room
+natives/stm/environment/scene/chapter4/c04_ship3fshowerroompast.scn.20,Wrecked Ship / 3F / Shower Room Past,1,Small room
 natives/stm/environment/scene/chapter4/c04_ship4fbridge.scn.20,Wrecked Ship / 4F / Bridge,99,Large or combat-capable area
 natives/stm/environment/scene/chapter4/c04_ship4fcabina.scn.20,Wrecked Ship / 4F / Captain's Cabin,5,Default playable area
 natives/stm/environment/scene/chapter4/c04_ship4fcorridora.scn.20,Wrecked Ship / 4F / Corridor with staircase leading downwards,10,Connector or medium area
@@ -293,22 +293,22 @@ natives/stm/environment/scene/chapter4/c04_shipb1room02.scn.20,Wrecked Ship / S2
 natives/stm/environment/scene/chapter4/c04_shipb1stairs.scn.20,Wrecked Ship / S2 / Moldy Stairwell,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_shipb1workshop.scn.20,Wrecked Ship / S2 / Workshop,1,Small room
 natives/stm/environment/scene/chapter4/c04_shipb2corridor01.scn.20,Wrecked Ship / S2 / Corridor,10,Connector or medium area
-natives/stm/environment/scene/chapter4/c04_shipb2corridor01past.scn.20,Ship / S2 / Corridor Past,10,Connector or medium area
+natives/stm/environment/scene/chapter4/c04_shipb2corridor01past.scn.20,Wrecked Ship / S2 / Corridor Past,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_shipb2corridor02.scn.20,Wrecked Ship / S2 / Corridor,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_shipb2corridor03.scn.20,Wrecked Ship / S2 / Corridor,10,Connector or medium area
-natives/stm/environment/scene/chapter4/c04_shipb2corridor03past.scn.20,Ship / S2 / Corridor,10,Connector or medium area
+natives/stm/environment/scene/chapter4/c04_shipb2corridor03past.scn.20,Wrecked Ship / S2 / Corridor,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_shipb2corridor04.scn.20,Wrecked Ship / S2 / Moldy Corridor,10,Connector or medium area
-natives/stm/environment/scene/chapter4/c04_shipb2corridor04past.scn.20,Ship / S2 / Moldy Corridor Past,10,Connector or medium area
+natives/stm/environment/scene/chapter4/c04_shipb2corridor04past.scn.20,Wrecked Ship / S2 / Moldy Corridor Past,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_shipb2engineroom01.scn.20,Wrecked Ship / S2 / No. 2 Engine Room / Evie,1,Small room
-natives/stm/environment/scene/chapter4/c04_shipb2engineroom01past.scn.20,Ship / S2 / No. 2 Engine Room / Evie,1,Small room
+natives/stm/environment/scene/chapter4/c04_shipb2engineroom01past.scn.20,Wrecked Ship / S2 / No. 2 Engine Room / Evie,1,Small room
 natives/stm/environment/scene/chapter4/c04_shipb2storage01.scn.20,Wrecked Ship / S2 / Store Room,1,Small room
-natives/stm/environment/scene/chapter4/c04_shipb2storage01past.scn.20,Ship / S2 / Store Room Past,1,Small room
+natives/stm/environment/scene/chapter4/c04_shipb2storage01past.scn.20,Wrecked Ship / S2 / Store Room Past,1,Small room
 natives/stm/environment/scene/chapter4/c04_shipb2storage02.scn.20,Wrecked Ship / S2 / Pressure Gauge Room / Near Swamp Exit,99,Large or combat-capable area
 natives/stm/environment/scene/chapter4/c04_shipb2storage03.scn.20,Wrecked Ship / S2 / No. 1 Engine Room,1,Small room
-natives/stm/environment/scene/chapter4/c04_shipb2storage03past.scn.20,Ship / S2 / No. 1 Engine Room,1,Small room
+natives/stm/environment/scene/chapter4/c04_shipb2storage03past.scn.20,Wrecked Ship / S2 / No. 1 Engine Room,1,Small room
 natives/stm/environment/scene/chapter4/c04_shipelevatorshaft01a.scn.20,Wrecked Ship / Elevator Shaft,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_shipstairs.scn.20,Wrecked Ship / Staircase,10,Connector or medium area
-natives/stm/environment/scene/chapter4/c04_shipstairspast.scn.20,Ship / Staircase Past,10,Connector or medium area
+natives/stm/environment/scene/chapter4/c04_shipstairspast.scn.20,Wrecked Ship / Staircase Past,10,Connector or medium area
 natives/stm/environment/scene/chapter4/c04_swamp01.scn.20,Terrain,99,Large or combat-capable area
 natives/stm/environment/scene/chapter4/c04_swamp02.scn.20,Terrain,99,Large or combat-capable area
 natives/stm/environment/scene/chapter4/c04_swamp03.scn.20,Terrain,99,Large or combat-capable area
@@ -319,9 +319,9 @@ natives/stm/environment/scene/chapter4/c04_tankercenter.scn.20,Wrecked Ship / Ex
 natives/stm/environment/scene/chapter4/c04_tankerfront.scn.20,Wrecked Ship / Exterior Front,99,Large or combat-capable area
 natives/stm/environment/scene/chapter4/c04_tankerstern.scn.20,Wrecked Ship / Exterior Stern,99,Large or combat-capable area
 natives/stm/environment/scene/ff000/c01_2f.scn.20,Derelict House Footage / Guest House / 2F / Stairs,4,Connector or medium area
-natives/stm/environment/scene/ff000/c01_b1a.scn.20,Derelict House Footage / Guest House / B / André,5,Default playable area
-natives/stm/environment/scene/ff000/c01_b1b.scn.20,Derelict House Footage / Guest House / B / Water Corridor,4,Connector or medium area
-natives/stm/environment/scene/ff000/c01_b1c.scn.20,Derelict House Footage / Guest House / B / Water Corridor,4,Connector or medium area
+natives/stm/environment/scene/ff000/c01_b1a.scn.20,Derelict House Footage / Guest House / B1 / Andre,5,Default playable area
+natives/stm/environment/scene/ff000/c01_b1b.scn.20,Derelict House Footage / Guest House / B1 / Water Corridor,4,Connector or medium area
+natives/stm/environment/scene/ff000/c01_b1c.scn.20,Derelict House Footage / Guest House / B1 / Water Corridor,4,Connector or medium area
 natives/stm/environment/scene/ff000/c01_corridor01.scn.20,Derelict House Footage / Guest House / 1F / Entrance Corridor,4,Connector or medium area
 natives/stm/environment/scene/ff000/c01_corridor02.scn.20,Derelict House Footage / Guest House / 1F / Corridor at the back,4,Connector or medium area
 natives/stm/environment/scene/ff000/c01_kitchen01.scn.20,Derelict House Footage / Guest House / 1F / Kitchen,1,Small room
@@ -351,7 +351,7 @@ natives/stm/environment/scene/ff030/c03_oldhouse1froom02.scn.20,Mia VHS / Old Ho
 natives/stm/environment/scene/ff030/c03_oldhouse1fstairs01.scn.20,Mia VHS / Old House / Altar,5,Default playable area
 natives/stm/environment/scene/ff030/c03_oldhouse1fstorage.scn.20,Mia VHS / Old House / Storage Room / Unused?,1,Small room
 natives/stm/environment/scene/ff030/c03_oldhouse1funderfloor01.scn.20,Mia VHS / Old House / Underground Tunnel,4,Connector or medium area
-natives/stm/environment/scene/ff030/c03_oldhouse1fwallinside01.scn.20,Mia VHS / Old House / Centipide Wall,5,Default playable area
+natives/stm/environment/scene/ff030/c03_oldhouse1fwallinside01.scn.20,Mia VHS / Old House / Centipede Wall,5,Default playable area
 natives/stm/environment/scene/ff030/c03_oldhouse2fhallway01.scn.20,Mia VHS / Old House / Corridor,4,Connector or medium area
 natives/stm/environment/scene/ff030/c03_oldhouse2fhallway02.scn.20,Mia VHS / Old House / Corridor,4,Connector or medium area
 natives/stm/environment/scene/ff030/c03_oldhouse2fkidsroom01.scn.20,Mia VHS / Old House / Child's Room 1,1,Small room

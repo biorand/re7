@@ -3,10 +3,13 @@ using Biohazard.BioRand.RE7.Inventory;
 using Biohazard.BioRand.RE7.Items;
 using Biohazard.BioRand.RE7.Modifiers;
 using Biohazard.BioRand.RE7.REEngine;
+using Biohazard.BioRand.RE7.Serialization;
 using Biohazard.BioRand.RE7.Services;
 using Enums.app.Item;
 using IntelOrca.Biohazard.BioRand;
 using IntelOrca.Biohazard.REE.Rsz;
+using System.Numerics;
+using System.Text;
 
 namespace Biohazard.BioRand.RE7.Tests;
 
@@ -806,8 +809,8 @@ public class RandomizerItemRandomizationTests {
                 x.Tags.Contains(ExtraPlacementModifier.ItemBoxTag))
             .ToList();
 
-        Assert.NotEmpty(placements);
-
+        // Locations belong to the CSV. The fixture test below keeps behavior
+        // covered even if all optional item boxes are removed from that data.
         foreach (var sceneGroup in placements.GroupBy(x => x.SceneFile, StringComparer.OrdinalIgnoreCase)) {
             var beforeDynamic = GetDynamicParent(result.ReadBeforeScene(sceneGroup.Key));
             var afterDynamic = GetDynamicParent(result.ReadAfterScene(sceneGroup.Key));
@@ -821,9 +824,46 @@ public class RandomizerItemRandomizationTests {
                     var transform = child.FindComponent<GeneratedViaTransform>();
                     return transform != null && TransformMatchesPlacement(transform, placement);
                 });
+                AssertUsableItemBox(newChild);
                 AssertPositionMatchesPlacement(newChild.FindComponent<GeneratedViaTransform>()!, placement);
             }
         }
+    }
+
+    [Theory]
+    [InlineData(true, true)]
+    [InlineData(true, false)]
+    [InlineData(false, false)]
+    public void ItemBoxes_RespectPlacementPresenceAndEnabledState(bool includePlacement, bool enabled) {
+        const string scenePath = "natives/stm/environment/scene/chapter3/c03_leftarea1fpuzzleroom1.scn.20";
+        // Own the placement input so additions, moves, and removals in the
+        // production CSV do not change what this behavior test exercises.
+        var csv = "IsExtra,Tags,Id,Enabled,Chapter,PosX,PosY,PosZ,RotY,RotW,SceneFile\n";
+        if (includePlacement) {
+            csv += $"TRUE,item_box,,{enabled},3,50,1,20,1,0,{scenePath}\n";
+        }
+        using var result = RandomizerTest.RunState(prepareRandomizer: randomizer =>
+            randomizer.DynamicData.SetData(DynamicDataName.ItemPlacements, Encoding.UTF8.GetBytes(csv)));
+
+        var existing = result.ReadBeforeScene(scenePath).GetGameObjects().Select(go => go.Guid).ToHashSet();
+        var addedBoxes = result.ReadAfterScene(scenePath).GetGameObjects()
+            .Where(go => !existing.Contains(go.Guid) && go.Name == "ItemBox").ToList();
+        if (!includePlacement || !enabled) {
+            Assert.Empty(addedBoxes);
+            return;
+        }
+
+        var box = Assert.Single(addedBoxes);
+        AssertUsableItemBox(box);
+        var transform = box.FindComponent<GeneratedViaTransform>()!;
+        Assert.Equal(new Vector3(50, 1, 20), transform.Position);
+        Assert.Equal(new Quaternion(0, 1, 0, 0), transform.Rotation);
+    }
+
+    private static void AssertUsableItemBox(RszGameObject box) {
+        Assert.Equal("ItemBox", box.Name);
+        Assert.Contains(box.Children, child => child.FindComponent<app.InteractSendFsm>() is { Enabled: true, IsEnable: true });
+        Assert.Contains(box.Components, component => component.Type.Name == "via.fsm.Fsm");
     }
 
     [Fact]
