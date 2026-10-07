@@ -3,6 +3,7 @@
   "keep-basement-chainsaw": true,
   "randomized-messages": true,
   "main-menu-biorand-touch": true,
+  "disable-mia-opening-damage": true,
   "madhouse-normal-saves": true,
   "inventory-unrestricted-management": true,
   "allow-bonus-items": false,

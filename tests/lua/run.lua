@@ -11,6 +11,7 @@ local suites = {
     "test_enemy_drops",
     "test_enemy_identity",
     "test_static_mia",
+    "test_mia_opening_damage",
     "test_rng",
     "test_session_state",
     "test_random_events",

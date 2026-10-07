@@ -43,6 +43,16 @@ These tests execute the real Lua modules and hook callbacks against small, stric
 
 The .NET archive test also checks that every script in both release formats exactly matches its embedded source. Neither test harness can prove native hook execution, prefab availability, physics, or scene lifetime behavior inside RE7.
 
+## Opening Mia scripted damage
+
+`disable-mia-opening-damage` defaults to enabled in General / Quality of Life and independently requires REFramework. Both release archives include `BioRand7/mia_opening_damage.lua`. Disabling the option preserves vanilla damage; enabling it through configuration reload installs its hooks once.
+
+The guard checks the receiving `app.PlayerDamageController` for an active `app.PlayerGrappleEm2000` with the exact grapple name `Chapter1Battle1_ThrowStairs`, `Chapter1Battle1_Mount`, or `Chapter1Battle1_Finish`. It skips `DamageController.adjustHealth`, returns zero damage from `PlayerDamageController.calcDamage`, and clamps reductions requested through `setHealth`. Healing and the setter's maximum-health argument pass through. No health snapshot or scene object is retained, so an ended grapple or save reload cannot leave protection active. Later knife/axe and chainsaw encounters and enemy damage controllers remain unaffected. Grapple animations, damage records, and progression actions still execute.
+
+These methods and grapple names were verified against the live RT TDB on 2026-10-07. The standalone C# prototype was hot-loaded during `Chapter1Battle1_Finish`: a direct request to reduce HP from 1,000 to 999 left it at 1,000. The initial Lua port's global `canSubHealth` hook failed because its native implementation is a shared constant-return stub that also receives unrelated, non-managed arguments. The corrected script uses the player's damage calculation instead and validates pointers before managed-object conversion. Its config reads use literal keys, matching the configuration-ID audit and the other Lua modules.
+
+The packaged Lua script has offline coverage for all three phases, scope exclusions, healing, invalid pointers, null/unloaded objects, float return values, hook storage, and configuration reload. The corrected script was deployed and reset in the paused game, with the standalone prototype absent from the loaded-plugin list; live verification was interrupted by the user. Completing the encounter using the packaged Lua script remains a gameplay check. Keep the standalone `reframework/plugins/source/BioRandMiaOpeningDamage.cs` prototype removed so it cannot mask a Lua failure.
+
 ## In-game checks
 
 Use a newly generated release archive containing the corrected scripts. Existing downloaded archives retain their old embedded versions. Remove any old BioRand managed plugin DLL left by a pre-Lua installation before testing, so both implementations do not run together.

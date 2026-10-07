@@ -11,6 +11,7 @@ public class ReleaseRuntimeRequirementsTests {
     [InlineData("random-starting-inventory-additional-gun-ethan")]
     [InlineData("additional-items")]
     [InlineData("recipes-add-new")]
+    [InlineData("disable-mia-opening-damage")]
     [InlineData("random-bird-cage-magnum")]
     [InlineData("extra-enemy-amount")]
     public void IndependentWeaponAndEnemyFeatures_IncludeRuntime(string option) {
