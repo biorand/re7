@@ -46,6 +46,7 @@ internal class Randomizer : IDisposable {
         "debug-force-reframework",
         "madhouse-normal-saves",
         "disable-mia-opening-damage",
+        "pause-inventory",
         "inventory-unrestricted-management",
         "random-events",
         "random-starting-inventory-skills-ethan",

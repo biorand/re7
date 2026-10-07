@@ -31,6 +31,7 @@ public sealed class RandomizerOutput {
         "BioRand7/enemy_drops.lua",
         "BioRand7/game.lua",
         "BioRand7/inventory.lua",
+        "BioRand7/inventory_pause.lua",
         "BioRand7/logger.lua",
         "BioRand7/madhouse_saves.lua",
         "BioRand7/mia_opening_damage.lua",

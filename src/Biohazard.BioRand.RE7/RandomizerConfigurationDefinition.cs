@@ -114,6 +114,15 @@ internal static class RandomizerConfigurationDefinition {
         group = page.CreateGroup("Quality of Life");
 
         group.Items.Add(new GroupItem(){
+            Id = "pause-inventory",
+            Label = "Pause While Inventory Is Open",
+            Description =
+                "Pause gameplay while browsing the inventory and crafting tabs. Requires REFramework.",
+            Type = "switch",
+            Default = false
+        });
+
+        group.Items.Add(new GroupItem(){
             Id = "disable-mia-opening-damage",
             Label = "Disable Opening Mia Scripted Damage",
             Description =
