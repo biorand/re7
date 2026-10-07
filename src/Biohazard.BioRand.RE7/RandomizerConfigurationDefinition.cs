@@ -114,6 +114,15 @@ internal static class RandomizerConfigurationDefinition {
         group = page.CreateGroup("Quality of Life");
 
         group.Items.Add(new GroupItem(){
+            Id = "disable-mia-opening-damage",
+            Label = "Disable Opening Mia Scripted Damage",
+            Description =
+                "Prevent health loss during Mia's first scripted knife encounter, including the stair throw and finishing struggle. Later Mia fights retain normal damage. Requires REFramework.",
+            Type = "switch",
+            Default = true
+        });
+
+        group.Items.Add(new GroupItem(){
             Id = "madhouse-normal-saves",
             Label = "Use Normal Saving on Madhouse",
             Description =
