@@ -58,6 +58,7 @@ public static class RandomizerTest {
         configuration["random-key-item-locations"] = false;
         configuration["madhouse-normal-saves"] = false;
         configuration["disable-mia-opening-damage"] = false;
+        configuration["pause-inventory"] = false;
         configuration["inventory-unrestricted-management"] = false;
         configuration["replace-madhouse-tapes"] = false;
         configuration["replace-weapons"] = false;
