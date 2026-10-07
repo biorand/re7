@@ -85,26 +85,40 @@ internal class EnemyModifier : Modifier {
 
     private static RszScene RandomizeForceTargetingOptions(
         RszScene scene,
+        string scenePath,
+        Services.EnemyPlacementService placements,
         EnemyRandomizerOptions options,
         Rng rng,
         out int changedCount) {
-        if (options.ForceTargetingProbability <= 0) {
-            changedCount = 0;
-            return scene;
-        }
-
-        var updatedCount = 0;
+        var updatedGuids = new HashSet<Guid>();
         var updatedScene = scene.VisitComponents((gameObject, component) => {
-            if (gameObject.FindComponent<app.EnemySpawnInfo>() == null ||
-                !EnemySpawnInfoRules.SupportsForceTargetingOption(component)) {
+            if (gameObject.FindComponent<app.EnemySpawnInfo>() == null) {
                 return component;
             }
 
-            updatedCount++;
-            return RandomizeForceTargetingOption(component, options, rng);
+            var rule = placements.GetRule(scenePath, gameObject.Guid);
+            if (rule.Cull || (!rule.Aggro && (rule.Preserve || options.ForceTargetingProbability <= 0)))
+                return component;
+
+            if (rule.Aggro && component.Type.FindFieldIndex("IsPlayerTargetingAtStart") != -1) {
+                if (component.Get<bool>("IsPlayerTargetingAtStart"))
+                    return component;
+                updatedGuids.Add(gameObject.Guid);
+                return component.SetField("IsPlayerTargetingAtStart", true);
+            }
+            if (!EnemySpawnInfoRules.SupportsForceTargetingOption(component))
+                return component;
+
+            var updated = rule.Aggro
+                ? component.SetField("IsForceTargetingToPlayer", true)
+                : RandomizeForceTargetingOption(component, options, rng);
+            if (updated.Get<bool>("IsForceTargetingToPlayer") == component.Get<bool>("IsForceTargetingToPlayer"))
+                return component;
+            updatedGuids.Add(gameObject.Guid);
+            return updated;
         });
 
-        changedCount = updatedCount;
+        changedCount = updatedGuids.Count;
         return updatedScene;
     }
 
@@ -139,6 +153,10 @@ internal class EnemyModifier : Modifier {
                                       ?? throw new InvalidOperationException(
                                           $"Spawn info template for '{enemyId}' does not contain '{newEnemy.SpawnOptionType}'.");
                 var dlcSpawnOptions = spawnInfoTemplate.FindComponent("app.EnemySpawnInfoOptionDLC");
+
+                // Both definitions use Em4000; the option determines the blade variant.
+                if (newEnemy.Id is "Molded" or "MoldedBlade")
+                    newSpawnOptions = newSpawnOptions.SetField("IsUseBlade", newEnemy.Id == "MoldedBlade");
 
                 originalSpawnInfoGameObject = ReplaceSpawnInfoOptions(
                     originalSpawnInfoGameObject,
@@ -255,12 +273,13 @@ internal class EnemyModifier : Modifier {
             var packSelectors = new Dictionary<string, EnemyPackSelector>(StringComparer.Ordinal);
             var replacements = new List<(Guid, IEnemyDefinition)>();
             foreach (var spawnInfo in spawnInfos) {
-                if (!EnemySpawnInfoRules.ShouldReplaceSpawnInfo(spawnInfo))
+                var rule = randomizer.EnemyPlacementService.GetRule(area.Path, spawnInfo.Guid);
+                if (rule.Preserve || rule.Cull || !EnemySpawnInfoRules.ShouldReplaceSpawnInfo(spawnInfo))
                     continue;
 
                 var component = spawnInfo.FindComponent<app.EnemySpawnInfo>()!;
                 var compatibleEnemyPool =
-                    SelectCompatibleEnemyPool(area.Path, spawnInfo, areaEnemyPool, balancedEnemyPool);
+                    SelectCompatibleEnemyPool(area.Path, spawnInfo, areaEnemyPool, balancedEnemyPool, rule);
                 if (compatibleEnemyPool.IsDefaultOrEmpty) {
                     logger.LogLine($"Keeping {component.UnitAlias} ({spawnInfo.Name}): no compatible replacement.");
                     continue;
@@ -294,23 +313,20 @@ internal class EnemyModifier : Modifier {
         logger.Pop();
     }
 
-    private static ImmutableArray<EnemyTableEntry> SelectCompatibleEnemyPool(
+    internal static ImmutableArray<EnemyTableEntry> SelectCompatibleEnemyPool(
         string scenePath,
         RszGameObject spawnInfo,
         ImmutableArray<EnemyTableEntry> areaEnemyPool,
-        ImmutableArray<EnemyTableEntry> fallbackEnemyPool) {
-        if (!EnemySpawnInfoRules.RequiresInsectReplacement(scenePath, spawnInfo))
-            return areaEnemyPool;
-
-        var areaInsects = areaEnemyPool
-            .Where(entry => entry.Enemy.IsInsect)
-            .ToImmutableArray();
-        if (!areaInsects.IsDefaultOrEmpty)
-            return areaInsects;
-
-        return fallbackEnemyPool
-            .Where(entry => entry.Enemy.IsInsect)
-            .ToImmutableArray();
+        ImmutableArray<EnemyTableEntry> fallbackEnemyPool,
+        EnemyPlacementRule rule) {
+        var insectsOnly = EnemySpawnInfoRules.RequiresInsectReplacement(scenePath, spawnInfo);
+        bool IsCompatible(EnemyTableEntry entry)
+            => rule.AllowsReplacement(entry.Enemy) && (!insectsOnly || entry.Enemy.IsInsect) &&
+               (!rule.Aggro || entry.Enemy.UsesEnemyGenerator);
+        var candidates = areaEnemyPool.Where(IsCompatible).ToImmutableArray();
+        return candidates.IsDefaultOrEmpty
+            ? fallbackEnemyPool.Where(IsCompatible).ToImmutableArray()
+            : candidates;
     }
 
     private static EnemyPackSelector GetPackSelector(
@@ -397,27 +413,34 @@ internal class EnemyModifier : Modifier {
         Randomizer randomizer,
         RandomizerLogger logger,
         EnemyRandomizerOptions options) {
-        if (options.ForceTargetingProbability <= 0)
+        var placements = randomizer.EnemyPlacementService;
+        if (options.ForceTargetingProbability <= 0 && placements.AggroScenePaths.Count == 0)
             return;
 
         var rng = randomizer.GetRng("modifier/enemies/force-targeting");
         var updatedSceneCount = 0;
         var updatedSpawnInfoCount = 0;
 
-        foreach (var area in randomizer.AreaService.Areas) {
-            if (!ScriptedSceneSafety.AllowsEnemyMutation(area.Path))
+        var paths = placements.AggroScenePaths.AsEnumerable();
+        if (options.ForceTargetingProbability > 0) {
+            paths = paths.Concat(AreaDefinitionRepository.Default.All
+                .Where(area => area.Dlc == null).Select(area => area.Path));
+        }
+        foreach (var path in paths.Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(path => path, StringComparer.Ordinal)) {
+            if (!ScriptedSceneSafety.AllowsEnemyMutation(path))
                 continue;
 
             var scnFile = randomizer.FileRepository
-                .GetScnFile(area.Path)
+                .GetScnFile(path)
                 .ToBuilder(randomizer.FileRepository.TypeRepository);
-            scnFile.Scene = RandomizeForceTargetingOptions(scnFile.Scene, options, rng, out var changedCount);
+            scnFile.Scene = RandomizeForceTargetingOptions(scnFile.Scene, path, placements, options, rng, out var changedCount);
             if (changedCount == 0)
                 continue;
 
             updatedSceneCount++;
             updatedSpawnInfoCount += changedCount;
-            randomizer.FileRepository.SetScnFile(area.Path, scnFile.AddMissingResources().Build());
+            randomizer.AreaService.UpdateCachedScene(path, scnFile.Scene);
+            randomizer.FileRepository.SetScnFile(path, scnFile.AddMissingResources().Build());
         }
 
         logger.LogLine(
@@ -644,5 +667,67 @@ internal class EnemyModifier : Modifier {
         RandomizeEnemies(randomizer, logger, templateFactory, options, healthResolver);
         PlaceExtraEnemies(randomizer, logger, extraEnemySceneBuilder, options, healthResolver);
         RandomizeEnemyForceTargeting(randomizer, logger, options);
+        ApplyCulling(randomizer, logger);
+    }
+
+    private static void ApplyCulling(Randomizer randomizer, RandomizerLogger logger) {
+        var placements = randomizer.EnemyPlacementService;
+        if (placements.Culls.Count == 0)
+            return;
+
+        // A spawn's generation FSM can live outside its own scene. Scan the
+        // campaign scene catalogue so no active request retains a removed GUID.
+        var paths = AreaDefinitionRepository.Default.All.Where(area => area.Dlc == null)
+            .Select(area => area.Path).Concat(placements.Culls.Keys)
+            .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(path => path, StringComparer.Ordinal);
+        foreach (var path in paths) {
+            var builder = randomizer.FileRepository.GetScnFile(path)
+                .ToBuilder(randomizer.FileRepository.TypeRepository);
+            var scene = builder.Scene;
+            var changed = false;
+            scene = scene.Visit(node => {
+                if (node is RszObjectNode action && action.Type.Name == "app.fsm.EnemyGenerate" &&
+                    placements.CulledSpawnInfoGuids.Contains(action.Get<Guid>("SpawnInfo"))) {
+                    changed = true;
+                    return action.SetField("v0_Enabled", false).SetField("SpawnInfo", Guid.Empty);
+                }
+                return node;
+            });
+            if (placements.Culls.TryGetValue(path, out var guids)) {
+                foreach (var guid in GetCullTargets(scene, guids).Order()) {
+                    if (scene.FindGameObject(guid) == null)
+                        continue;
+                    scene = scene.RemoveGameObject(guid);
+                    changed = true;
+                    logger.LogLine($"Culling enemy {guid} in {path}.");
+                }
+            }
+            if (!changed)
+                continue;
+            builder.Scene = scene;
+            randomizer.AreaService.UpdateCachedScene(path, scene);
+            randomizer.FileRepository.SetScnFile(path, builder.AddMissingResources().Build());
+        }
+    }
+
+    private static HashSet<Guid> GetCullTargets(RszScene scene, HashSet<Guid> requested) {
+        var targets = new HashSet<Guid>();
+        Visit(scene, null);
+        return targets;
+
+        void Visit(IRszSceneNode node, Guid? enemyRoot) {
+            if (node is RszGameObject gameObject) {
+                if (gameObject.FindComponent<app.EnemySave>() != null)
+                    enemyRoot = gameObject.Guid;
+                if (requested.Contains(gameObject.Guid)) {
+                    // Mesh rows can be the head/body of a saved enemy. Remove its
+                    // actor root, not just its visible mesh. Spawn slots stay local.
+                    targets.Add(gameObject.FindComponent<app.EnemySpawnInfo>() != null
+                        ? gameObject.Guid : enemyRoot ?? gameObject.Guid);
+                }
+            }
+            foreach (var child in node.Children)
+                Visit(child, enemyRoot);
+        }
     }
 }

@@ -270,6 +270,8 @@ Files where inventory size is changed:
 
 ### IMPORTANT WHEN RANDOMIZING
 
+- Enemy placement directives (`preserve`, `aggro`, `nodup`, `cull`, `Include`, and `Exclude`) are consumed from the enemy spreadsheet and embedded CSV. See `docs/enemies/enemy_spawning.md` for precedence, definition-ID wildcards, and remaining native encounter safeguards.
+
 - in the FSM, the UIDs are **not** arbitrary. they are actually state IDs hard-coded in .fsm.16 files!
 - therefore, only assign valid UIDs in biorand
 - wandering enemies must be edited by removing the MapName in via.navigation.NavigationSurface

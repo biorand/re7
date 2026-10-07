@@ -93,3 +93,51 @@ The useful static mapping is therefore:
 This avoids a manual vanilla-scene-file column. The pooled `EnemySpawnInfo` records can still live in separate files such as
 `natives/stm/scenes/chapter/chapter4/chapter4_2/moldeads.scn.20`; the cap acts on the General scene's requests that point at those records.
 For neutral or upward multipliers, scene limits cap added vanilla enemies but do not delete the baseline vanilla requests.
+
+## Enemy placement spreadsheet directives
+
+`Enemy Placements` / `_Data/enemies.csv` uses `Tags`, `Include`, and `Exclude`.
+The embedded snapshot and downloaded sheet go through the same `EnemyPlacementService`.
+Rows are matched by normalized scene path and GUID; generation actions in another
+scene resolve their spawn-info GUID back to the placement rule.
+
+- `preserve` keeps the original placement out of replacement and count changes.
+  Probabilistic forced targeting also leaves it alone. Explicit `aggro` can still
+  target the player while keeping the original enemy type.
+- `aggro` sets `EnemySpawnInfo.IsPlayerTargetingAtStart` and supported spawn options'
+  `IsForceTargetingToPlayer` after replacement. It works with enemy randomization
+  disabled and survives multiplication. It requires an `IsSpawnInfo` row; static
+  actors have no generic supported targeting path.
+- `nodup` excludes the spawn from duplication. It still permits replacement and
+  removal when the enemy multiplier reduces the count.
+- `cull` removes the selected enemy even when randomization is disabled, and
+  disables `app.fsm.EnemyGenerate` actions referencing its spawn-info GUID across
+  campaign scenes. Shared pooled instances remain available to other spawn slots.
+  For mesh rows under an `app.EnemySave` actor, culling removes that actor root
+  rather than leaving an invisible active enemy. Do not apply this to a required
+  boss/story actor without checking the progression FSM.
+
+Tags are whitespace-separated and case-insensitive. Legacy `prefab` and `exclude`
+tags are accepted as `preserve`. Unknown tags and contradictory `cull preserve` /
+`cull aggro` combinations fail with the placement GUID and scene in the error.
+Flashback scenes remain protected; explicit `aggro` or `cull` there is rejected.
+
+`Include` and `Exclude` are whitespace-separated `EnemyDefinitions.Id` patterns,
+case-insensitive, with `*` and `?` wildcards. They match definition IDs such as
+`MoldedBlade`, not `Em4000` aliases: normal and blade Molded share that engine alias.
+Blank Include admits the configured pool; Exclude wins over Include. Filters
+intersect configured ratios, balance restrictions, and native encounter safeguards.
+If the area variety pool has no allowed candidate, selection retries the full
+compatible configured pool. If that is also empty, the original enemy stays.
+Different slot restrictions can therefore exceed an area's requested variety.
+
+The curated snapshot preserves templates, pooled actors, bosses, flashbacks, barn
+and pit fights, and special crawler appearances. Ordinary Molded slots allow normal,
+blade, and four-legged Molded; existing fat slots additionally allow fat Molded.
+Old House insect spawns admit only insects. No slot is culled by default. DataGen
+emits the same schema and conservative defaults; running the enemies generator
+rebuilds its output, so refresh from the sheet to retain subsequent manual edits.
+
+Regression tests cover the CSV rules, serialized replacements and targeting,
+cross-scene culling, and multiplier restrictions. In-game validation is still
+needed for progression after authoring new culls and for unusual replacement pools.

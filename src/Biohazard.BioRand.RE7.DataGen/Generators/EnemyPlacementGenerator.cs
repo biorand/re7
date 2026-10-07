@@ -1,6 +1,7 @@
 ﻿using Biohazard.BioRand.RE7;
 using Biohazard.BioRand.RE7.DataGen;
 using Biohazard.BioRand.RE7.Enemies;
+using Biohazard.BioRand.RE7.Modifiers;
 using Biohazard.BioRand.RE7.Extensions;
 using Biohazard.BioRand.RE7.Serialization;
 using IntelOrca.Biohazard.REE.Compression;
@@ -145,14 +146,8 @@ internal class EnemyPlacementGenerator : IFileGenerator {
             ? "Molded (Blade)"
             : definition.Name;
 
-        string tags = path.StartsWith("natives/stm/scenes/enemy", StringComparison.InvariantCultureIgnoreCase)
-            ? "prefab"
-            : "";
-
-        if (definition.IsBoss)
-            tags += " exclude";
-
-        tags = tags.TrimStart();
+        var directives = EnemySpawnInfoRules.GetDefaultPlacementDirectives(
+            path, go, definition, isSpawnInfo, enabled);
 
         results.Add(new EnemyPlacement{
             EnemyID = enemyId,
@@ -170,7 +165,9 @@ internal class EnemyPlacementGenerator : IFileGenerator {
             RotW = transform.Rotation.W,
             SceneFile = path,
             Guid = go.Guid,
-            Tags = tags
+            Tags = directives.Tags,
+            Include = directives.Include,
+            Exclude = directives.Exclude,
         });
     }
 

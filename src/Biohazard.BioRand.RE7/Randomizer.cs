@@ -321,6 +321,7 @@ internal class Randomizer : IDisposable {
     public FlagService FlagService => GetService<FlagService>();
     public ChestService ChestService => GetService<ChestService>();
     public EnemySceneLimitService EnemySceneLimitService => GetService<EnemySceneLimitService>();
+    public EnemyPlacementService EnemyPlacementService => GetService<EnemyPlacementService>();
 
     public void AddLogFile(string name, string content) {
         _logFiles[name] = content;

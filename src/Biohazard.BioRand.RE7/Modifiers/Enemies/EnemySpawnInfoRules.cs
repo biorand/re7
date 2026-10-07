@@ -1,4 +1,5 @@
 using IntelOrca.Biohazard.REE.Rsz;
+using Biohazard.BioRand.RE7.Enemies;
 
 namespace Biohazard.BioRand.RE7.Modifiers;
 
@@ -70,6 +71,38 @@ internal static class EnemySpawnInfoRules {
     internal static bool SupportsForceTargetingOption(RszObjectNode component)
         => component.Type.Name.Contains("EnemySpawnInfoOption", StringComparison.Ordinal)
            && component.Type.FindFieldIndex("IsForceTargetingToPlayer") != -1;
+
+    internal static (string Tags, string Include, string Exclude) GetDefaultPlacementDirectives(
+        string path, RszGameObject gameObject, IEnemyDefinition definition, bool isSpawnInfo, bool enabled) {
+        if (!enabled || !isSpawnInfo || definition.IsBoss ||
+            NormalizePath(path).StartsWith("natives/stm/scenes/enemy/", StringComparison.OrdinalIgnoreCase) ||
+            !ScriptedSceneSafety.AllowsEnemyMutation(path) || !ShouldReplaceSpawnInfo(gameObject)) {
+            return ("preserve nodup", "", "");
+        }
+
+        var tags = new List<string>();
+        if (gameObject.Components.Any(component => SupportsForceTargetingOption(component) &&
+                component.Get<bool>("IsForceTargetingToPlayer")))
+            tags.Add("aggro");
+        var specialAppearance = definition.EnemyId switch {
+            EnemyID.Em4000 => gameObject.FindComponent<app.EnemySpawnInfoOptionEm4000>()?.ThinkSet?.AppearSet?.AppearType
+                is { } appear && appear != Enums.app.Em4000.ThinkAppearSet.Type.Default,
+            EnemyID.Em4100 => HasNonDefaultMoldedQuickAppearMode(gameObject),
+            _ => false,
+        };
+        if (definition.IsInsect || definition.EnemyId == EnemyID.Em4200 || specialAppearance)
+            tags.Add("nodup");
+
+        if (definition.IsInsect)
+            return (string.Join(' ', tags), "FlyingBug InsectHive InsectSwarm", "Molded* Mia* Jack* Marge* Eveline*");
+        if (definition.IsMolded) {
+            var fat = definition.EnemyId == EnemyID.Em4200;
+            return (string.Join(' ', tags),
+                "Molded MoldedBlade MoldedQuick" + (fat ? " MoldedFat" : ""),
+                (fat ? "" : "MoldedFat ") + "Mia* Jack* Marge* Eveline* FlyingBug Insect*");
+        }
+        return ("preserve nodup", "", "");
+    }
 
     private static string NormalizePath(string path)
         => path.Replace('\\', '/');

@@ -21,6 +21,13 @@ internal class AreaService(Randomizer randomizer) {
 
     public void LoadAreas() => EnsureLoaded();
 
+    public void UpdateCachedScene(string path, IntelOrca.Biohazard.REE.Rsz.RszScene scene) {
+        foreach (var area in _areas.Concat(_enemyAreas)) {
+            if (string.Equals(area.Path, path, StringComparison.OrdinalIgnoreCase))
+                area.Scene = scene;
+        }
+    }
+
     public ImmutableArray<Area> EnemyAreas {
         get {
             EnsureEnemyAreasLoaded();

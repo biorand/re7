@@ -407,7 +407,9 @@ public class RandomizerExtraEnemyGenerationBehaviorTests {
                 config["enemy-variety"] = 1;
                 config["enemy-pack-max-size"] = 1;
                 ConfigureEnemyPool(config);
-            });
+            },
+            // Isolate extra placement from explicit aggro directives on vanilla enemies.
+            enemyPlacementsCsv: "Guid,SceneFile,IsSpawnInfo,Tags,Include,Exclude\n");
 
         var extraSpawnInfos = GetNewExtraSpawnInfos(result, RandomExtraEnemyScenePath);
 
@@ -474,7 +476,8 @@ public class RandomizerExtraEnemyGenerationBehaviorTests {
     private static RandomizerRunResult RunWithExtraEnemies(
         string extraEnemiesCsv,
         Action<RandomizerConfiguration>? configure = null,
-        string? enemyLimitsCsv = null)
+        string? enemyLimitsCsv = null,
+        string? enemyPlacementsCsv = null)
         => RandomizerTest.RunState(
             config => {
                 config["extra-enemy-amount"] = 1.0;
@@ -489,6 +492,11 @@ public class RandomizerExtraEnemyGenerationBehaviorTests {
                     randomizer.DynamicData.SetData(
                         DynamicDataName.EnemyLimits,
                         System.Text.Encoding.UTF8.GetBytes(enemyLimitsCsv));
+                }
+                if (enemyPlacementsCsv != null) {
+                    randomizer.DynamicData.SetData(
+                        DynamicDataName.Enemies,
+                        System.Text.Encoding.UTF8.GetBytes(enemyPlacementsCsv));
                 }
             });
 

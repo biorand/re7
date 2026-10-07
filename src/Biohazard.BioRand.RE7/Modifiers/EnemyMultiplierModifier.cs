@@ -100,10 +100,22 @@ internal class EnemyMultiplierModifier : Modifier {
         Rng rng,
         int? maxEnemyCount = null,
         EnemySceneLimitService? enemyLimitService = null) {
-        var slots = CollectMultipliableSpawnSlots(scene);
-        var limitableSlots = maxEnemyCount == null
+        var allSlots = CollectMultipliableSpawnSlots(scene);
+        var placements = randomizer.EnemyPlacementService;
+        var slots = allSlots.Where(slot => {
+            var rule = placements.GetRule(scenePath, slot.SpawnInfoGuid);
+            return !rule.Preserve && !rule.Cull;
+        }).ToImmutableArray();
+        var allLimitableSlots = maxEnemyCount == null
             ? []
             : CollectLimitableSpawnSlots(scene, enemyLimitService);
+        var limitableSlots = allLimitableSlots.Where(slot => {
+            var rule = placements.GetSpawnRule(slot.SpawnInfoGuid);
+            return !rule.Preserve && !rule.Cull;
+        }).ToImmutableArray();
+        var preservedCount = allLimitableSlots.IsDefaultOrEmpty
+            ? allSlots.Count(slot => placements.GetRule(scenePath, slot.SpawnInfoGuid).Preserve)
+            : allLimitableSlots.Count(slot => placements.GetSpawnRule(slot.SpawnInfoGuid).Preserve);
         var currentEnemyCount = limitableSlots.IsDefaultOrEmpty
             ? slots.Length
             : limitableSlots.Length;
@@ -114,7 +126,7 @@ internal class EnemyMultiplierModifier : Modifier {
         var uncappedTargetCount = GetTargetEnemyCount(currentEnemyCount, multiplier);
         var targetCount = maxEnemyCount == null
             ? uncappedTargetCount
-            : ApplyMaxEnemyCount(currentEnemyCount, uncappedTargetCount, maxEnemyCount.Value);
+            : ApplyMaxEnemyCount(currentEnemyCount, uncappedTargetCount, Math.Max(0, maxEnemyCount.Value - preservedCount));
         if (targetCount == currentEnemyCount)
             return scene;
 
@@ -127,7 +139,11 @@ internal class EnemyMultiplierModifier : Modifier {
                 ? RemoveSpawnSlots(scene, slots, currentEnemyCount - targetCount, logger, rng)
                 : DisableGenerateSlots(scene, limitableSlots, currentEnemyCount - targetCount, logger, rng);
         } else if (slots.Length != 0) {
-            scene = AddSpawnSlots(scene, randomizer, slots, targetCount - currentEnemyCount, logger, rng);
+            var duplicableSlots = slots.Where(slot =>
+                !placements.GetRule(scenePath, slot.SpawnInfoGuid).NoDuplicates).ToImmutableArray();
+            if (!duplicableSlots.IsDefaultOrEmpty) {
+                scene = AddSpawnSlots(scene, randomizer, duplicableSlots, targetCount - currentEnemyCount, logger, rng);
+            }
         }
 
         logger.Pop();
