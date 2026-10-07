@@ -9,6 +9,8 @@ public class EnemyPlacement {
     public required EnemyID EnemyID { get; set; }
     public string Name { get; set; } = "";
     public string Tags { get; set; } = "";
+    public string Include { get; set; } = "";
+    public string Exclude { get; set; } = "";
     public string? Comment { get; set; } = "";
 
     public bool Enabled { get; set; }
