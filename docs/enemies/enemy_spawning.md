@@ -141,3 +141,37 @@ rebuilds its output, so refresh from the sheet to retain subsequent manual edits
 Regression tests cover the CSV rules, serialized replacements and targeting,
 cross-scene culling, and multiplier restrictions. In-game validation is still
 needed for progression after authoring new culls and for unusual replacement pools.
+
+## Extra enemy Include / Exclude
+
+`Extra Enemy Placements` / `_Data/extra_enemies.csv` also accepts `Include` and
+`Exclude`, using the same whitespace-separated definition IDs, case-insensitive
+matching, and `*` / `?` wildcards. Exclude always wins. Use `MoldedQuick`, not
+`Em4100`, in these columns; `Molded` and `MoldedBlade` are separate choices.
+
+| Id | Include | Exclude | Result |
+| --- | --- | --- | --- |
+| blank | `MoldedQuick` | blank | Always choose a crawler. |
+| blank | `Molded MoldedQuick MoldedFat` | `MoldedFat` | Choose normal Molded or a crawler with equal probability. |
+| `random` | `Molded*` | `MoldedFat` | Restrict the configured, weighted extra-enemy pool to matching types. |
+| blank or `random` | blank | `Jack*` | Use the configured extra-enemy pool without Jack variants. |
+
+Blank Id with a nonblank Include is an explicit authored pool, independent of
+profile ratios and balance mode, just like the previous fixed/pipe-separated Id
+choices. Only definitions with extra-enemy generator support are eligible. An
+explicit Include can select normal/blade Molded, which the existing automatic
+extra-enemy pool omits because of idle-animation issues.
+
+`Id = random` keeps profile ratios, balance mode, and existing extra-enemy safety
+restrictions; Include/Exclude narrows that pool. When an area's variety selection
+has no match, the row retries the full compatible configured pool, as ordinary
+enemy placement rules do. Restrictive rows can therefore exceed requested variety.
+Pack selection is shared only between rows with the same eligible candidate pool.
+
+If no candidate remains, the placement is skipped and other rows are not duplicated
+to compensate. Extra amount, scene limits, and enemy multiplication still apply.
+Multiplier copies use only successfully resolved placements.
+
+Existing single native IDs and pipe-separated Id values remain readable for old
+downloaded data; their candidates are also filtered. The maintained sheet and
+embedded snapshot use Include for explicit choices, so new rows do not need pipes.

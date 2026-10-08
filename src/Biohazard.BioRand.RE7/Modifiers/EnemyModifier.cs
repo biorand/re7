@@ -476,7 +476,7 @@ internal class EnemyModifier : Modifier {
 
         logger.Push("Additional enemies");
         var hasRandomExtraEnemies =
-            extraEnemies.Any(group => group.Any(extraEnemy => ExtraEnemyPlanner.IsRandomEnemyId(extraEnemy.Id)));
+            extraEnemies.Any(group => group.Any(ExtraEnemyPlanner.UsesConfiguredPool));
         var randomEnemyPool = hasRandomExtraEnemies
             ? CreateExtraEnemyPool(randomizer)
             : [];
@@ -505,7 +505,7 @@ internal class EnemyModifier : Modifier {
                 Math.Min(targetEnemyCount, scenePlacements.Count),
                 rng);
             var sceneHasRandomExtraEnemies =
-                selectedPlacements.Any(extraEnemy => ExtraEnemyPlanner.IsRandomEnemyId(extraEnemy.Id));
+                selectedPlacements.Any(ExtraEnemyPlanner.UsesConfiguredPool);
             var sceneChapter = ExtraEnemyPlanner.GetSharedChapter(selectedPlacements);
             var sceneRandomEnemyPool = options.IsBalanced && sceneHasRandomExtraEnemies
                 ? BalancedEnemyPoolSelector.Select(randomEnemyPool, sceneChapter, scene)
@@ -520,28 +520,31 @@ internal class EnemyModifier : Modifier {
             var packSelector = areaEnemyPool.IsDefaultOrEmpty
                 ? null
                 : new EnemyPackSelector(areaEnemyPool, options.MaxPackSize, rng);
+            var filteredPackSelectors = new Dictionary<string, EnemyPackSelector>();
 
             foreach (var extraEnemy in selectedPlacements) {
+                var rule = new EnemyPlacementRule("", extraEnemy.Include, extraEnemy.Exclude);
                 IEnemyDefinition definition;
-                if (ExtraEnemyPlanner.IsRandomEnemyId(extraEnemy.Id)) {
-                    if (packSelector == null) {
+                if (ExtraEnemyPlanner.UsesConfiguredPool(extraEnemy)) {
+                    var compatiblePool = areaEnemyPool.Where(entry => rule.AllowsReplacement(entry.Enemy)).ToImmutableArray();
+                    if (compatiblePool.IsDefaultOrEmpty)
+                        compatiblePool = sceneRandomEnemyPool.Where(entry => rule.AllowsReplacement(entry.Enemy)).ToImmutableArray();
+                    if (compatiblePool.IsDefaultOrEmpty) {
                         logger.LogLine(
-                            $"Skipping random extra enemy at {extraEnemy.PosX}/{extraEnemy.PosY}/{extraEnemy.PosZ}: empty enemy table.");
+                            $"Skipping random extra enemy at {extraEnemy.PosX}/{extraEnemy.PosY}/{extraEnemy.PosZ}: no candidates after Include/Exclude.");
                         continue;
                     }
 
-                    definition = packSelector.Next();
+                    definition = string.IsNullOrWhiteSpace(extraEnemy.Include) && string.IsNullOrWhiteSpace(extraEnemy.Exclude)
+                        ? packSelector!.Next()
+                        : GetPackSelector(filteredPackSelectors, compatiblePool, options.MaxPackSize, rng).Next();
                 } else {
-                    var possibleEnemies = extraEnemy.Id.Split('|',
-                        StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-                    var selectedEnemyId = possibleEnemies.Length switch{
-                        0 => extraEnemy.Id.Trim(),
-                        1 => possibleEnemies[0],
-                        _ => rng.Next(possibleEnemies),
-                    };
-                    definition = EnemyDefinitions.Instance.FromId(selectedEnemyId)
-                                 ?? throw new InvalidOperationException(
-                                     $"Unknown extra enemy id '{extraEnemy.Id}' (selected '{selectedEnemyId}').");
+                    var candidates = ExtraEnemyPlanner.GetExplicitCandidates(extraEnemy, rule);
+                    if (candidates.IsDefaultOrEmpty) {
+                        logger.LogLine($"Skipping extra enemy at {extraEnemy.PosX}/{extraEnemy.PosY}/{extraEnemy.PosZ}: no candidates after Include/Exclude.");
+                        continue;
+                    }
+                    definition = candidates.Length == 1 ? candidates[0] : rng.Next(candidates);
                 }
 
                 if (ExtraEnemyPlanner.TryCreateRequest(logger, extraEnemy, definition, out var request)) {
@@ -549,7 +552,10 @@ internal class EnemyModifier : Modifier {
                 }
             }
 
-            while (extraEnemyRequests.Count < targetEnemyCount && extraEnemyRequests.Count != 0) {
+            // An empty filtered placement must not be backfilled by duplicating another row.
+            var validTargetCount = EnemyMultiplierModifier.GetTargetEnemyCount(extraEnemyRequests.Count,
+                (double)targetEnemyCount / selectedPlacements.Length);
+            while (extraEnemyRequests.Count < validTargetCount && extraEnemyRequests.Count != 0) {
                 var source = rng.Next(extraEnemyRequests);
                 logger.LogLine(
                     $"Duplicating {source.Enemy.Name} at {source.Placement.PosX}/{source.Placement.PosY}/{source.Placement.PosZ}");

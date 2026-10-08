@@ -7,6 +7,8 @@ namespace Biohazard.BioRand.RE7.Modifiers;
 internal sealed class ExtraEnemyPlacement {
     public bool Enabled { get; init; }
     public string Id { get; init; } = "";
+    public string Include { get; init; } = "";
+    public string Exclude { get; init; } = "";
     public string Comment { get; init; } = "";
     public string SceneFile { get; init; } = "";
     public int Chapter { get; init; }
@@ -30,8 +32,25 @@ internal sealed class ExtraEnemyGeneratorBuild {
 }
 
 internal static class ExtraEnemyPlanner {
-    internal static bool IsRandomEnemyId(string id)
-        => id.Equals("random", StringComparison.OrdinalIgnoreCase);
+    internal static bool UsesConfiguredPool(ExtraEnemyPlacement placement)
+        => placement.Id.Trim().Equals("random", StringComparison.OrdinalIgnoreCase) ||
+           (string.IsNullOrWhiteSpace(placement.Id) && string.IsNullOrWhiteSpace(placement.Include));
+
+    internal static ImmutableArray<IEnemyDefinition> GetExplicitCandidates(ExtraEnemyPlacement placement,
+        EnemyPlacementRule rule) {
+        IEnumerable<IEnemyDefinition> candidates;
+        if (string.IsNullOrWhiteSpace(placement.Id)) {
+            // An authored Include list replaces legacy fixed/pipe IDs, independently of profile ratios.
+            candidates = EnemyDefinitions.Instance.All.Where(enemy => enemy.UsesEnemyGenerator);
+        } else {
+            candidates = placement.Id.Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .Select(id => EnemyDefinitions.Instance.All.FirstOrDefault(enemy =>
+                        enemy.Id.Equals(id, StringComparison.OrdinalIgnoreCase)) ??
+                    EnemyDefinitions.Instance.FromId(id) ?? throw new InvalidOperationException(
+                        $"Unknown extra enemy id '{placement.Id}' (selected '{id}')."));
+        }
+        return candidates.Where(rule.AllowsReplacement).ToImmutableArray();
+    }
 
     internal static int? GetSharedChapter(IEnumerable<ExtraEnemyPlacement> placements) {
         var chapters = placements
