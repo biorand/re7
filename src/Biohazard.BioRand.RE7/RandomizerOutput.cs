@@ -70,7 +70,16 @@ public sealed class RandomizerOutput {
         var entries = GetCommonZipEntries();
         entries.Add($"re_chunk_000.pak.patch_{PakVersion:000}.pak", PakFile.ToByteArray());
         if (HasAdditionalAssets) {
-            entries.Add($"re_chunk_000.pak.patch_{PakVersion + 1:000}.pak", AdditionalAssetPakFile.ToByteArray());
+            // The higher patch number wins in-game. Match repository/Fluffy
+            // precedence so a shared baseline cannot undo a seed-specific edit.
+            var seedPaths = PakFile.Entries.Keys.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            var assets = new PakFileBuilder();
+            foreach (var entry in AdditionalAssetPakFile.Entries) {
+                if (!seedPaths.Contains(entry.Key)) {
+                    assets.Entries[entry.Key] = entry.Value;
+                }
+            }
+            entries.Add($"re_chunk_000.pak.patch_{PakVersion + 1:000}.pak", assets.ToByteArray());
         }
         _zipFile = BuildZipFile(entries);
         return _zipFile;
