@@ -104,4 +104,33 @@ return function()
 
     feature:reset()
     assert(next(feature.states) == nil, "Save reloads and script resets must clear idle timers")
+
+    detonations, despawns = {}, {}
+    player_position.x = 1
+    enemy.active = false
+    now = 3000
+    feature:update_object(enemy)
+    now = 3010
+    feature:update_object(enemy)
+    assert(feature.states[2].started == nil and detonations[2] == nil,
+        "A nearby player must not arm an inactive pooled or SpawnGroup enemy")
+
+    enemy.active = true
+    feature:update_object(enemy)
+    assert(feature.states[2].started == now, "Activation must start a fresh proximity fuse")
+    now = 3012
+    enemy.active = false
+    feature:update_object(enemy)
+    now = 3020
+    feature:update_object(enemy)
+    assert(feature.states[2].started == nil and detonations[2] == nil,
+        "Suspending an armed enemy must cancel its fuse without exploding or destroying it")
+    enemy.active = true
+    feature:update_object(enemy)
+    now = 3024.999
+    feature:update_object(enemy)
+    assert(detonations[2] == nil)
+    now = 3025
+    feature:update_object(enemy)
+    assert(detonations[2] == 1, "Resuming must give the player the full fuse duration")
 end

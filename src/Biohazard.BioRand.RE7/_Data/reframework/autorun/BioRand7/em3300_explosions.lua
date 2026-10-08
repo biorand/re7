@@ -172,13 +172,19 @@ function Em3300Explosions:update_object(enemy_object)
         end
         return true
     end
+    -- Discovery also sees inactive pool entries and suspended SpawnGroup actors.
+    -- Proximity must not arm them, and suspension must cancel an existing fuse.
+    if not enemy_object:call("get_Update") then
+        state.started, state.delay, state.idle_since = nil, nil, nil
+        return false
+    end
     if state.started == nil then
         local nearby = self:near_player(enemy_object)
         if nearby then
             state.idle_since = nil
             state.delay = self:delay(enemy_object)
             state.started = now
-        elseif nearby == false and enemy_object:call("get_Update") then
+        elseif nearby == false then
             state.idle_since = state.idle_since or now
             if now - state.idle_since >= INACTIVITY_SECONDS then
                 state.exploded = now
