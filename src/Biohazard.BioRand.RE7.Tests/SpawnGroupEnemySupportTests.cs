@@ -144,6 +144,8 @@ public class SpawnGroupEnemySupportTests {
         var go = scene.FindGameObject(member.Guid)!;
         var spawn = go.FindComponent<app.EnemySpawnInfo>()!;
         Assert.Equal(enemy.EnemyId.ToString(), spawn.UnitAlias);
+        if (id is "JackStalker" or "JackShears")
+            Assert.True(spawn.IsCheckGroundForSpawn);
         Assert.Equal(spawn.MyGUID, member.RuntimeGuid);
         Assert.NotEqual(Guid.Empty, member.RuntimeGuid);
         Assert.NotNull(go.FindComponent(enemy.SpawnOptionType!));

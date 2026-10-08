@@ -78,6 +78,8 @@ internal sealed class ExtraEnemySceneBuilder(
         spawnInfoComponent.UnitAlias = enemyId;
         spawnInfoComponent.Comment = $"{SpawnInfoPrefix}_{enemyId}_{index:000}";
         spawnInfoComponent.HealthParameter.Health = assignedHealth;
+        if (request.Enemy.Category == EnemyCategory.Jack)
+            spawnInfoComponent.IsCheckGroundForSpawn = true;
 
         ConfigureMoldedAiMap(spawnInfoComponent, enemyId, request.Placement.SceneFile);
         spawnInfoComponent.MyGUID = rng.NextGuid();
