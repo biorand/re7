@@ -1,4 +1,4 @@
-﻿using Biohazard.BioRand.RE7.DataGen.CodeGen;
+using Biohazard.BioRand.RE7.DataGen.CodeGen;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
@@ -15,7 +15,7 @@ internal sealed class RszToCsCommand : Command<Settings> {
         public bool WithEnums { get; set; }
     }
 
-    protected override int Execute(CommandContext context, Settings settings, CancellationToken token) {
+    public override int Execute(CommandContext context, Settings settings, CancellationToken token) {
         try {
             var output = RszCodeGenerator.Generate(settings.TypeName, settings.WithEnums);
             FileWriter.WriteOutput($"{settings.TypeName}.cs", output);

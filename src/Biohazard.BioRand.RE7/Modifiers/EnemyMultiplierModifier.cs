@@ -140,7 +140,8 @@ internal class EnemyMultiplierModifier : Modifier {
                 : DisableGenerateSlots(scene, limitableSlots, currentEnemyCount - targetCount, logger, rng, randomizer);
         } else if (slots.Length != 0) {
             var duplicableSlots = slots.Where(slot =>
-                !placements.GetRule(scenePath, slot.SpawnInfoGuid).NoDuplicates).ToImmutableArray();
+                !placements.GetRule(scenePath, slot.SpawnInfoGuid).NoDuplicates &&
+                !EnemySpawnInfoRules.IsSwarmOrHiveAlias(slot.UnitAlias)).ToImmutableArray();
             if (!duplicableSlots.IsDefaultOrEmpty) {
                 scene = AddSpawnSlots(scene, randomizer, duplicableSlots, targetCount - currentEnemyCount, logger, rng);
             }
@@ -322,7 +323,7 @@ internal class EnemyMultiplierModifier : Modifier {
 
         foreach (var slot in removedSlots) {
             logger.LogLine($"Removing {slot.UnitAlias} ({slot.SpawnInfoGuid})");
-            randomizer.SpawnGroupService.Suppress(slot.SpawnInfoGuid);
+            randomizer.SpawnGroupService.RetireSpawnInfo(slot.SpawnInfoGuid);
             scene = scene.RemoveGameObject(slot.SpawnInfoGuid);
         }
 
@@ -444,14 +445,14 @@ internal class EnemyMultiplierModifier : Modifier {
 
         if (existingInstance != null) {
             var clone = CloneGameObject(existingInstance, rng).WithName(existingInstance.Name + "_BioRandMultiplier");
-            return EnemyTemplateFactory.RefreshRuntimeGuids(clone,
-                randomizer.GetRng("enemy-multiplier/instance-state", clone.Guid));
+            return EnemyTemplateFactory.DisableEnemyStampSerialization(EnemyTemplateFactory.RefreshRuntimeGuids(clone,
+                randomizer.GetRng("enemy-multiplier/instance-state", clone.Guid)));
         }
 
         try {
             var clone = CloneGameObject(randomizer.TemplateService.GetEnemyTemplate(sourceSlot.UnitAlias), rng);
-            return EnemyTemplateFactory.RefreshRuntimeGuids(clone,
-                randomizer.GetRng("enemy-multiplier/instance-state", clone.Guid));
+            return EnemyTemplateFactory.DisableEnemyStampSerialization(EnemyTemplateFactory.RefreshRuntimeGuids(clone,
+                randomizer.GetRng("enemy-multiplier/instance-state", clone.Guid)));
         }
         catch {
             return null;

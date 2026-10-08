@@ -1,10 +1,36 @@
 using Biohazard.BioRand.RE7.Commands;
 using System.IO.Compression;
 using IntelOrca.Biohazard.BioRand;
+using Spectre.Console;
+using Spectre.Console.Cli;
 
 namespace Biohazard.BioRand.RE7.Tests;
 
 public class GenerateCommandExtractionTests {
+    [Theory]
+    [InlineData("missing.pak")]
+    [InlineData("missing-directory")]
+    public void MissingInput_ReportsActionableErrorBeforeGeneration(string name) {
+        var root = CreateTemporaryDirectory();
+        try {
+            using var writer = new StringWriter();
+            var app = new CommandApp<GenerateCommand>();
+            app.Configure(config => config.Settings.Console = AnsiConsole.Create(new AnsiConsoleSettings {
+                Out = new AnsiConsoleOutput(writer),
+            }));
+            var outputPath = Path.Combine(root, "output.pak");
+
+            var exitCode = app.Run(["--seed", "357436", "--input", Path.Combine(root, name), "--output", outputPath]);
+
+            Assert.NotEqual(0, exitCode);
+            Assert.Contains("Input not found:", writer.ToString());
+            Assert.Contains("--input", writer.ToString());
+            Assert.False(File.Exists(outputPath));
+        } finally {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
     [Fact]
     public void UrlResponse_UsesGenerationSeedRatherThanRecordId() {
         var input = GenerateCommand.FromResponse(new GenerateCommand.RandoResponse {

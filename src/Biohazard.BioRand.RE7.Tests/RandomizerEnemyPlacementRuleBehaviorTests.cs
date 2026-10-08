@@ -101,6 +101,11 @@ public class RandomizerEnemyPlacementRuleBehaviorTests {
         Assert.All(guids, guid => Assert.Contains(guid, beforeRefs));
         foreach (var path in new[] { ScenePath, ExternalScenePath }) {
             Assert.DoesNotContain(GetGenerateRefs(result.ReadAfterScene(path)), guid => guids.Contains(guid));
+            result.ReadAfterScene(path).Visit(node => {
+                if (node is RszObjectNode spawnUnit && spawnUnit.Type.Name == "app.CharacterExistZoneGroup.SpawnUnit")
+                    Assert.DoesNotContain(spawnUnit.Get<Guid>("spawnInfo"), guids);
+                return node;
+            });
         }
     }
 

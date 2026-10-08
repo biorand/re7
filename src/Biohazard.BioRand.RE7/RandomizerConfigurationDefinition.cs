@@ -300,7 +300,9 @@ internal static class RandomizerConfigurationDefinition {
         var allEnemies = EnemyDefinitions.Instance.Randomizable.OrderBy(enemy => enemy.Name);
         var bosses = EnemyDefinitions.Instance.Bosses.OrderBy(boss => boss.Name);
         var nonBosses = EnemyDefinitions.Instance.NonBosses.OrderBy(nonBoss => nonBoss.Name);
-        var speedConfigurableEnemies = allEnemies.Where(enemy => enemy.SupportsSpeedRandomization);
+        // Vanilla encounters still support tuning when an enemy is excluded from placement.
+        var speedConfigurableEnemies = EnemyDefinitions.Instance.All
+            .Where(enemy => enemy.SupportsSpeedRandomization).OrderBy(enemy => enemy.Name);
 
         page = configDefinition.CreatePage("Enemies");
         group = page.CreateGroup("Randomization");

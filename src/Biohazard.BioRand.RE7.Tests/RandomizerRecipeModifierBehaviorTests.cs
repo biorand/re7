@@ -6,6 +6,33 @@ namespace Biohazard.BioRand.RE7.Tests;
 [Trait("Category", "RequiresPak")]
 public class RandomizerRecipeModifierBehaviorTests {
     [Fact]
+    public void RecipeModifier_DictionaryLimitCountsDistinctResultsRatherThanRecipeVariants() {
+        var recipesCsv = new StringBuilder(
+            "Enabled,Pool,Count1_Min,Count1_Max,Item1,Count2_Min,Count2_Max,Item2,OutputCount_Min,OutputCount_Max,OutputItem,Comment\n");
+        for (var i = 0; i < 20; i++) {
+            recipesCsv.AppendLine(
+                $"true,AlwaysEnabled,1,1,Herb,1,1,Herb,1,1,Strong Chem Fluid,Variant {i}");
+        }
+        recipesCsv.AppendLine(
+            "true,Balanced,2,2,Handgun Ammo,1,1,Gunpowder,3,3,Shotgun Shells,Later distinct result");
+
+        using var result = RandomizerTest.RunState(
+            config => {
+                config["recipes-add-new"] = true;
+                config["recipes-randomization-mode"] = "Balanced";
+                config["recipes-new-min"] = 1;
+                config["recipes-new-max"] = 1;
+            },
+            prepareRandomizer: randomizer => {
+                randomizer.DynamicData.SetData(DynamicDataName.Recipes, Encoding.UTF8.GetBytes(recipesCsv.ToString()));
+            });
+
+        var dictionary = result.ReadAfterUserFile<app.DictionaryCombineData>(
+            RandomizerTestPaths.DictionaryCombineDataPath);
+        Assert.Equal(["ChemicalM", "ShotgunBullet"], dictionary._Datas.Select(item => item.ItemDataID));
+    }
+
+    [Fact]
     public void RecipeModifier_WithInjectedRecipes_AddsSelectedRecipesAndRebuildsDictionary() {
         var recipesCsv = """
                          Enabled,Pool,Count1_Min,Count1_Max,Item1,Count2_Min,Count2_Max,Item2,OutputCount_Min,OutputCount_Max,OutputItem,Comment

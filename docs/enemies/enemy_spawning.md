@@ -94,6 +94,16 @@ This avoids a manual vanilla-scene-file column. The pooled `EnemySpawnInfo` reco
 `natives/stm/scenes/chapter/chapter4/chapter4_2/moldeads.scn.20`; the cap acts on the General scene's requests that point at those records.
 For neutral or upward multipliers, scene limits cap added vanilla enemies but do not delete the baseline vanilla requests.
 
+Deleting a spawn-info slot also requires retiring references outside its scene.
+Static replacements, multiplier removals, and explicit culls track the retired
+GUIDs even when SpawnGroups are unused. The final scene pass disables matching
+`app.fsm.EnemyGenerate` actions across difficulty/level scenes and disables and
+clears `app.CharacterExistZoneGroup.SpawnUnit` entries that reference the removed
+slot. For example, the Chapter 3-4 crawler
+`f0873263-24a2-4b98-84ea-b8cfbc8e0a6e` has requests in both `moldeads.scn.20` and
+`hard.scn.20`, plus existence-zone references in the former. FSM action UIDs and
+unrelated progression state are retained.
+
 ## Enemy placement spreadsheet directives
 
 `Enemy Placements` / `_Data/enemies.csv` uses `Tags`, `Include`, and `Exclude`.
@@ -142,6 +152,19 @@ Regression tests cover the CSV rules, serialized replacements and targeting,
 cross-scene culling, and multiplier restrictions. In-game validation is still
 needed for progression after authoring new culls and for unusual replacement pools.
 
+### Swarm stability restriction
+
+Insect Swarm (`Em5520`) and Insect Hive (`Em5510`) are disabled as randomized
+replacements and extra placements, including legacy explicit IDs and authored
+Include lists. A hive indirectly creates two swarms and three flying bugs, so
+disabling the swarm choice alone would still introduce swarms. The multiplier
+also refuses to duplicate swarms or any hive appearance (`Em5510`–`Em5512`), even
+if a downloaded placement row omits `nodup`. Existing vanilla encounters remain
+available; their native progression logic is preserved. Flying Bug remains a
+supported insect replacement. This is a conservative removal pending a verified
+swarm fix, not proof that swarms caused the separate dog-head-door mesh registry
+crash.
+
 ## Extra enemy Include / Exclude
 
 `Extra Enemy Placements` / `_Data/extra_enemies.csv` also accepts `Include` and
@@ -176,4 +199,4 @@ Existing single native IDs and pipe-separated Id values remain readable for old
 downloaded data; their candidates are also filtered. The maintained sheet and
 embedded snapshot use Include for explicit choices, so new rows do not need pipes.
 
-SpawnGroups now cover all 12 currently spawnable enemy definitions through their supported placement paths, including static Mia extras and elderly Eveline replacements/explicit extras. See [SpawnGroups](spawn_groups.md) for the support scope and native lifecycle/save behavior.
+SpawnGroups cover the currently spawnable enemy definitions through their supported placement paths, including static Mia extras and elderly Eveline replacements/explicit extras. See [SpawnGroups](spawn_groups.md) for the support scope and native lifecycle/save behavior.

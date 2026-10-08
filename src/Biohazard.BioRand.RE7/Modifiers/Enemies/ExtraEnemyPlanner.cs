@@ -50,7 +50,8 @@ internal static class ExtraEnemyPlanner {
                     EnemyDefinitions.Instance.FromId(id) ?? throw new InvalidOperationException(
                         $"Unknown extra enemy id '{placement.Id}' (selected '{id}')."));
         }
-        return candidates.Where(rule.AllowsReplacement).ToImmutableArray();
+        return candidates.Where(enemy => enemy.SupportsRandomEnemyPlacement && rule.AllowsReplacement(enemy))
+            .ToImmutableArray();
     }
 
     internal static int? GetSharedChapter(IEnumerable<ExtraEnemyPlacement> placements) {

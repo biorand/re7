@@ -27,29 +27,37 @@ internal sealed class GenerateCommand : AsyncCommand<GenerateCommand.Settings> {
         [CommandOption("-c|--config")]
         public string? ConfigPath { get; init; }
 
-        [CommandOption("-i|--input")] public string? InputPath { get; init; }
+        [Description("Input PAK or extracted directory (defaults to ~/.biorand/biorand-re7.pak)")]
+        [CommandOption("-i|--input")]
+        public string InputPath { get; init; } = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".biorand", "biorand-re7.pak");
 
         [CommandOption("-o|--output")] public string? OutputPath { get; init; }
 
         [CommandOption("-k|--kill")] public bool Kill { get; init; }
     }
 
-    protected override ValidationResult Validate(CommandContext context, Settings settings) {
+    public override ValidationResult Validate(CommandContext context, Settings settings) {
         if (settings.OutputPath == null) {
             return ValidationResult.Error($"Output path not specified");
+        }
+
+        if (!File.Exists(settings.InputPath) && !Directory.Exists(settings.InputPath)) {
+            return ValidationResult.Error(
+                $"Input not found: {settings.InputPath}. Use --input to specify a baseline PAK or extracted game directory.");
         }
 
         return base.Validate(context, settings);
     }
 
-    protected override async Task<int>
+    public override async Task<int>
         ExecuteAsync(CommandContext context, Settings settings, CancellationToken token) {
         var reporter = new ConsoleReporter();
         if (settings.Kill) {
             reporter.RunTask("Killing re7.exe", KillRe7);
         }
 
-        var randomizer = new RandomizerExecutor(settings.InputPath ?? "", reporter);
+        var randomizer = new RandomizerExecutor(settings.InputPath, reporter);
         RandomizerInput input;
         if (settings.Url is string url) {
             input = await FromUrl(new Uri(url));

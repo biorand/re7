@@ -233,25 +233,20 @@ public class RandomizerExtraEnemyGenerationBehaviorTests {
             !gameObject.Components.Any(EnemySpawnInfoRules.SupportsForceTargetingOption));
     }
 
-    [Fact]
-    public void ExtraEnemies_HivePlacement_AddsGeneratedInsectPoolInstances() {
-        using var result = RunWithExtraEnemies(BuildExtraEnemiesCsv(ExtraEnemyScenePath, 1, "Em5510"));
+    [Theory]
+    [InlineData("Em5510")]
+    [InlineData("Em5520")]
+    [InlineData("InsectHive")]
+    [InlineData("InsectSwarm")]
+    public void ExtraEnemies_SwarmAndHivePlacements_AreSkipped(string enemyId) {
+        using var result = RunWithExtraEnemies(BuildExtraEnemiesCsv(ExtraEnemyScenePath, 1, enemyId));
         var beforeScene = result.ReadBeforeScene(ExtraEnemyScenePath);
         var afterScene = result.ReadAfterScene(ExtraEnemyScenePath);
 
         var extraSpawnInfos = GetNewExtraSpawnInfos(afterScene, beforeScene);
-        var extraInstances = GetNewExtraEnemyInstances(afterScene, beforeScene);
-        var instanceAliases = extraInstances
-            .Select(gameObject => gameObject.Name)
-            .ToList();
-        var hive = Assert.Single(extraInstances, gameObject => gameObject.Name == "Em5510");
-
-        Assert.Single(extraSpawnInfos);
-        AssertExtraSpawnInfo(extraSpawnInfos, "Em5510", -50, 5, 100, 2400);
-        Assert.Equal(3, instanceAliases.Count(alias => alias == "Em5400"));
-        Assert.Equal(2, instanceAliases.Count(alias => alias == "Em5520"));
-        AssertHiveTemplateUsesEm5510Assets(hive);
-        AssertHiveNestedSpawnInfos(hive);
+        Assert.Empty(extraSpawnInfos);
+        Assert.Empty(GetNewGameObjects(afterScene, beforeScene));
+        Assert.False(result.WasFileModified(ExtraEnemyScenePath));
     }
 
     [Fact]

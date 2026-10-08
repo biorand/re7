@@ -60,6 +60,12 @@ internal static class EnemySpawnInfoRules {
     internal static bool IsInsectSpawnAlias(string unitAlias)
         => InsectSpawnAliases.Contains(unitAlias);
 
+    internal static bool IsSwarmOrHiveAlias(string unitAlias)
+        => unitAlias.Equals("Em5520", StringComparison.OrdinalIgnoreCase) ||
+           unitAlias.Equals("Em5510", StringComparison.OrdinalIgnoreCase) ||
+           unitAlias.Equals("Em5511", StringComparison.OrdinalIgnoreCase) ||
+           unitAlias.Equals("Em5512", StringComparison.OrdinalIgnoreCase);
+
     internal static bool RequiresInsectReplacement(string scenePath, RszGameObject spawnInfoGameObject) {
         if (!string.Equals(NormalizePath(scenePath), OldHouseBugEnemyScenePath, StringComparison.OrdinalIgnoreCase))
             return false;
@@ -94,7 +100,7 @@ internal static class EnemySpawnInfoRules {
             tags.Add("nodup");
 
         if (definition.IsInsect)
-            return (string.Join(' ', tags), "FlyingBug InsectHive InsectSwarm", "Molded* Mia* Jack* Marge* Eveline*");
+            return (string.Join(' ', tags), "FlyingBug", "Molded* Mia* Jack* Marge* Eveline*");
         if (definition.IsMolded) {
             var fat = definition.EnemyId == EnemyID.Em4200;
             return (string.Join(' ', tags),

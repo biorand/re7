@@ -15,9 +15,10 @@
         <PackageReference Include="CsvHelper" Version="33.1.0" />
         <PackageReference Include="IntelOrca.Biohazard.BioRand.Common" Version="1.6.1" />
         <PackageReference Include="IntelOrca.Biohazard.BioRand.REE" Version="1.6.1" />
-        <PackageReference Include="IntelOrca.Biohazard.REE" Version="1.5.3"
+        <PackageReference Include="IntelOrca.Biohazard.REE" Version="1.5.6"
                           Condition="'$(UseReeutilsProjectReference)' != 'true'" />
         <PackageReference Include="RectangleBinPacking" Version="1.0.2" />
+        <PackageReference Include="Spectre.Console.Cli" Version="0.57.2" />
     </ItemGroup>
     <ItemGroup>
         <EmbeddedResource Include="_Data/**/*" />

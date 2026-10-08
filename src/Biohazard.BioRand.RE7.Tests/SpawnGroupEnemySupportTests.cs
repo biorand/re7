@@ -12,7 +12,7 @@ public class SpawnGroupEnemySupportTests {
     private const string Environment = "natives/stm/environment/scene/chapter3/c03_mainhouse1fliving.scn.20";
     private const string Generator = "natives/stm/scenes/chapter/chapter3/enemy_c03.scn.20";
 
-    public static IEnumerable<object[]> GeneratorEnemies => EnemyDefinitions.Instance.All
+    public static IEnumerable<object[]> GeneratorEnemies => EnemyDefinitions.Instance.Randomizable
         .Where(enemy => enemy.SpawnOptionType != null).Select(enemy => new object[] { enemy.Id });
 
     [Theory, MemberData(nameof(GeneratorEnemies)), Trait("Category", "RequiresPak")]
@@ -115,6 +115,42 @@ public class SpawnGroupEnemySupportTests {
                     Assert.NotEqual(sourceGuid, action.Get<Guid>("SpawnInfo"));
             });
         }
+    }
+
+    [Fact, Trait("Category", "RequiresPak")]
+    public void UngroupedStaticReplacementRetiresNativeGenerationRequests() {
+        const string sourcePath = "natives/stm/scenes/chapter/chapter3/chapter3_4/moldeads.scn.20";
+        const string hardPath = "natives/stm/scenes/chapter/chapter3/chapter3_4/hard.scn.20";
+        var sourceGuid = new Guid("f0873263-24a2-4b98-84ea-b8cfbc8e0a6e");
+        using var result = RandomizerTest.RunState(config => {
+            config["random-enemies"] = true;
+            config["balanced-enemies"] = false;
+            foreach (var enemy in EnemyDefinitions.Instance.All)
+                config[$"enemy-ratio-{enemy.Id.ToLowerInvariant()}"] = enemy.Id == "EvelineElderly" ? 1.0 : 0.0;
+        }, prepareRandomizer: randomizer => randomizer.DynamicData.SetData(DynamicDataName.Enemies,
+            Encoding.UTF8.GetBytes("Guid,SceneFile,IsSpawnInfo,Include\n" +
+                                  $"{sourceGuid},{sourcePath},TRUE,EvelineElderly\n")));
+
+        Assert.Empty(result.Randomizer.SpawnGroupService.Membership);
+        Assert.Contains(sourceGuid, result.Randomizer.SpawnGroupService.RetiredSpawnInfos);
+        Assert.Null(result.ReadAfterScene(sourcePath).FindGameObject(sourceGuid));
+        var beforeReferences = 0;
+        foreach (var path in new[] {sourcePath, hardPath}) {
+            result.ReadBeforeScene(path).Visit(node => {
+                if (node is RszObjectNode action && action.Type.Name == "app.fsm.EnemyGenerate" &&
+                    action.Get<Guid>("SpawnInfo") == sourceGuid)
+                    beforeReferences++;
+                return node;
+            });
+            result.ReadAfterScene(path).Visit(node => {
+                if (node is RszObjectNode action && action.Type.Name == "app.fsm.EnemyGenerate")
+                    Assert.NotEqual(sourceGuid, action.Get<Guid>("SpawnInfo"));
+                if (node is RszObjectNode spawnUnit && spawnUnit.Type.Name == "app.CharacterExistZoneGroup.SpawnUnit")
+                    Assert.NotEqual(sourceGuid, spawnUnit.Get<Guid>("spawnInfo"));
+                return node;
+            });
+        }
+        Assert.True(beforeReferences > 0);
     }
 
     private static void SetGroup(Randomizer randomizer) => randomizer.DynamicData.SetData(

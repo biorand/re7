@@ -40,9 +40,15 @@ internal sealed class SpawnGroupService {
     }
 
     public void ReplaceWithStatic(Guid source, Guid actor) {
-        if (!Membership.Remove(source, out var member)) return;
+        // Native generation actions also reference ungrouped replacements.
         RetiredSpawnInfos.Add(source);
+        if (!Membership.Remove(source, out var member)) return;
         Register(member.Scene, actor, member.Group, member.Aggro);
+    }
+
+    public void RetireSpawnInfo(Guid guid) {
+        RetiredSpawnInfos.Add(guid);
+        Suppress(guid);
     }
 
     public void RegisterDuplicate(Guid source, Guid clone) {
