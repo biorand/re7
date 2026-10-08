@@ -140,7 +140,8 @@ internal class EnemyMultiplierModifier : Modifier {
                 : DisableGenerateSlots(scene, limitableSlots, currentEnemyCount - targetCount, logger, rng, randomizer);
         } else if (slots.Length != 0) {
             var duplicableSlots = slots.Where(slot =>
-                !placements.GetRule(scenePath, slot.SpawnInfoGuid).NoDuplicates).ToImmutableArray();
+                !placements.GetRule(scenePath, slot.SpawnInfoGuid).NoDuplicates &&
+                !EnemySpawnInfoRules.IsSwarmOrHiveAlias(slot.UnitAlias)).ToImmutableArray();
             if (!duplicableSlots.IsDefaultOrEmpty) {
                 scene = AddSpawnSlots(scene, randomizer, duplicableSlots, targetCount - currentEnemyCount, logger, rng);
             }

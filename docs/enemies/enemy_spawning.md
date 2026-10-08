@@ -142,6 +142,19 @@ Regression tests cover the CSV rules, serialized replacements and targeting,
 cross-scene culling, and multiplier restrictions. In-game validation is still
 needed for progression after authoring new culls and for unusual replacement pools.
 
+### Swarm stability restriction
+
+Insect Swarm (`Em5520`) and Insect Hive (`Em5510`) are disabled as randomized
+replacements and extra placements, including legacy explicit IDs and authored
+Include lists. A hive indirectly creates two swarms and three flying bugs, so
+disabling the swarm choice alone would still introduce swarms. The multiplier
+also refuses to duplicate swarms or any hive appearance (`Em5510`–`Em5512`), even
+if a downloaded placement row omits `nodup`. Existing vanilla encounters remain
+available; their native progression logic is preserved. Flying Bug remains a
+supported insect replacement. This is a conservative removal pending a verified
+swarm fix, not proof that swarms caused the separate dog-head-door mesh registry
+crash.
+
 ## Extra enemy Include / Exclude
 
 `Extra Enemy Placements` / `_Data/extra_enemies.csv` also accepts `Include` and
@@ -176,4 +189,4 @@ Existing single native IDs and pipe-separated Id values remain readable for old
 downloaded data; their candidates are also filtered. The maintained sheet and
 embedded snapshot use Include for explicit choices, so new rows do not need pipes.
 
-SpawnGroups now cover all 12 currently spawnable enemy definitions through their supported placement paths, including static Mia extras and elderly Eveline replacements/explicit extras. See [SpawnGroups](spawn_groups.md) for the support scope and native lifecycle/save behavior.
+SpawnGroups cover the currently spawnable enemy definitions through their supported placement paths, including static Mia extras and elderly Eveline replacements/explicit extras. See [SpawnGroups](spawn_groups.md) for the support scope and native lifecycle/save behavior.

@@ -12,7 +12,7 @@ public class SpawnGroupEnemySupportTests {
     private const string Environment = "natives/stm/environment/scene/chapter3/c03_mainhouse1fliving.scn.20";
     private const string Generator = "natives/stm/scenes/chapter/chapter3/enemy_c03.scn.20";
 
-    public static IEnumerable<object[]> GeneratorEnemies => EnemyDefinitions.Instance.All
+    public static IEnumerable<object[]> GeneratorEnemies => EnemyDefinitions.Instance.Randomizable
         .Where(enemy => enemy.SpawnOptionType != null).Select(enemy => new object[] { enemy.Id });
 
     [Theory, MemberData(nameof(GeneratorEnemies)), Trait("Category", "RequiresPak")]

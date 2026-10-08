@@ -160,6 +160,28 @@ public class RandomizerEnemyMultiplierBehaviorTests {
             maxEnemyCount: 0));
     }
 
+    [Theory]
+    [InlineData("Em5510")]
+    [InlineData("Em5511")]
+    [InlineData("Em5512")]
+    [InlineData("Em5520")]
+    public void ProcessScene_SwarmsAndHivesAreNeverDuplicatedEvenWithoutNoDupDirective(string alias) {
+        using var result = RandomizerTest.RunState();
+        var (scenePath, scene, slots) = FindSceneWithSlots(result, minSlots: 2);
+        foreach (var slot in slots) {
+            var gameObject = scene.FindGameObject(slot.SpawnInfoGuid)!;
+            var spawnInfo = gameObject.FindComponent<app.EnemySpawnInfo>()!;
+            spawnInfo.UnitAlias = alias;
+            scene = scene.UpdateGameObject(gameObject.AddOrUpdateComponent(spawnInfo));
+        }
+
+        var afterScene = EnemyMultiplierModifier.ProcessScene(scene, result.Randomizer,
+            new RandomizerLogger(), scenePath, 3.0, new Rng(0x5151));
+
+        Assert.Same(scene, afterScene);
+        Assert.Equal(slots.Length, EnemyMultiplierModifier.CollectMultipliableSpawnSlots(afterScene).Length);
+    }
+
     [Fact]
     public void ApplyMaxEnemyCount_CapsReducedTarget() {
         Assert.Equal(1, EnemyMultiplierModifier.ApplyMaxEnemyCount(

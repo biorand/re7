@@ -5,6 +5,19 @@ using Biohazard.BioRand.RE7.Serialization;
 namespace Biohazard.BioRand.RE7.Tests;
 
 public class ExtraEnemyFilterTests {
+    [Fact]
+    public void SwarmBanRemovesPlacementWeightsButKeepsVanillaTuningAndValidVarietyDefault() {
+        var definition = RandomizerExecutor.ConfigurationDefinition;
+        foreach (var id in new[] { "insecthive", "insectswarm" }) {
+            Assert.DoesNotContain(definition.AllItems, item => item.Id == $"enemy-ratio-{id}");
+            Assert.Contains(definition.AllItems, item => item.Id == $"enemy-health-min-{id}");
+            Assert.Contains(definition.AllItems, item => item.Id == $"enemy-speed-min-{id}");
+        }
+        var variety = Assert.Single(definition.AllItems, item => item.Id == "enemy-variety");
+        Assert.Equal(EnemyDefinitions.Instance.Randomizable.Count, Convert.ToInt32(variety.Max));
+        Assert.InRange(Convert.ToInt32(variety.Default), 1, EnemyDefinitions.Instance.Randomizable.Count);
+    }
+
     [Theory]
     [InlineData("", "Molded*", "MoldedFat", "Molded MoldedBlade MoldedQuick")]
     [InlineData("", "molded\tMOLDEDBLADE", "*Blade", "Molded")]
@@ -14,6 +27,9 @@ public class ExtraEnemyFilterTests {
     [InlineData("Em4000|Em4100|Em4200", "Molded*", "MoldedFat", "Molded MoldedQuick")]
     [InlineData("Em4100", "", "MoldedQuick", "")]
     [InlineData("MoldedBlade", "", "", "MoldedBlade")]
+    [InlineData("", "Insect*", "", "")]
+    [InlineData("Em5510|Em5520|Em5400", "", "", "FlyingBug")]
+    [InlineData("InsectHive|InsectSwarm", "", "", "")]
     public void ExplicitFiltersUseDefinitionIdsAndExcludeWins(string id, string include, string exclude, string expected) {
         var placement = new ExtraEnemyPlacement { Id = id, Include = include, Exclude = exclude };
         var candidates = ExtraEnemyPlanner.GetExplicitCandidates(placement, new EnemyPlacementRule("", include, exclude));
