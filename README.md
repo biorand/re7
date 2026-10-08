@@ -1,6 +1,6 @@
 # BioRand 7
 
-[![.NET](https://github.com/juliangrtz/re7/actions/workflows/ci.yml/badge.svg)](https://github.com/juliangrtz/re7/actions/workflows/ci.yml) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/juliangrtz/re7/issues) 
+[![.NET](https://github.com/biorand/re7/actions/workflows/ci.yml/badge.svg)](https://github.com/biorand/re7/actions/workflows/ci.yml) [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/biorand/re7/issues)
 
 
 <p align="center">
