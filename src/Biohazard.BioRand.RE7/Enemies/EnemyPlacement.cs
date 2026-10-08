@@ -11,6 +11,7 @@ public class EnemyPlacement {
     public string Tags { get; set; } = "";
     public string Include { get; set; } = "";
     public string Exclude { get; set; } = "";
+    public string SpawnGroup { get; set; } = "";
     public string? Comment { get; set; } = "";
 
     public bool Enabled { get; set; }

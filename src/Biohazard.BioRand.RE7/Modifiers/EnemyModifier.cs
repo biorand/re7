@@ -123,6 +123,7 @@ internal class EnemyModifier : Modifier {
     }
 
     private RszScene ProcessGeneratorScene(
+        Randomizer randomizer,
         RszScene scene,
         RandomizerLogger logger,
         EnemyTemplateFactory templateFactory,
@@ -205,6 +206,7 @@ internal class EnemyModifier : Modifier {
 
                 scene = scene.RemoveGameObject(spawnGuid);
                 scene = scene.Add(template);
+                randomizer.SpawnGroupService.ReplaceWithStatic(spawnGuid, template.Guid);
             }
         }
 
@@ -302,7 +304,7 @@ internal class EnemyModifier : Modifier {
         if (generatorChanges.Count > 0) {
             var scene = area.Scene;
             foreach (var (generator, replacements) in generatorChanges) {
-                scene = ProcessGeneratorScene(scene, logger, templateFactory, generator, replacements, options, rng,
+                scene = ProcessGeneratorScene(randomizer, scene, logger, templateFactory, generator, replacements, options, rng,
                     healthResolver);
             }
 
@@ -321,7 +323,8 @@ internal class EnemyModifier : Modifier {
         EnemyPlacementRule rule) {
         var insectsOnly = EnemySpawnInfoRules.RequiresInsectReplacement(scenePath, spawnInfo);
         bool IsCompatible(EnemyTableEntry entry)
-            => rule.AllowsReplacement(entry.Enemy) && (!insectsOnly || entry.Enemy.IsInsect) &&
+            => rule.AllowsReplacement(entry.Enemy) &&
+               (!insectsOnly || entry.Enemy.IsInsect) &&
                (!rule.Aggro || entry.Enemy.UsesEnemyGenerator);
         var candidates = areaEnemyPool.Where(IsCompatible).ToImmutableArray();
         return candidates.IsDefaultOrEmpty
@@ -578,11 +581,10 @@ internal class EnemyModifier : Modifier {
                         directObjectsByScene.Add(scene, directObjects);
                     }
 
-                    directObjects.Add(extraEnemySceneBuilder.CreateStaticInstance(
-                        request,
-                        options,
-                        directObjects.Count,
-                        rng));
+                    var instance = extraEnemySceneBuilder.CreateStaticInstance(
+                        request, options, directObjects.Count, rng);
+                    directObjects.Add(instance);
+                    randomizer.SpawnGroupService.Register(scene, instance.Guid, request.Placement.SpawnGroup);
                     continue;
                 }
 
@@ -602,6 +604,8 @@ internal class EnemyModifier : Modifier {
                     generatorSpawnInfoIndex,
                     rng);
                 var requestInstances = extraEnemySceneBuilder.CreateInstances(request, options, rng);
+                randomizer.SpawnGroupService.Register(
+                    ExtraEnemySceneBuilder.GetGeneratorScene(scene, extraEnemyRequests), spawnInfo.Guid, request.Placement.SpawnGroup);
                 var fsmGenerator =
                     extraEnemySceneBuilder.CreateFsmGenerator(request, spawnInfo, generatorSpawnInfoIndex, rng);
 

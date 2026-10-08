@@ -9,6 +9,7 @@ internal sealed class ExtraEnemyPlacement {
     public string Id { get; init; } = "";
     public string Include { get; init; } = "";
     public string Exclude { get; init; } = "";
+    public string SpawnGroup { get; init; } = "";
     public string Comment { get; init; } = "";
     public string SceneFile { get; init; } = "";
     public int Chapter { get; init; }
@@ -41,7 +42,7 @@ internal static class ExtraEnemyPlanner {
         IEnumerable<IEnemyDefinition> candidates;
         if (string.IsNullOrWhiteSpace(placement.Id)) {
             // An authored Include list replaces legacy fixed/pipe IDs, independently of profile ratios.
-            candidates = EnemyDefinitions.Instance.All.Where(enemy => enemy.UsesEnemyGenerator);
+            candidates = EnemyDefinitions.Instance.Randomizable;
         } else {
             candidates = placement.Id.Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
                 .Select(id => EnemyDefinitions.Instance.All.FirstOrDefault(enemy =>
@@ -99,9 +100,9 @@ internal static class ExtraEnemyPlanner {
         ExtraEnemyPlacement extraEnemy,
         IEnemyDefinition definition,
         out ResolvedExtraEnemyPlacement request) {
-        if (!definition.UsesEnemyGenerator) {
+        if (!definition.SupportsRandomEnemyPlacement) {
             logger.LogLine(
-                $"Skipping {definition.Name} at {extraEnemy.PosX}/{extraEnemy.PosY}/{extraEnemy.PosZ}: enemy has no generator spawn-info template.");
+                $"Skipping {definition.Name} at {extraEnemy.PosX}/{extraEnemy.PosY}/{extraEnemy.PosZ}: enemy is not supported for extra placement.");
             request = null!;
             return false;
         }
