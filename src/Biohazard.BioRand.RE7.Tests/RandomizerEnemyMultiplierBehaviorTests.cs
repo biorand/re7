@@ -119,6 +119,8 @@ public class RandomizerEnemyMultiplierBehaviorTests {
                 .SelectMany(EnemyCloneIsolationTests.GetStateIds).ToHashSet();
             foreach (var copy in copies) {
                 copy.VisitComponents(component => {
+                    if (component.Type.Name == "app.StampController")
+                        Assert.False(component.Get<bool>("IsSerializeTexture"));
                     foreach (var field in new[] { "SaveGUID", "InstanceGuid" }) {
                         var index = component.Type.FindFieldIndex(field);
                         if (index >= 0) {

@@ -445,14 +445,14 @@ internal class EnemyMultiplierModifier : Modifier {
 
         if (existingInstance != null) {
             var clone = CloneGameObject(existingInstance, rng).WithName(existingInstance.Name + "_BioRandMultiplier");
-            return EnemyTemplateFactory.RefreshRuntimeGuids(clone,
-                randomizer.GetRng("enemy-multiplier/instance-state", clone.Guid));
+            return EnemyTemplateFactory.DisableEnemyStampSerialization(EnemyTemplateFactory.RefreshRuntimeGuids(clone,
+                randomizer.GetRng("enemy-multiplier/instance-state", clone.Guid)));
         }
 
         try {
             var clone = CloneGameObject(randomizer.TemplateService.GetEnemyTemplate(sourceSlot.UnitAlias), rng);
-            return EnemyTemplateFactory.RefreshRuntimeGuids(clone,
-                randomizer.GetRng("enemy-multiplier/instance-state", clone.Guid));
+            return EnemyTemplateFactory.DisableEnemyStampSerialization(EnemyTemplateFactory.RefreshRuntimeGuids(clone,
+                randomizer.GetRng("enemy-multiplier/instance-state", clone.Guid)));
         }
         catch {
             return null;
