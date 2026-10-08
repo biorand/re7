@@ -279,7 +279,8 @@ internal class EnemyModifier : Modifier {
 
                 var component = spawnInfo.FindComponent<app.EnemySpawnInfo>()!;
                 var compatibleEnemyPool =
-                    SelectCompatibleEnemyPool(area.Path, spawnInfo, areaEnemyPool, balancedEnemyPool, rule);
+                    SelectCompatibleEnemyPool(area.Path, spawnInfo, areaEnemyPool, balancedEnemyPool, rule,
+                        randomizer.SpawnGroupService.Membership.ContainsKey(spawnInfo.Guid));
                 if (compatibleEnemyPool.IsDefaultOrEmpty) {
                     logger.LogLine($"Keeping {component.UnitAlias} ({spawnInfo.Name}): no compatible replacement.");
                     continue;
@@ -318,10 +319,11 @@ internal class EnemyModifier : Modifier {
         RszGameObject spawnInfo,
         ImmutableArray<EnemyTableEntry> areaEnemyPool,
         ImmutableArray<EnemyTableEntry> fallbackEnemyPool,
-        EnemyPlacementRule rule) {
+        EnemyPlacementRule rule, bool moldedOnly = false) {
         var insectsOnly = EnemySpawnInfoRules.RequiresInsectReplacement(scenePath, spawnInfo);
         bool IsCompatible(EnemyTableEntry entry)
-            => rule.AllowsReplacement(entry.Enemy) && (!insectsOnly || entry.Enemy.IsInsect) &&
+            => rule.AllowsReplacement(entry.Enemy) && (!moldedOnly || entry.Enemy.IsMolded) &&
+               (!insectsOnly || entry.Enemy.IsInsect) &&
                (!rule.Aggro || entry.Enemy.UsesEnemyGenerator);
         var candidates = areaEnemyPool.Where(IsCompatible).ToImmutableArray();
         return candidates.IsDefaultOrEmpty
@@ -524,18 +526,19 @@ internal class EnemyModifier : Modifier {
 
             foreach (var extraEnemy in selectedPlacements) {
                 var rule = new EnemyPlacementRule("", extraEnemy.Include, extraEnemy.Exclude);
+                var grouped = !string.IsNullOrWhiteSpace(extraEnemy.SpawnGroup);
                 IEnemyDefinition definition;
                 if (ExtraEnemyPlanner.UsesConfiguredPool(extraEnemy)) {
-                    var compatiblePool = areaEnemyPool.Where(entry => rule.AllowsReplacement(entry.Enemy)).ToImmutableArray();
+                    var compatiblePool = areaEnemyPool.Where(entry => rule.AllowsReplacement(entry.Enemy) && (!grouped || entry.Enemy.IsMolded)).ToImmutableArray();
                     if (compatiblePool.IsDefaultOrEmpty)
-                        compatiblePool = sceneRandomEnemyPool.Where(entry => rule.AllowsReplacement(entry.Enemy)).ToImmutableArray();
+                        compatiblePool = sceneRandomEnemyPool.Where(entry => rule.AllowsReplacement(entry.Enemy) && (!grouped || entry.Enemy.IsMolded)).ToImmutableArray();
                     if (compatiblePool.IsDefaultOrEmpty) {
                         logger.LogLine(
                             $"Skipping random extra enemy at {extraEnemy.PosX}/{extraEnemy.PosY}/{extraEnemy.PosZ}: no candidates after Include/Exclude.");
                         continue;
                     }
 
-                    definition = string.IsNullOrWhiteSpace(extraEnemy.Include) && string.IsNullOrWhiteSpace(extraEnemy.Exclude)
+                    definition = !grouped && string.IsNullOrWhiteSpace(extraEnemy.Include) && string.IsNullOrWhiteSpace(extraEnemy.Exclude)
                         ? packSelector!.Next()
                         : GetPackSelector(filteredPackSelectors, compatiblePool, options.MaxPackSize, rng).Next();
                 } else {
@@ -548,6 +551,8 @@ internal class EnemyModifier : Modifier {
                 }
 
                 if (ExtraEnemyPlanner.TryCreateRequest(logger, extraEnemy, definition, out var request)) {
+                    if (!string.IsNullOrWhiteSpace(extraEnemy.SpawnGroup) && !definition.IsMolded)
+                        throw new InvalidDataException($"SpawnGroup '{extraEnemy.SpawnGroup}' only supports ordinary Molded.");
                     extraEnemyRequests.Add(request);
                 }
             }
@@ -602,6 +607,8 @@ internal class EnemyModifier : Modifier {
                     generatorSpawnInfoIndex,
                     rng);
                 var requestInstances = extraEnemySceneBuilder.CreateInstances(request, options, rng);
+                randomizer.SpawnGroupService.Register(
+                    ExtraEnemySceneBuilder.GetGeneratorScene(scene, extraEnemyRequests), spawnInfo.Guid, request.Placement.SpawnGroup);
                 var fsmGenerator =
                     extraEnemySceneBuilder.CreateFsmGenerator(request, spawnInfo, generatorSpawnInfoIndex, rng);
 

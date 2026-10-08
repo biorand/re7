@@ -25,6 +25,8 @@ public class RandomizerRandomEventPluginBehaviorTests {
         "BioRand7/reload_speed.lua",
         "BioRand7/rng.lua",
         "BioRand7/static_mia.lua",
+        "BioRand7/spawn_groups.lua",
+        "BioRand7/spawn_group_engine.lua",
         "BioRand7/ui.lua",
     ];
 

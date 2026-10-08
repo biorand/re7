@@ -63,6 +63,12 @@ Evidence checked on 2026-10-07: `reframework/il2cpp_dump_rt.json.gz` confirms th
 
 Lua regression tests cover transitions, overlapping native pauses, animations still in progress, configuration changes, absent/replaced managers, and session cleanup. .NET tests cover the default and both archives, including a disabled option alongside another runtime feature. The live MCP connection was unavailable during implementation: verify in-game that inventory navigation, crafting, closing/reopening, opening during reload/healing, Escape-menu overlap, and save loading all work with the packaged script, and that enemies resume only after the last pause ends.
 
+## SpawnGroups
+
+`spawn_groups.lua` controls generated main-game Molded groups using the native `EnemyGeneratorManager` lifecycle requests; `spawn_group_engine.lua` handles pool/FSM discovery and raw TDB fields. See [SpawnGroups authoring, lifecycle rules, and validation](enemies/spawn_groups.md). Both release archives carry a seed-specific manifest, including an empty manifest when no groups are authored.
+
+The 2026-10-07 live probe verified qualified FSM-state lookup and observed delayed spawn, suspension, resume, and terminal despawn on an Em4100 slot. It also established that these timers must use `via.Application.get_ElapsedSecond()` rather than the frame-scaled `get_DeltaTime()`. A different native slot rejected spawning; requests now isolate exceptions and retry at a bounded rate. Save-load hooks reset transient trigger state; native completion is never cleared by the production controller. The linked note records the limits of this validation and remaining gameplay checks.
+
 ## In-game checks
 
 Use a newly generated release archive containing the corrected scripts. Existing downloaded archives retain their old embedded versions. Remove any old BioRand managed plugin DLL left by a pre-Lua installation before testing, so both implementations do not run together.

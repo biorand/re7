@@ -18,6 +18,7 @@ public sealed class RandomizerOutput {
     public int PakVersion { get; }
     public bool IsWithREFramework { get; }
     internal bool DebugRecipesEnabled { get; }
+    private readonly byte[]? _spawnGroups;
     public bool HasAdditionalAssets => AdditionalAssetPakFile.Entries.Count != 0;
 
     private static readonly string[] REFrameworkScriptPaths = [
@@ -40,6 +41,8 @@ public sealed class RandomizerOutput {
         "BioRand7/reload_speed.lua",
         "BioRand7/rng.lua",
         "BioRand7/static_mia.lua",
+        "BioRand7/spawn_groups.lua",
+        "BioRand7/spawn_group_engine.lua",
         "BioRand7/ui.lua",
     ];
 
@@ -47,7 +50,8 @@ public sealed class RandomizerOutput {
         "https://github.com/praydog/REFramework-nightly/releases/latest/download/RE7.zip";
 
     internal RandomizerOutput(RandomizerInput input, PakFileBuilder pakFile, PakFileBuilder additionalAssetPakFile,
-        Dictionary<string, string> logFiles, int pakVersion, bool isWithREFramework, bool debugRecipesEnabled = false) {
+        Dictionary<string, string> logFiles, int pakVersion, bool isWithREFramework, bool debugRecipesEnabled = false,
+        byte[]? spawnGroups = null) {
         Input = input;
         PakFile = pakFile;
         AdditionalAssetPakFile = additionalAssetPakFile;
@@ -55,6 +59,7 @@ public sealed class RandomizerOutput {
         PakVersion = pakVersion;
         IsWithREFramework = isWithREFramework;
         DebugRecipesEnabled = debugRecipesEnabled;
+        _spawnGroups = spawnGroups;
     }
 
     public byte[] GetOutputZip() {
@@ -122,6 +127,8 @@ public sealed class RandomizerOutput {
             }
 
             entries.Add("reframework/data/BioRand7/config.json", GetREFrameworkConfigBytes());
+            entries.Add("reframework/data/BioRand7/spawn_groups.json", _spawnGroups ??
+                System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new { version = 1, seed = Input.Seed, groups = Array.Empty<object>() }));
         }
 
         if (Input.Configuration.GetValueOrDefault<bool>("debug-download-reframework-nightly")) {

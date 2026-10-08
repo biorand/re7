@@ -136,8 +136,8 @@ internal class EnemyMultiplierModifier : Modifier {
         logger.Push($"{scenePath}: enemy multiplier {currentEnemyCount} => {targetCount}{limitLabel}");
         if (targetCount < currentEnemyCount) {
             scene = limitableSlots.IsDefaultOrEmpty
-                ? RemoveSpawnSlots(scene, slots, currentEnemyCount - targetCount, logger, rng)
-                : DisableGenerateSlots(scene, limitableSlots, currentEnemyCount - targetCount, logger, rng);
+                ? RemoveSpawnSlots(scene, slots, currentEnemyCount - targetCount, logger, rng, randomizer)
+                : DisableGenerateSlots(scene, limitableSlots, currentEnemyCount - targetCount, logger, rng, randomizer);
         } else if (slots.Length != 0) {
             var duplicableSlots = slots.Where(slot =>
                 !placements.GetRule(scenePath, slot.SpawnInfoGuid).NoDuplicates).ToImmutableArray();
@@ -303,7 +303,8 @@ internal class EnemyMultiplierModifier : Modifier {
         ImmutableArray<EnemySpawnSlot> slots,
         int removeCount,
         RandomizerLogger logger,
-        Rng rng) {
+        Rng rng,
+        Randomizer randomizer) {
         var removedSlots = SelectRandomSlotsWithoutReplacement(slots, removeCount, rng);
         var removedSpawnInfosByGeneration = removedSlots
             .GroupBy(slot => slot.GenerationGameObjectGuid)
@@ -321,6 +322,7 @@ internal class EnemyMultiplierModifier : Modifier {
 
         foreach (var slot in removedSlots) {
             logger.LogLine($"Removing {slot.UnitAlias} ({slot.SpawnInfoGuid})");
+            randomizer.SpawnGroupService.Suppress(slot.SpawnInfoGuid);
             scene = scene.RemoveGameObject(slot.SpawnInfoGuid);
         }
 
@@ -332,7 +334,8 @@ internal class EnemyMultiplierModifier : Modifier {
         ImmutableArray<EnemyGenerateSlot> slots,
         int removeCount,
         RandomizerLogger logger,
-        Rng rng) {
+        Rng rng,
+        Randomizer randomizer) {
         var removedSlots = SelectRandomSlotsWithoutReplacement(slots, removeCount, rng);
         var removedSpawnInfosByGeneration = removedSlots
             .GroupBy(slot => slot.GenerationGameObjectGuid)
@@ -350,6 +353,7 @@ internal class EnemyMultiplierModifier : Modifier {
 
         foreach (var slot in removedSlots) {
             logger.LogLine($"Disabling {slot.UnitAlias} ({slot.SpawnInfoGuid})");
+            randomizer.SpawnGroupService.Suppress(slot.SpawnInfoGuid);
         }
 
         return scene;
@@ -421,6 +425,7 @@ internal class EnemyMultiplierModifier : Modifier {
         generationClone = RefreshGenerationObjectInstanceIds(generationClone, rng);
 
         logger.LogLine($"Duplicating {sourceSlot.UnitAlias}: {sourceSlot.SpawnInfoGuid} => {spawnInfoClone.Guid}");
+        randomizer.SpawnGroupService.RegisterDuplicate(sourceSlot.SpawnInfoGuid, spawnInfoClone.Guid);
         return AddSiblingAfter(scene, sourceSlot.GenerationGameObjectGuid, generationClone);
     }
 

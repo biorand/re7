@@ -9,6 +9,7 @@ internal sealed class ExtraEnemyPlacement {
     public string Id { get; init; } = "";
     public string Include { get; init; } = "";
     public string Exclude { get; init; } = "";
+    public string SpawnGroup { get; init; } = "";
     public string Comment { get; init; } = "";
     public string SceneFile { get; init; } = "";
     public int Chapter { get; init; }
