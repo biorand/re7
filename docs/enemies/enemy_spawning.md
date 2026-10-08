@@ -94,6 +94,16 @@ This avoids a manual vanilla-scene-file column. The pooled `EnemySpawnInfo` reco
 `natives/stm/scenes/chapter/chapter4/chapter4_2/moldeads.scn.20`; the cap acts on the General scene's requests that point at those records.
 For neutral or upward multipliers, scene limits cap added vanilla enemies but do not delete the baseline vanilla requests.
 
+Deleting a spawn-info slot also requires retiring references outside its scene.
+Static replacements, multiplier removals, and explicit culls track the retired
+GUIDs even when SpawnGroups are unused. The final scene pass disables matching
+`app.fsm.EnemyGenerate` actions across difficulty/level scenes and disables and
+clears `app.CharacterExistZoneGroup.SpawnUnit` entries that reference the removed
+slot. For example, the Chapter 3-4 crawler
+`f0873263-24a2-4b98-84ea-b8cfbc8e0a6e` has requests in both `moldeads.scn.20` and
+`hard.scn.20`, plus existence-zone references in the former. FSM action UIDs and
+unrelated progression state are retained.
+
 ## Enemy placement spreadsheet directives
 
 `Enemy Placements` / `_Data/enemies.csv` uses `Tags`, `Include`, and `Exclude`.

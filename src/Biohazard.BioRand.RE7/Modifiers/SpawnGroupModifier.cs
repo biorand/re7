@@ -7,7 +7,7 @@ namespace Biohazard.BioRand.RE7.Modifiers;
 internal sealed class SpawnGroupModifier(Randomizer randomizer) : Modifier {
     public override void Apply(RandomizerLogger logger) {
         var service = randomizer.SpawnGroupService;
-        if (service.Membership.Count == 0) return;
+        if (service.Membership.Count == 0 && service.RetiredSpawnInfos.Count == 0) return;
         var members = new Dictionary<string, List<SpawnGroupMember>>(StringComparer.OrdinalIgnoreCase);
         var controlled = new HashSet<Guid>(service.RetiredSpawnInfos);
         var runtimeGuids = new HashSet<Guid>();
@@ -66,8 +66,9 @@ internal sealed class SpawnGroupModifier(Randomizer randomizer) : Modifier {
             randomizer.AreaService.UpdateCachedScene(sceneGroup.Key, scene);
             randomizer.FileRepository.SetScnFile(sceneGroup.Key, builder.AddMissingResources().Build());
         }
-        // References can live in separate difficulty/level FSM scenes. Keep FSM UIDs and
-        // unrelated progression actions intact; only disable this controller's requests.
+        // References can live in separate difficulty/level FSM scenes. Removed slots
+        // need cleanup even when they never belonged to a group. Keep FSM UIDs and
+        // unrelated progression actions intact.
         var paths = AreaDefinitionRepository.Default.All.Where(x => x.Dlc == null).Select(x => x.Path)
             .Concat(service.Membership.Values.Select(x => x.Scene))
             .Distinct(StringComparer.OrdinalIgnoreCase).Order(StringComparer.Ordinal);
@@ -75,6 +76,11 @@ internal sealed class SpawnGroupModifier(Randomizer randomizer) : Modifier {
             var builder = randomizer.FileRepository.GetScnFile(path).ToBuilder(randomizer.FileRepository.TypeRepository);
             var changed = false;
             builder.Scene = builder.Scene.Visit(node => {
+                if (node is RszObjectNode spawnUnit && spawnUnit.Type.Name == "app.CharacterExistZoneGroup.SpawnUnit" &&
+                    service.RetiredSpawnInfos.Contains(spawnUnit.Get<Guid>("spawnInfo"))) {
+                    changed = true;
+                    return spawnUnit.SetField("isUse", false).SetField("spawnInfo", Guid.Empty);
+                }
                 if (node is RszObjectNode action && action.Type.Name == "app.fsm.EnemyGenerate" &&
                     controlled.Contains(action.Get<Guid>("SpawnInfo"))) {
                     changed = true;

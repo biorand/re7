@@ -323,7 +323,7 @@ internal class EnemyMultiplierModifier : Modifier {
 
         foreach (var slot in removedSlots) {
             logger.LogLine($"Removing {slot.UnitAlias} ({slot.SpawnInfoGuid})");
-            randomizer.SpawnGroupService.Suppress(slot.SpawnInfoGuid);
+            randomizer.SpawnGroupService.RetireSpawnInfo(slot.SpawnInfoGuid);
             scene = scene.RemoveGameObject(slot.SpawnInfoGuid);
         }
 

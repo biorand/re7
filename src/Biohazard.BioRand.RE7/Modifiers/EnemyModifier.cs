@@ -687,6 +687,9 @@ internal class EnemyModifier : Modifier {
         if (placements.Culls.Count == 0)
             return;
 
+        foreach (var guid in placements.CulledSpawnInfoGuids)
+            randomizer.SpawnGroupService.RetireSpawnInfo(guid);
+
         // A spawn's generation FSM can live outside its own scene. Scan the
         // campaign scene catalogue so no active request retains a removed GUID.
         var paths = AreaDefinitionRepository.Default.All.Where(area => area.Dlc == null)

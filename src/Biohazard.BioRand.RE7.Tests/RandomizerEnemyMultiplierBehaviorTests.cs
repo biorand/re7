@@ -160,6 +160,38 @@ public class RandomizerEnemyMultiplierBehaviorTests {
             maxEnemyCount: 0));
     }
 
+    [Fact]
+    public void MultiplierRemoval_RetiresExternalDifficultyRequestsWithoutSpawnGroupsOrSceneLimits() {
+        const string path = "natives/stm/scenes/chapter/chapter3/chapter3_4/moldeads.scn.20";
+        const string hardPath = "natives/stm/scenes/chapter/chapter3/chapter3_4/hard.scn.20";
+        var guid = new Guid("f0873263-24a2-4b98-84ea-b8cfbc8e0a6e");
+        using var result = RandomizerTest.RunState(config => config["enemy-multiplier"] = 0.0,
+            prepareRandomizer: randomizer => randomizer.DynamicData.SetData(DynamicDataName.EnemyLimits,
+                System.Text.Encoding.UTF8.GetBytes("SceneFile,MaxEnemies\n")));
+        Assert.Empty(result.Randomizer.SpawnGroupService.Membership);
+        Assert.NotNull(result.ReadBeforeScene(path).FindGameObject(guid));
+        Assert.Null(result.ReadAfterScene(path).FindGameObject(guid));
+        Assert.Contains(guid, result.Randomizer.SpawnGroupService.RetiredSpawnInfos);
+
+        var beforeReferences = 0;
+        result.ReadBeforeScene(hardPath).Visit(node => {
+            if (node is RszObjectNode action && action.Type.Name == "app.fsm.EnemyGenerate" &&
+                action.Get<Guid>("SpawnInfo") == guid)
+                beforeReferences++;
+            return node;
+        });
+        Assert.True(beforeReferences > 0);
+        foreach (var scenePath in new[] {path, hardPath}) {
+            result.ReadAfterScene(scenePath).Visit(node => {
+                if (node is RszObjectNode action && action.Type.Name == "app.fsm.EnemyGenerate")
+                    Assert.NotEqual(guid, action.Get<Guid>("SpawnInfo"));
+                if (node is RszObjectNode spawnUnit && spawnUnit.Type.Name == "app.CharacterExistZoneGroup.SpawnUnit")
+                    Assert.NotEqual(guid, spawnUnit.Get<Guid>("spawnInfo"));
+                return node;
+            });
+        }
+    }
+
     [Theory]
     [InlineData("Em5510")]
     [InlineData("Em5511")]
