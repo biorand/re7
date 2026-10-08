@@ -85,7 +85,7 @@ return function()
 
     -- Execute the real native adapter against strict field/method mocks.
     local fields = { IsCompleted = false, IsSpawned = false, suspendType = 0, RequestedOperation = 0 }
-    local option = { set_field = function(_, key, value) assert(key == "IsForceTargetingToPlayer" and value) end }
+    local option = { get_type_definition = function() return { get_field = function() return {} end } end, set_field = function(_, key, value) assert(key == "IsForceTargetingToPlayer" and value) end }
     local go = {}
     local spawn = {
         get_field = function(_, key) assert(fields[key] ~= nil, "Unexpected field " .. key); return fields[key] end,
@@ -117,8 +117,12 @@ return function()
     assert(calls[4][1] == "requestResume(app.EnemySpawnInfo, System.Boolean, System.Boolean, System.Int32)")
     assert(calls[4][3] == false and calls[4][4] == false, "Resume without reset/dead-corner constraints")
     native:apply(member, "despawn", 5); assert(calls[5][1] == "requestKill(app.EnemySpawnInfo)")
+    -- Some insect/boss options have no force-targeting field.
+    option.get_type_definition = function() return {get_field = function() return nil end} end
+    fields.IsSpawned, fields.suspendType = false, 0
+    native:apply(member, "active", 6); assert(#calls == 6)
     fields.IsCompleted = true
-    native:apply(member, "active", 6); assert(#calls == 5, "Never resurrect completed encounters")
+    native:apply(member, "active", 6); assert(#calls == 6, "Never resurrect completed encounters")
     native.members = {}
-    native:apply(member, "active", 7); assert(#calls == 5, "Unloaded slots are harmless")
+    native:apply(member, "active", 7); assert(#calls == 6, "Unloaded slots are harmless")
 end

@@ -145,7 +145,9 @@ function Engine:apply(member, desired, now)
         if member.aggro then
             spawn:set_field("IsPlayerTargetingAtStart", true)
             local option = spawn:call("get_option")
-            if option ~= nil then option:set_field("IsForceTargetingToPlayer", true) end
+            if option ~= nil and option:get_type_definition():get_field("IsForceTargetingToPlayer") ~= nil then
+                option:set_field("IsForceTargetingToPlayer", true)
+            end
         end
         if suspended then
             method, args = "requestResume(app.EnemySpawnInfo, System.Boolean, System.Boolean, System.Int32)", { spawn, false, false, 0 }

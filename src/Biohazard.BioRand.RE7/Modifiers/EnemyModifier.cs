@@ -319,10 +319,10 @@ internal class EnemyModifier : Modifier {
         RszGameObject spawnInfo,
         ImmutableArray<EnemyTableEntry> areaEnemyPool,
         ImmutableArray<EnemyTableEntry> fallbackEnemyPool,
-        EnemyPlacementRule rule, bool moldedOnly = false) {
+        EnemyPlacementRule rule, bool generatorOnly = false) {
         var insectsOnly = EnemySpawnInfoRules.RequiresInsectReplacement(scenePath, spawnInfo);
         bool IsCompatible(EnemyTableEntry entry)
-            => rule.AllowsReplacement(entry.Enemy) && (!moldedOnly || entry.Enemy.IsMolded) &&
+            => rule.AllowsReplacement(entry.Enemy) && (!generatorOnly || entry.Enemy.SpawnOptionType != null) &&
                (!insectsOnly || entry.Enemy.IsInsect) &&
                (!rule.Aggro || entry.Enemy.UsesEnemyGenerator);
         var candidates = areaEnemyPool.Where(IsCompatible).ToImmutableArray();
@@ -529,9 +529,9 @@ internal class EnemyModifier : Modifier {
                 var grouped = !string.IsNullOrWhiteSpace(extraEnemy.SpawnGroup);
                 IEnemyDefinition definition;
                 if (ExtraEnemyPlanner.UsesConfiguredPool(extraEnemy)) {
-                    var compatiblePool = areaEnemyPool.Where(entry => rule.AllowsReplacement(entry.Enemy) && (!grouped || entry.Enemy.IsMolded)).ToImmutableArray();
+                    var compatiblePool = areaEnemyPool.Where(entry => rule.AllowsReplacement(entry.Enemy) && (!grouped || entry.Enemy.SpawnOptionType != null)).ToImmutableArray();
                     if (compatiblePool.IsDefaultOrEmpty)
-                        compatiblePool = sceneRandomEnemyPool.Where(entry => rule.AllowsReplacement(entry.Enemy) && (!grouped || entry.Enemy.IsMolded)).ToImmutableArray();
+                        compatiblePool = sceneRandomEnemyPool.Where(entry => rule.AllowsReplacement(entry.Enemy) && (!grouped || entry.Enemy.SpawnOptionType != null)).ToImmutableArray();
                     if (compatiblePool.IsDefaultOrEmpty) {
                         logger.LogLine(
                             $"Skipping random extra enemy at {extraEnemy.PosX}/{extraEnemy.PosY}/{extraEnemy.PosZ}: no candidates after Include/Exclude.");
@@ -551,8 +551,8 @@ internal class EnemyModifier : Modifier {
                 }
 
                 if (ExtraEnemyPlanner.TryCreateRequest(logger, extraEnemy, definition, out var request)) {
-                    if (!string.IsNullOrWhiteSpace(extraEnemy.SpawnGroup) && !definition.IsMolded)
-                        throw new InvalidDataException($"SpawnGroup '{extraEnemy.SpawnGroup}' only supports ordinary Molded.");
+                    if (!string.IsNullOrWhiteSpace(extraEnemy.SpawnGroup) && definition.SpawnOptionType == null)
+                        throw new InvalidDataException($"SpawnGroup '{extraEnemy.SpawnGroup}' requires a generator-backed enemy.");
                     extraEnemyRequests.Add(request);
                 }
             }

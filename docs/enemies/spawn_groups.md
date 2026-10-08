@@ -37,14 +37,14 @@ ExampleEncounter,spawn,,,,,,0,Enable when the pool loads
 
 ## Supported placements and interactions
 
-The first implementation supports ordinary main-game Molded spawn slots: `Molded`, `MoldedBlade`, `MoldedQuick`, and `MoldedFat` for Include/Exclude. Their native aliases are `Em4000` (including the blade variant), `Em4100`, and `Em4200`. Extra Enemy Placements uses the same canonical Include/Exclude IDs. Leave Id blank for an explicit Include pool, or use `random` to filter the configured pool. Legacy native IDs and pipe-separated lists remain accepted.
+Generator-backed groups support `Molded`, `MoldedBlade`, `MoldedQuick`, `MoldedFat`, `FlyingBug`, `InsectHive`, `InsectSwarm`, `JackStalker`, `JackShears`, `JackMutated`, and `MargeMutated`. Native hive aliases `Em5511`/`Em5512` share the `InsectHive` stack. Boss types are supported as randomized replacements or extras; their original scripted encounters remain protected by placement rules. Extra Enemy Placements uses the same canonical Include/Exclude IDs. Leave Id blank for an explicit Include pool, or use `random` to filter the configured pool. Legacy native IDs and pipe-separated lists remain accepted.
 
 - `preserve` and `cull` take precedence over group membership. Preserved slots keep their original encounter control; culled slots are removed.
 - `aggro` is retained and applied on activation. `nodup` still prevents multiplier copies.
-- Randomized group members are restricted to ordinary Molded, with the existing Include/Exclude rules still applied. An incompatible final native slot fails generation.
+- Randomized group members use the configured generator-backed pool, with the existing Include/Exclude and scene compatibility rules still applied. An incompatible final native slot fails generation.
 - Multiplier clones inherit their original group. Slots removed or disabled by the multiplier/scene-limit path are excluded from the final manifest and cannot be reactivated by the controller. Existing scene-limit rules are unchanged.
 - Selected extra placements register their actual generated scene and final GUID. Extras skipped by amount/limit/pool selection do not become manifest members.
-- Scripted flashbacks, protected native slots, bosses, DLC encounters, and direct/static actor placements are not supported. `waypoint` rows fail explicitly; navigation and boss progression need separate runtime work.
+- Scripted flashbacks, protected native slots, original boss sequences, DLC encounters, and direct/static actor placements are not supported. `waypoint` rows fail explicitly; navigation and boss progression need separate runtime work.
 
 Keep a group scoped to one encounter whose pools load together. The runtime restores group activation from the first available native members; it is not a chapter-wide encounter sequencer.
 
@@ -60,7 +60,7 @@ Room streaming retains fired triggers in memory. Save-load/new-game hooks reset 
 
 ## Validation and remaining gameplay checks
 
-C# regression tests cover parsing/errors, tag precedence, multiplier membership, scene-limit suppression, extra-placement scene identity, serialized native fields, external generation references, and release manifests. Lua tests execute the production controller and native adapter against strict mocks for trigger conjunction, delays, pause, streaming, restore, simultaneous events, asynchronous requests, retry limits, and completed-slot protection.
+C# regression tests generate and serialize both replacements and explicit Include/Exclude extras for every registered generator-backed enemy. They also cover parsing/errors, tag precedence, multiplier membership, scene-limit suppression, extra-placement scene identity, serialized native fields, external generation references, and release manifests. Lua tests execute the production controller and native adapter against strict mocks for trigger conjunction, delays, pause, streaming, restore, simultaneous events, asynchronous requests, retry limits, and completed-slot protection.
 
 Live RE7 RT validation on 2026-10-07 ran the production Lua modules against a native Em4100 slot. A qualified current FSM state plus a player-position sphere triggered delayed spawning; the probe observed suspension, resumption, and terminal despawn. Native suspension reported the Self variant, so this does not independently prove completion of the explicit external suspension request. The test harness restored the slot's original unspawned state and was removed. A first Em4000 slot rejected `requestSpawn` with a native null-reference exception in that scene; per-member exception isolation and bounded retries handle this without blocking the group, but that slot's native readiness cause remains unresolved.
 

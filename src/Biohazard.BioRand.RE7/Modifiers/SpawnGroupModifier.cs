@@ -25,8 +25,8 @@ internal sealed class SpawnGroupModifier(Randomizer randomizer) : Modifier {
                     throw new InvalidDataException($"SpawnGroup '{member.Group}' cannot find enemy {guid} in {member.Scene}.");
                 }
                 var spawn = gameObject.FindComponent<app.EnemySpawnInfo>();
-                if (spawn == null || spawn.UnitAlias is not ("Em4000" or "Em4100" or "Em4200"))
-                    throw new InvalidDataException($"SpawnGroup '{member.Group}' only supports ordinary Molded spawn slots: {guid}.");
+                if (spawn == null || !SupportsGeneratorAlias(spawn.UnitAlias))
+                    throw new InvalidDataException($"SpawnGroup '{member.Group}' has an unsupported enemy spawn slot: {guid}.");
                 if (!EnemySpawnInfoRules.IsExtraEnemySpawnInfo(gameObject) &&
                     !EnemySpawnInfoRules.ShouldReplaceSpawnInfo(gameObject))
                     throw new InvalidDataException($"SpawnGroup '{member.Group}' targets a protected native encounter: {guid}.");
@@ -77,6 +77,13 @@ internal sealed class SpawnGroupModifier(Randomizer randomizer) : Modifier {
         }
         service.SetManifest(members.OrderBy(x => x.Key, StringComparer.Ordinal).Select(pair =>
             new SpawnGroupManifestEntry(pair.Key, service.Definitions[pair.Key].Conditions, pair.Value)).ToList());
-        logger.LogLine($"SpawnGroups: {members.Count} groups controlling {members.Values.Sum(x => x.Count)} Molded spawn slots.");
+        logger.LogLine($"SpawnGroups: {members.Count} groups controlling {members.Values.Sum(x => x.Count)} enemy spawn slots.");
     }
+
+    private static bool SupportsGeneratorAlias(string alias) {
+        // Hive variants share the registered Em5510 component/option stack.
+        if (alias is "Em5511" or "Em5512") alias = "Em5510";
+        return EnemyDefinitions.Instance.FromId(alias)?.SpawnOptionType != null;
+    }
+
 }
