@@ -23,6 +23,7 @@ For current design notes and planned work, see:
 - [Roadmap](docs/Roadmap.MD)
 - [Technical notes](docs/Notes.MD)
 - [Enemy spawning notes](docs/enemies/enemy_spawning.md)
+- [Adding spawn groups](docs/enemies/spawn_groups.md) and [copyable FSM state reference](docs/enemies/spawn_group_states.md)
 - [Key item route graph](docs/key_item_route_graph.png)
 - [Flags, triggers, stats notes](docs/UvarVariables.MD)
 
