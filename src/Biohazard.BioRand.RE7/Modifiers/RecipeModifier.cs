@@ -166,15 +166,13 @@ internal class RecipeModifier : Modifier {
         randomizer.FileRepository.ModifyUserFile<DictionaryCombineData>(
             DictionaryCombineDataPath,
             root => {
-                root._Datas.Clear();
-
-                for (int i = 0; i < newRecipes.Count && i < MaxRecipeCount; i++) {
-                    root._Datas.Add(new(){ ItemDataID = newRecipes[i].ResultItemID });
-                }
-
-                root._Datas = root._Datas
-                    .DistinctBy(d => d.ItemDataID)
-                    //.OrderBy(d => _itemDefinitions.FromId(d.ItemDataID)!.CategoryType)
+                // The menu limit counts distinct result items, not recipe variants.
+                // Deduplicate before limiting so earlier variants do not hide later results.
+                root._Datas = newRecipes
+                    .Select(recipe => recipe.ResultItemID)
+                    .Distinct(StringComparer.Ordinal)
+                    .Take(MaxRecipeCount)
+                    .Select(id => new DictionaryCombineData.Data { ItemDataID = id })
                     .ToList();
                 result = root._Datas;
                 return root;
