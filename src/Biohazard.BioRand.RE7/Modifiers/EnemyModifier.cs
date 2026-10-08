@@ -169,6 +169,8 @@ internal class EnemyModifier : Modifier {
                 var assignedHealth = healthResolver.GetHealth(newEnemy);
                 originalSpawnInfoComponent.HealthParameter.Health = assignedHealth;
                 originalSpawnInfoComponent.UnitAlias = enemyId;
+                if (newEnemy.Category == EnemyCategory.Jack)
+                    originalSpawnInfoComponent.IsCheckGroundForSpawn = true;
                 originalSpawnInfoGameObject = originalSpawnInfoGameObject
                     .AddOrUpdateComponent(originalSpawnInfoComponent)
                     .WithName(originalSpawnInfoGameObject.Name + "_Now_" + enemyId);
