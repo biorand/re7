@@ -9,7 +9,7 @@ internal sealed class SpawnGroupModifier(Randomizer randomizer) : Modifier {
         var service = randomizer.SpawnGroupService;
         if (service.Membership.Count == 0) return;
         var members = new Dictionary<string, List<SpawnGroupMember>>(StringComparer.OrdinalIgnoreCase);
-        var controlled = new HashSet<Guid>();
+        var controlled = new HashSet<Guid>(service.RetiredSpawnInfos);
         var runtimeGuids = new HashSet<Guid>();
         foreach (var sceneGroup in service.Membership.OrderBy(x => x.Key).GroupBy(x => x.Value.Scene)) {
             var builder = randomizer.FileRepository.GetScnFile(sceneGroup.Key)
@@ -25,7 +25,18 @@ internal sealed class SpawnGroupModifier(Randomizer randomizer) : Modifier {
                     throw new InvalidDataException($"SpawnGroup '{member.Group}' cannot find enemy {guid} in {member.Scene}.");
                 }
                 var spawn = gameObject.FindComponent<app.EnemySpawnInfo>();
-                if (spawn == null || !SupportsGeneratorAlias(spawn.UnitAlias))
+                if (spawn == null) {
+                    var (actor, saveGuid) = PrepareStaticActor(gameObject, randomizer);
+                    if (saveGuid == Guid.Empty || !runtimeGuids.Add(saveGuid))
+                        throw new InvalidDataException($"SpawnGroup member {guid} has an empty or duplicate runtime save GUID.");
+                    scene = scene.UpdateGameObject(actor);
+                    if (!service.Suppressed.Contains(guid)) {
+                        if (!members.TryGetValue(member.Group, out var actors)) members[member.Group] = actors = [];
+                        actors.Add(new(member.Scene, guid, saveGuid, member.Aggro, "static"));
+                    }
+                    continue;
+                }
+                if (!SupportsGeneratorAlias(spawn.UnitAlias))
                     throw new InvalidDataException($"SpawnGroup '{member.Group}' has an unsupported enemy spawn slot: {guid}.");
                 if (!EnemySpawnInfoRules.IsExtraEnemySpawnInfo(gameObject) &&
                     !EnemySpawnInfoRules.ShouldReplaceSpawnInfo(gameObject))
@@ -78,6 +89,25 @@ internal sealed class SpawnGroupModifier(Randomizer randomizer) : Modifier {
         service.SetManifest(members.OrderBy(x => x.Key, StringComparer.Ordinal).Select(pair =>
             new SpawnGroupManifestEntry(pair.Key, service.Definitions[pair.Key].Conditions, pair.Value)).ToList());
         logger.LogLine($"SpawnGroups: {members.Count} groups controlling {members.Values.Sum(x => x.Count)} enemy spawn slots.");
+    }
+
+    private static (RszGameObject Actor, Guid SaveGuid) PrepareStaticActor(RszGameObject actor, Randomizer randomizer) {
+        var save = actor.FindComponent("app.Em3300.Em3300Save");
+        if (save == null && actor.Name.StartsWith($"{ExtraEnemySceneBuilder.StaticPrefix}_Em2000_", StringComparison.Ordinal)) {
+            // Mia's EnemySave owns health. A separate native OtherObjectSave stores group
+            // activity in its extensible OtherInt data, without changing her AI save fields.
+            save = randomizer.FileRepository.TypeRepository.Create("app.OtherObjectSave")
+                .SetField("Enabled", true)
+                .SetField("SaveGUID", randomizer.GetRng("spawn-groups/static-state", actor.Guid).NextGuid())
+                .SetField("IsNotSaveBasicData", true);
+            actor = actor.AddOrUpdateComponent(save);
+        }
+        if (save == null || (actor.Name != "Em3300_Static" &&
+            !actor.Name.StartsWith(ExtraEnemySceneBuilder.StaticPrefix + "_", StringComparison.Ordinal)))
+            throw new InvalidDataException($"SpawnGroups cannot control an unsupported or original scripted static actor: {actor.Guid}.");
+        // Awake/save registration still runs; rendering and gameplay wait for the controller.
+        actor = actor.WithSettings(actor.Settings.SetField("Update", false).SetField("Draw", false));
+        return (actor, save.Get<Guid>("SaveGUID"));
     }
 
     private static bool SupportsGeneratorAlias(string alias) {

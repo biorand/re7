@@ -65,7 +65,7 @@ Lua regression tests cover transitions, overlapping native pauses, animations st
 
 ## SpawnGroups
 
-`spawn_groups.lua` controls generated main-game enemy groups using the native `EnemyGeneratorManager` lifecycle requests; `spawn_group_engine.lua` handles pool/FSM discovery and raw TDB fields. See [SpawnGroups authoring, lifecycle rules, and validation](enemies/spawn_groups.md). Both release archives carry a seed-specific manifest, including an empty manifest when no groups are authored.
+`spawn_groups.lua` controls generated main-game enemy groups using the native `EnemyGeneratorManager` lifecycle requests; `spawn_group_engine.lua` handles pool/FSM discovery and raw TDB fields. `spawn_group_static.lua` controls generated Mia/Eveline actors and records activity in native OtherObjectSave data. See [SpawnGroups authoring, lifecycle rules, and validation](enemies/spawn_groups.md). Both release archives carry a seed-specific manifest, including an empty manifest when no groups are authored.
 
 The 2026-10-07 live probe verified qualified FSM-state lookup and observed delayed spawn, suspension, resume, and terminal despawn on an Em4100 slot. It also established that these timers must use `via.Application.get_ElapsedSecond()` rather than the frame-scaled `get_DeltaTime()`. A different native slot rejected spawning; requests now isolate exceptions and retry at a bounded rate. Save-load hooks reset transient trigger state; native completion is never cleared by the production controller. The linked note records the limits of this validation and remaining gameplay checks.
 

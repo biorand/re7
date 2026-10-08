@@ -139,6 +139,8 @@ function Em3300Explosions:detonate(enemy_object)
 end
 
 function Em3300Explosions:despawn(enemy_object)
+    local groups = self.context.features and self.context.features.spawn_groups
+    if groups ~= nil then groups.engine.static:complete(enemy_object) end
     local game = self.context.game
     local ok, error_message = pcall(function()
         game:method("app.Util", "setActive(via.GameObject, System.Boolean, System.Boolean)")

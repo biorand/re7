@@ -244,7 +244,7 @@ internal sealed class ExtraEnemySceneBuilder(
     }
 
     internal static bool UsesStaticScenePlacement(IEnemyDefinition enemy)
-        => enemy.UsesEnemyGenerator && enemy.SpawnOptionType == null;
+        => enemy.SpawnOptionType == null;
 
     internal static string GetGeneratorScene(
         string requestScene,

@@ -43,6 +43,7 @@ public sealed class RandomizerOutput {
         "BioRand7/static_mia.lua",
         "BioRand7/spawn_groups.lua",
         "BioRand7/spawn_group_engine.lua",
+        "BioRand7/spawn_group_static.lua",
         "BioRand7/ui.lua",
     ];
 
@@ -128,7 +129,7 @@ public sealed class RandomizerOutput {
 
             entries.Add("reframework/data/BioRand7/config.json", GetREFrameworkConfigBytes());
             entries.Add("reframework/data/BioRand7/spawn_groups.json", _spawnGroups ??
-                System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new { version = 1, seed = Input.Seed, groups = Array.Empty<object>() }));
+                System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(new { version = 2, seed = Input.Seed, groups = Array.Empty<object>() }));
         }
 
         if (Input.Configuration.GetValueOrDefault<bool>("debug-download-reframework-nightly")) {

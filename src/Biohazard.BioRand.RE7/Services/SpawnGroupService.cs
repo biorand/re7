@@ -8,11 +8,12 @@ internal sealed class SpawnGroupService {
     public Dictionary<string, SpawnGroupDefinition> Definitions { get; }
     public Dictionary<Guid, (string Scene, string Group, bool Aggro)> Membership { get; } = [];
     public HashSet<Guid> Suppressed { get; } = [];
+    public HashSet<Guid> RetiredSpawnInfos { get; } = [];
     public SpawnGroupManifest Manifest { get; private set; }
 
     public SpawnGroupService(Randomizer randomizer) {
         Definitions = SpawnGroupTable.Parse(randomizer.DynamicData.GetData(DynamicDataName.SpawnGroups)!);
-        Manifest = new(1, randomizer.Seed, []);
+        Manifest = new(2, randomizer.Seed, []);
         foreach (var row in Csv.Deserialize<PlacementRow>(randomizer.DynamicData.GetData(DynamicDataName.Enemies)!)) {
             if (string.IsNullOrWhiteSpace(row.SpawnGroup)) continue;
             var rule = randomizer.EnemyPlacementService.GetRule(row.SceneFile, row.Guid);
@@ -36,6 +37,12 @@ internal sealed class SpawnGroupService {
         if (Membership.TryGetValue(guid, out var existing) && existing != membership)
             throw new InvalidDataException($"Conflicting SpawnGroups for enemy {guid}.");
         Membership[guid] = membership;
+    }
+
+    public void ReplaceWithStatic(Guid source, Guid actor) {
+        if (!Membership.Remove(source, out var member)) return;
+        RetiredSpawnInfos.Add(source);
+        Register(member.Scene, actor, member.Group, member.Aggro);
     }
 
     public void RegisterDuplicate(Guid source, Guid clone) {

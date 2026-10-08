@@ -18,6 +18,7 @@ local suites = {
     "test_random_events",
     "test_performance",
     "test_spawn_groups",
+    "test_spawn_group_static",
 }
 
 local failures = 0

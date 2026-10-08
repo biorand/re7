@@ -14,7 +14,7 @@ end
 function SpawnGroups:load(manifest)
     self.manifest = nil
     if manifest ~= nil then
-        if manifest.version ~= 1 or manifest.seed ~= self.context.config:get("biorand-seed", 0) then
+        if manifest.version ~= 2 or manifest.seed ~= self.context.config:get("biorand-seed", 0) then
             self.context.log:error("SpawnGroups manifest version/seed does not match this seed; controller disabled")
         else
             self.manifest = manifest
@@ -29,7 +29,7 @@ end
 
 function SpawnGroups:reset()
     self.clock, self.next_update, self.groups = 0, 0, {}
-    self.engine:reset()
+    self.engine:reset(self.manifest and self.manifest.groups or {})
     for _, definition in ipairs(self.manifest and self.manifest.groups or {}) do
         local group = { definition = definition, rules = {}, spawned = true, resumed = true, terminal = false }
         for _, condition in ipairs(definition.conditions) do

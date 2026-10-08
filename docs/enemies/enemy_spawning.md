@@ -175,3 +175,5 @@ Multiplier copies use only successfully resolved placements.
 Existing single native IDs and pipe-separated Id values remain readable for old
 downloaded data; their candidates are also filtered. The maintained sheet and
 embedded snapshot use Include for explicit choices, so new rows do not need pipes.
+
+SpawnGroups now cover all 12 currently spawnable enemy definitions through their supported placement paths, including static Mia extras and elderly Eveline replacements/explicit extras. See [SpawnGroups](spawn_groups.md) for the support scope and native lifecycle/save behavior.

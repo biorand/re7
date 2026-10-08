@@ -7,7 +7,7 @@ namespace Biohazard.BioRand.RE7.Enemies;
 internal sealed record SpawnGroupCondition(string Parameter, string State, float? X, float? Y, float? Z,
     float? Radius, float Time);
 internal sealed record SpawnGroupDefinition(string Name, List<SpawnGroupCondition> Conditions);
-internal sealed record SpawnGroupMember(string Scene, Guid Guid, Guid RuntimeGuid, bool Aggro);
+internal sealed record SpawnGroupMember(string Scene, Guid Guid, Guid RuntimeGuid, bool Aggro, string Kind = "generator");
 internal sealed record SpawnGroupManifestEntry(string Name, List<SpawnGroupCondition> Conditions,
     List<SpawnGroupMember> Members);
 internal sealed record SpawnGroupManifest(int Version, int Seed, List<SpawnGroupManifestEntry> Groups);

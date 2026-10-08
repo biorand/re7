@@ -1,14 +1,16 @@
+local Static = require("BioRand7/spawn_group_static")
 local Engine = {}
 Engine.__index = Engine
 local unpack_args = table.unpack or unpack
 
 function Engine.new(context)
-    local self = setmetatable({ context = context, game = context.game }, Engine)
+    local self = setmetatable({ context = context, game = context.game, static = Static.new(context) }, Engine)
     self:reset()
     return self
 end
 
-function Engine:reset()
+function Engine:reset(groups)
+    self.static:reset(groups)
     self.members, self.states, self.requests, self.warned = {}, {}, {}, {}
     self.next_discovery, self.next_states = 0, 0
     self.manager = nil
@@ -36,10 +38,13 @@ function Engine:refresh(now, groups)
     if now >= self.next_discovery then
         self.next_discovery = now + 1
         self.members = {}
+        self.static:refresh()
         self.manager = self.game:singleton("app.EnemyGeneratorManager")
         local wanted = {}
         for _, group in ipairs(groups) do
-            for _, member in ipairs(group.members) do wanted[member.runtimeGuid] = true end
+            for _, member in ipairs(group.members) do
+                if member.kind ~= "static" then wanted[member.runtimeGuid] = true end
+            end
         end
         if self.manager ~= nil then
             for generator in self.game:list(self.manager:get_field("generators")) do
@@ -116,7 +121,12 @@ function Engine:restore(members)
     local present, started, active = false, false, false
     for _, member in ipairs(members) do
         local spawn = self.members[member.runtimeGuid]
-        if self:valid(spawn) then
+        if member.kind == "static" then
+            local state = self.static:state(member)
+            present = present or state ~= nil
+            started = started or (state ~= nil and state ~= 0)
+            active = active or state == 1
+        elseif self:valid(spawn) then
             present = true
             local spawned = spawn:get_field("IsSpawned")
             local suspended = spawn:get_field("suspendType") ~= 0
@@ -128,6 +138,17 @@ function Engine:restore(members)
 end
 
 function Engine:apply(member, desired, now)
+    if member.kind == "static" then
+        local ok, err = pcall(self.static.apply, self.static, member, desired)
+        local key = member.runtimeGuid .. ":static"
+        if not ok and not self.warned[key] then
+            self.warned[key] = true
+            self.context.log:warn("SpawnGroup static request failed for " .. member.runtimeGuid .. ": " .. tostring(err))
+        elseif ok then
+            self.warned[key] = nil
+        end
+        return
+    end
     local spawn = self.members[member.runtimeGuid]
     if self.manager == nil or not self:valid(spawn) or spawn:get_field("IsCompleted") then return end
     if spawn:get_field("RequestedOperation") ~= 0 then return end

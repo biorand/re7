@@ -123,6 +123,7 @@ internal class EnemyModifier : Modifier {
     }
 
     private RszScene ProcessGeneratorScene(
+        Randomizer randomizer,
         RszScene scene,
         RandomizerLogger logger,
         EnemyTemplateFactory templateFactory,
@@ -205,6 +206,7 @@ internal class EnemyModifier : Modifier {
 
                 scene = scene.RemoveGameObject(spawnGuid);
                 scene = scene.Add(template);
+                randomizer.SpawnGroupService.ReplaceWithStatic(spawnGuid, template.Guid);
             }
         }
 
@@ -279,8 +281,7 @@ internal class EnemyModifier : Modifier {
 
                 var component = spawnInfo.FindComponent<app.EnemySpawnInfo>()!;
                 var compatibleEnemyPool =
-                    SelectCompatibleEnemyPool(area.Path, spawnInfo, areaEnemyPool, balancedEnemyPool, rule,
-                        randomizer.SpawnGroupService.Membership.ContainsKey(spawnInfo.Guid));
+                    SelectCompatibleEnemyPool(area.Path, spawnInfo, areaEnemyPool, balancedEnemyPool, rule);
                 if (compatibleEnemyPool.IsDefaultOrEmpty) {
                     logger.LogLine($"Keeping {component.UnitAlias} ({spawnInfo.Name}): no compatible replacement.");
                     continue;
@@ -303,7 +304,7 @@ internal class EnemyModifier : Modifier {
         if (generatorChanges.Count > 0) {
             var scene = area.Scene;
             foreach (var (generator, replacements) in generatorChanges) {
-                scene = ProcessGeneratorScene(scene, logger, templateFactory, generator, replacements, options, rng,
+                scene = ProcessGeneratorScene(randomizer, scene, logger, templateFactory, generator, replacements, options, rng,
                     healthResolver);
             }
 
@@ -319,10 +320,10 @@ internal class EnemyModifier : Modifier {
         RszGameObject spawnInfo,
         ImmutableArray<EnemyTableEntry> areaEnemyPool,
         ImmutableArray<EnemyTableEntry> fallbackEnemyPool,
-        EnemyPlacementRule rule, bool generatorOnly = false) {
+        EnemyPlacementRule rule) {
         var insectsOnly = EnemySpawnInfoRules.RequiresInsectReplacement(scenePath, spawnInfo);
         bool IsCompatible(EnemyTableEntry entry)
-            => rule.AllowsReplacement(entry.Enemy) && (!generatorOnly || entry.Enemy.SpawnOptionType != null) &&
+            => rule.AllowsReplacement(entry.Enemy) &&
                (!insectsOnly || entry.Enemy.IsInsect) &&
                (!rule.Aggro || entry.Enemy.UsesEnemyGenerator);
         var candidates = areaEnemyPool.Where(IsCompatible).ToImmutableArray();
@@ -526,19 +527,18 @@ internal class EnemyModifier : Modifier {
 
             foreach (var extraEnemy in selectedPlacements) {
                 var rule = new EnemyPlacementRule("", extraEnemy.Include, extraEnemy.Exclude);
-                var grouped = !string.IsNullOrWhiteSpace(extraEnemy.SpawnGroup);
                 IEnemyDefinition definition;
                 if (ExtraEnemyPlanner.UsesConfiguredPool(extraEnemy)) {
-                    var compatiblePool = areaEnemyPool.Where(entry => rule.AllowsReplacement(entry.Enemy) && (!grouped || entry.Enemy.SpawnOptionType != null)).ToImmutableArray();
+                    var compatiblePool = areaEnemyPool.Where(entry => rule.AllowsReplacement(entry.Enemy)).ToImmutableArray();
                     if (compatiblePool.IsDefaultOrEmpty)
-                        compatiblePool = sceneRandomEnemyPool.Where(entry => rule.AllowsReplacement(entry.Enemy) && (!grouped || entry.Enemy.SpawnOptionType != null)).ToImmutableArray();
+                        compatiblePool = sceneRandomEnemyPool.Where(entry => rule.AllowsReplacement(entry.Enemy)).ToImmutableArray();
                     if (compatiblePool.IsDefaultOrEmpty) {
                         logger.LogLine(
                             $"Skipping random extra enemy at {extraEnemy.PosX}/{extraEnemy.PosY}/{extraEnemy.PosZ}: no candidates after Include/Exclude.");
                         continue;
                     }
 
-                    definition = !grouped && string.IsNullOrWhiteSpace(extraEnemy.Include) && string.IsNullOrWhiteSpace(extraEnemy.Exclude)
+                    definition = string.IsNullOrWhiteSpace(extraEnemy.Include) && string.IsNullOrWhiteSpace(extraEnemy.Exclude)
                         ? packSelector!.Next()
                         : GetPackSelector(filteredPackSelectors, compatiblePool, options.MaxPackSize, rng).Next();
                 } else {
@@ -551,8 +551,6 @@ internal class EnemyModifier : Modifier {
                 }
 
                 if (ExtraEnemyPlanner.TryCreateRequest(logger, extraEnemy, definition, out var request)) {
-                    if (!string.IsNullOrWhiteSpace(extraEnemy.SpawnGroup) && definition.SpawnOptionType == null)
-                        throw new InvalidDataException($"SpawnGroup '{extraEnemy.SpawnGroup}' requires a generator-backed enemy.");
                     extraEnemyRequests.Add(request);
                 }
             }
@@ -583,11 +581,10 @@ internal class EnemyModifier : Modifier {
                         directObjectsByScene.Add(scene, directObjects);
                     }
 
-                    directObjects.Add(extraEnemySceneBuilder.CreateStaticInstance(
-                        request,
-                        options,
-                        directObjects.Count,
-                        rng));
+                    var instance = extraEnemySceneBuilder.CreateStaticInstance(
+                        request, options, directObjects.Count, rng);
+                    directObjects.Add(instance);
+                    randomizer.SpawnGroupService.Register(scene, instance.Guid, request.Placement.SpawnGroup);
                     continue;
                 }
 

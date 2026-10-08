@@ -124,15 +124,17 @@ public class RandomizerOutputPackagingTests {
     [InlineData(true)]
     public void ArchivesIncludeTheSeedManifestAndEmptyManifestClearsPreviousSeed(bool fluffy) {
         var input = new RandomizerInput { Seed = 123, Configuration = RandomizerTest.CreateFeatureTestConfiguration() };
-        var manifest = Encoding.UTF8.GetBytes("{\"version\":1,\"seed\":123,\"groups\":[{\"name\":\"test\"}]}");
+        var manifest = Encoding.UTF8.GetBytes("{\"version\":2,\"seed\":123,\"groups\":[{\"name\":\"test\"}]}");
         foreach (var bytes in new byte[]?[] { manifest, null }) {
             var output = new RandomizerOutput(input, new PakFileBuilder(), new PakFileBuilder(), [], 1, true, false, bytes);
             using var zip = new ZipArchive(new MemoryStream(fluffy ? output.GetOutputMod() : output.GetOutputZip()));
             using var json = System.Text.Json.JsonDocument.Parse(ReadBytes(zip, "reframework/data/BioRand7/spawn_groups.json"));
             Assert.Equal(123, json.RootElement.GetProperty("seed").GetInt32());
+            Assert.Equal(2, json.RootElement.GetProperty("version").GetInt32());
             Assert.Equal(bytes == null ? 0 : 1, json.RootElement.GetProperty("groups").GetArrayLength());
             Assert.NotNull(zip.GetEntry("reframework/autorun/BioRand7/spawn_groups.lua"));
             Assert.NotNull(zip.GetEntry("reframework/autorun/BioRand7/spawn_group_engine.lua"));
+            Assert.NotNull(zip.GetEntry("reframework/autorun/BioRand7/spawn_group_static.lua"));
         }
     }
 

@@ -20,7 +20,7 @@ return function()
         return { parameter = parameter, state = s or "", time = time or 0, x = x, y = x and 0, z = x and 0, radius = x and 1 }
     end
     local function load(conditions)
-        feature:load({ version = 1, seed = 123, groups = {{name = "test", members = {member}, conditions = conditions}} })
+        feature:load({ version = 2, seed = 123, groups = {{name = "test", members = {member}, conditions = conditions}} })
         requests = {}
     end
     local function tick(count) for _ = 1, count or 1 do feature:update() end end
@@ -56,7 +56,7 @@ return function()
     feature:reset(); tick(); assert(desired() == "suspend", "Earlier saves/new games must discard later trigger state")
     load({condition("spawn"), condition("suspend", "Go"), condition("resume", "Go"), condition("despawn", "Go")})
     state = "Go"; tick(); assert(desired() == "despawn", "Despawn wins simultaneous events")
-    feature:load({version = 1, seed = 999, groups = {}})
+    feature:load({version = 2, seed = 999, groups = {}})
     assert(#feature.groups == 0 and #messages == 1, "Reject stale seed manifest")
 
     local loading, native_paused = false, false
