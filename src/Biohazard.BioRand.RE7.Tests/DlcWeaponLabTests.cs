@@ -39,6 +39,7 @@ public sealed class DlcWeaponLabTests {
         foreach (var file in first.Files) Assert.Equal(file.Value, second.Files[file.Key]);
 
         var campaign = first.DeserializeUserFile<app.ItemSettings>("prefab/item/resourceitemsettings.user".UserFile());
+        var messages = first.GetMsgFile("message/ui_item_mes.msg".MessageFile());
         foreach (var weapon in DlcWeaponCatalog.Weapons) {
             var item = campaign._Settings.SingleOrDefault(x => x.ItemDataID == weapon.ItemId);
             if (!weapon.IsLabCandidate) {
@@ -47,10 +48,16 @@ public sealed class DlcWeaponLabTests {
             }
             Assert.NotNull(item);
             Assert.True(item.CanStoreItembox);
+            Assert.NotNull(messages.FindMessage(item.NameMsg));
+            if (item.ManualMsg != Guid.Empty) Assert.NotNull(messages.FindMessage(item.ManualMsg));
             Assert.Equal(weapon.CampaignPrefab, item.ItemPrefab.Path.ToString());
             var path = weapon.CampaignPrefab.Of() + ".17";
             var scene = first.GetPfbFile(path).ReadScene(first.TypeRepository);
             var components = scene.GetGameObjects().SelectMany(go => go.Components).ToArray();
+            Assert.Contains(components, c => c.Type.Name == "via.render.Mesh");
+            Assert.Contains(components, c => c.Type.Name == "via.motion.Motion");
+            Assert.Contains(components, c => c.Type.Name == "via.motion.MotionFsm");
+            Assert.Contains(first.GetPfbFile(path).Resources, p => p.EndsWith(".mesh", StringComparison.OrdinalIgnoreCase));
             Assert.DoesNotContain(components, c => c.Type.Name.StartsWith("app.CH8") || c.Type.Name.StartsWith("app.CH9"));
             Assert.DoesNotContain(components, c => c.Type.Name == "app.DisableSave");
             var native = Assert.Single(components, c => c.Type.Name == (weapon.Adapter == DlcWeaponAdapter.Gun ? "app.WeaponGun" : "app.Weapon"));
@@ -66,6 +73,7 @@ public sealed class DlcWeaponLabTests {
         }
         Assert.DoesNotContain(first.Files.Keys, p => p.StartsWith("natives/stm/ch8/") || p.StartsWith("natives/stm/ch9/"));
         Assert.DoesNotContain(first.Files.Keys, p => p.Contains(".scn."));
+        Assert.Equal(6, first.Files.Count);
     }
 
     [Fact]
