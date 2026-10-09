@@ -120,10 +120,10 @@ internal class ItemRandomizer {
     public bool IsItemAllowed(ItemDefinition itemDefinition) {
         if (itemDefinition.IsStoryProgressionItem)
             return false;
-        if (itemDefinition.IsUnlockable)
-            return _allowUnlockables;
-        if (itemDefinition.Dlc != null)
-            return _allowDlcItems;
+        if (itemDefinition.IsUnlockable && !_allowUnlockables)
+            return false;
+        if (itemDefinition.Dlc != null && !_allowDlcItems)
+            return false;
 
         return true;
     }
