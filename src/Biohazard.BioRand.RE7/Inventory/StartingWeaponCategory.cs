@@ -30,7 +30,19 @@ internal static class StartingWeaponCategoryExtensions {
                 _ => throw new ArgumentException("Invalid category")
             };
 
-        public List<ItemID> GetItemIds()
+        public List<ItemID> GetItemIds(bool includeDlcWeapons = false) {
+            var items = GetBaseItemIds(category);
+            if (includeDlcWeapons) items.AddRange(category switch {
+                StartingWeaponCategory.Bladed => [ItemID.CKnife],
+                StartingWeaponCategory.Handgun => [ItemID.Handgun_Albert_C],
+                StartingWeaponCategory.Shotgun => [ItemID.Shotgun_Albert, ItemID.NumaItem072],
+                _ => Array.Empty<ItemID>(),
+            });
+            return items;
+        }
+    }
+
+    private static List<ItemID> GetBaseItemIds(StartingWeaponCategory category)
             => category switch{
                 StartingWeaponCategory.Bladed =>[ /*ItemID.HandAxe, */ ItemID.Knife, ItemID.MiaKnife],
                 StartingWeaponCategory.CircularSaw =>[ItemID.CircularSaw],
@@ -46,5 +58,4 @@ internal static class StartingWeaponCategoryExtensions {
                 StartingWeaponCategory.GrenadeLauncher =>[ItemID.GrenadeLauncher],
                 _ => throw new ArgumentException("Invalid category")
             };
-    }
 }

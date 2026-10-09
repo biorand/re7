@@ -1,5 +1,6 @@
 local Context = require("BioRand7/context")
 local Crafting = require("BioRand7/crafting")
+local DlcWeapons = require("BioRand7/dlc_weapons")
 local Em3300Explosions = require("BioRand7/em3300_explosions")
 local Em8000KneeDown = require("BioRand7/em8000_knee_down")
 local EnemyDrops = require("BioRand7/enemy_drops")
@@ -16,6 +17,7 @@ local UI = require("BioRand7/ui")
 local context = Context.new()
 
 context:add("inventory", Inventory.new(context))
+context:add("dlc_weapons", DlcWeapons.new(context))
 context:add("inventory_pause", InventoryPause.new(context))
 context:add("crafting", Crafting.new(context))
 context:add("madhouse_saves", MadhouseSaves.new(context))
@@ -44,6 +46,7 @@ local function update_feature(name)
 end
 
 re.on_application_entry("UpdateBehavior", function()
+    update_feature("dlc_weapons")
     update_feature("inventory_pause")
     update_feature("enemy_drops")
     update_feature("em3300_explosions")

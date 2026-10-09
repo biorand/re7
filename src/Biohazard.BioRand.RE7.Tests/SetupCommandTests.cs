@@ -1,10 +1,38 @@
 using Biohazard.BioRand.RE7.Commands;
+using Biohazard.BioRand.RE7.Weapons;
 using IntelOrca.Biohazard.REE.Package;
 using Spectre.Console.Cli;
 
 namespace Biohazard.BioRand.RE7.Tests;
 
 public class SetupCommandTests {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Setup_DlcWeaponsRequiresAndHarvestsEntireManifest(bool missingAsset) {
+        var root = Path.Combine(Path.GetTempPath(), $"biorand-setup-dlc-{Guid.NewGuid():N}");
+        Directory.CreateDirectory(root);
+        try {
+            var builder = new PakFileBuilder();
+            var bytes = new byte[] { 5, 6, 7, 8 };
+            var paths = DlcCampaignWeapons.RequiredAssetPaths;
+            foreach (var path in missingAsset ? paths.Skip(1) : paths)
+                builder.AddEntry(path, bytes);
+            builder.Save(Path.Combine(root, "re_chunk_000.pak"), CompressionKind.Zstd);
+            var destination = Path.Combine(root, "output", "baseline.pak");
+            var app = new CommandApp<SetupCommand>();
+            var result = app.Run(["-i", root, "-o", destination, "--dlc-weapons"]);
+            if (missingAsset) {
+                Assert.NotEqual(0, result);
+                Assert.False(File.Exists(destination));
+            } else {
+                Assert.Equal(0, result);
+                using var pak = new PakFile(destination);
+                Assert.All(paths, path => Assert.Equal(bytes, pak.GetEntryData(path)));
+            }
+        } finally { Directory.Delete(root, true); }
+    }
+
     [Theory]
     [InlineData(false)]
     [InlineData(true)]

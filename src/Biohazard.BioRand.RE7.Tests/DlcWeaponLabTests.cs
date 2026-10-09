@@ -11,12 +11,12 @@ namespace Biohazard.BioRand.RE7.Tests;
 
 public sealed class DlcWeaponLabTests {
     [Fact]
-    public void CatalogIsNotACampaignPool() {
+    public void CatalogExcludesUnsupportedCampaignWeapons() {
         Assert.Equal(14, DlcWeaponCatalog.Weapons.Length);
         Assert.Equal(14, DlcWeaponCatalog.Weapons.Select(w => w.ItemId).Distinct().Count());
         Assert.Equal(4, DlcWeaponCatalog.Weapons.Count(w => w.IsLabCandidate));
         Assert.False(DlcWeaponCatalog.Weapons.Single(w => w.ItemId == "CH9_WP006").IsLabCandidate);
-        foreach (var weapon in DlcWeaponCatalog.Weapons)
+        foreach (var weapon in DlcWeaponCatalog.Weapons.Where(w => !w.IsLabCandidate))
             Assert.Null(ItemDefinitionRepository.Default.FromId(weapon.ItemId));
     }
 

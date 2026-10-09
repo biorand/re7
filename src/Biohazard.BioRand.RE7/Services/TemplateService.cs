@@ -1,6 +1,8 @@
 ﻿using Biohazard.BioRand.RE7.Serialization;
 using IntelOrca.Biohazard.REE.Rsz;
 using Biohazard.BioRand.RE7.Items;
+using Biohazard.BioRand.RE7.Weapons;
+using Biohazard.BioRand.RE7.REEngine;
 
 namespace Biohazard.BioRand.RE7.Services;
 
@@ -11,6 +13,7 @@ internal class TemplateService {
     private readonly RszScene _scene;
     private readonly Randomizer _randomizer;
     private readonly Dictionary<string, RszGameObject> _itemTemplates = new();
+    private readonly HashSet<string> _dlcTemplates = new(StringComparer.Ordinal);
 
     public TemplateService(Randomizer randomizer) {
         _randomizer = randomizer;
@@ -49,6 +52,21 @@ internal class TemplateService {
         => GetObject(EnemyFsmGeneratorTemplateName);
 
     public RszGameObject GetItemTemplate(string id) {
+        if (!_dlcTemplates.Contains(id) && DlcCampaignWeapons.Contains(id)) {
+            if (!DlcCampaignWeapons.IsEnabled(_randomizer.FileRepository))
+                throw new InvalidOperationException($"DLC campaign weapons are disabled: {id}");
+            var baseId = id switch {
+                "CKnife" => "MiaKnife",
+                "Handgun_Albert_C" => "Handgun_M19",
+                "Shotgun_Albert" => "MachineGun",
+                _ => "Shotgun_DB",
+            };
+            var definition = WeaponDefinitionRepository.Default.FromWeaponId(
+                ItemDefinitionRepository.Default.FromId(id)!.WeaponId!.Value);
+            var nativeWeapon = ReadDlcWeaponComponent(id);
+            _itemTemplates[id] = CreateDlcWeaponTemplate(GetItemTemplate(baseId), id, definition, nativeWeapon);
+            _dlcTemplates.Add(id);
+        }
         if (!_itemTemplates.ContainsKey(id) && ItemDrops.DlcCoinDrops.Any(coin => coin.Id == id)) {
             // Purchased DLC coins have no scene templates. Reuse the base-game coin pickup
             // while retaining the purchased reward ID, including its _Buy suffix.
@@ -67,5 +85,37 @@ internal class TemplateService {
         }
         _itemTemplates.TryGetValue(id, out RszGameObject? result);
         return result ?? throw new Exception($"Item template {id} not found in template scene!");
+    }
+
+    internal static RszGameObject CreateDlcWeaponTemplate(RszGameObject template, string id, WeaponDefinition definition, RszObjectNode nativeWeapon) {
+        return template.WithName($"ItemTemplate_{id}").WithPrefab("").Visit(node => {
+            if (node is not RszObjectNode obj) return node;
+            return obj.Type.Name switch {
+                "app.Item" => obj.Set("ItemDataID", id),
+                "app.fsm.ItemAddTest" => obj.Set("_ItemDataID", id),
+                "app.WeaponGun" or "app.Weapon" => nativeWeapon,
+                "via.render.Mesh" => obj.Set("Mesh", new RszResourceNode(definition.Mesh))
+                    .Set("Material", new RszResourceNode(definition.Material)),
+                _ => obj,
+            };
+        });
+    }
+
+    public RszGameObject RebindDlcPickup(RszGameObject pickup, string originalId, string id) {
+        if (!DlcCampaignWeapons.Contains(id)) return pickup;
+        var weapon = ReadDlcWeaponComponent(id);
+        return pickup.Visit(node => node is RszObjectNode obj ? obj.Type.Name switch {
+            "app.Weapon" or "app.WeaponGun" => weapon,
+            "app.fsm.ItemAddTest" when obj.Get<string>("_ItemDataID") == originalId => obj.Set("_ItemDataID", id),
+            _ => obj,
+        } : node);
+    }
+
+    private RszObjectNode ReadDlcWeaponComponent(string id) {
+        var source = DlcCampaignWeapons.Sources.Single(w => w.ItemId == id);
+        var inventory = _randomizer.FileRepository.GetPfbFile(source.CampaignPrefab.Of() + ".17")
+            .ReadScene(_randomizer.FileRepository.TypeRepository);
+        return inventory.GetGameObjects().SelectMany(g => g.Components)
+            .Single(c => c.Type.Name is "app.Weapon" or "app.WeaponGun");
     }
 }

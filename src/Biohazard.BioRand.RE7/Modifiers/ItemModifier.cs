@@ -67,6 +67,7 @@ internal class ItemModifier : Modifier {
                     var originalGameObject = originalMatch.GameObject;
                     var originalTransform = originalGameObject.FindComponent<GeneratedViaTransform>();
                     var itemComponent = originalGameObject.FindComponent<app.Item>()!;
+                    var originalItemId = itemComponent.ItemDataID;
                     var drop = replacements[candidate.Key];
 
                     var replaceeName = _itemDefinitions.FromId(itemComponent.ItemDataID)?.Name ??
@@ -92,6 +93,7 @@ internal class ItemModifier : Modifier {
                     var template = templateService.GetItemTemplate(templateItemId);
 
                     if (originalMatch.HasFsmInHierarchy) {
+                        originalGameObject = templateService.RebindDlcPickup(originalGameObject, originalItemId, drop.Id);
                         if (!preserveItemModels) {
                             originalGameObject = originalGameObject.ApplyVisualResourcesFromTemplate(template);
                         }

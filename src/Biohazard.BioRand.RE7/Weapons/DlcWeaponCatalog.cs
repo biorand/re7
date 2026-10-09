@@ -30,9 +30,12 @@ public static class DlcWeaponCatalog {
 public sealed record DlcWeaponSource(
     string ItemId, string Name, int Chapter, int WeaponId, string ComponentType, DlcWeaponAdapter Adapter) {
     public bool IsLabCandidate => Adapter != DlcWeaponAdapter.None;
-    public string CampaignPrefab => $"BioRand/DlcWeaponLab/{ItemId}/Item.pfb";
-    public string ResourceScene => $"BioRand/DlcWeaponLab/{ItemId}/Resource.scn";
-    public string DetailPrefab => $"BioRand/DlcWeaponLab/{ItemId}/Detail.pfb";
+    public string ResourceRoot { get; init; } = "BioRand/DlcWeaponLab";
+    public string CampaignPrefab => $"{ResourceRoot}/{ItemId}/Item.pfb";
+    public string ResourceScene => $"{ResourceRoot}/{ItemId}/Resource.scn";
+    public string DetailPrefab => $"{ResourceRoot}/{ItemId}/Detail.pfb";
+    public string ParameterPath => $"{ResourceRoot}/{ItemId}/Parameter.user";
+    public string CollisionPath => $"{ResourceRoot}/{ItemId}/Attack.rcol";
     public string SourceResourceScene => ItemId switch {
         "CKnife" => "ch8/scenes/items/resources_chapter8/chrisknife.scn",
         "Handgun_Albert_C" => "ch8/scenes/items/resources_chapter8/chrishandgun.scn",

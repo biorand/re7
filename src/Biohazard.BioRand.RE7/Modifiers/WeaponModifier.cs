@@ -76,10 +76,13 @@ internal class WeaponModifier : Modifier {
 
     private readonly WeaponDefinitionRepository _weaponDefinitions = WeaponDefinitionRepository.Default;
     private readonly ItemDefinitionRepository _itemDefinitions = ItemDefinitionRepository.Default;
+    private bool IsAvailable(WeaponDefinition definition)
+        => !DlcCampaignWeapons.Contains(definition.WeaponId.ToString())
+           || DlcCampaignWeapons.IsEnabled(_randomizer.FileRepository);
 
     public override void LogState(RandomizerLogger logger) {
         var randomizer = _randomizer;
-        foreach (var definition in _weaponDefinitions.WeaponDefinitions) {
+        foreach (var definition in _weaponDefinitions.WeaponDefinitions.Where(IsAvailable)) {
             if (string.IsNullOrEmpty(definition.UserParamsPath)) {
                 continue;
             }
@@ -183,7 +186,7 @@ internal class WeaponModifier : Modifier {
         var randomizeStun = randomizer.GetConfigOption<bool>("weapon-mod-damage-include-stun");
         var randomizePlayerDmg = randomizer.GetConfigOption<bool>("weapon-mod-damage-include-player-damage");
 
-        foreach (var definition in _weaponDefinitions.WeaponDefinitions) {
+        foreach (var definition in _weaponDefinitions.WeaponDefinitions.Where(IsAvailable)) {
             var sanitizedId = definition.WeaponId.ToString().ToLowerInvariant().Replace("_", "-");
             var min = randomizer.GetConfigOption($"weapon-damage-min-{sanitizedId}", -1d);
             var max = randomizer.GetConfigOption($"weapon-damage-max-{sanitizedId}", -1d);
@@ -207,7 +210,7 @@ internal class WeaponModifier : Modifier {
         var ensureAtLeastOneBullet = randomizer.GetConfigOption<bool>("weapon-mod-ammo-capacity-prevent-zero");
         var minCap = ensureAtLeastOneBullet ? 1 : 0;
 
-        foreach (var definition in _weaponDefinitions.WeaponDefinitions) {
+        foreach (var definition in _weaponDefinitions.WeaponDefinitions.Where(IsAvailable)) {
             if (definition.UserParamsPath == null || !definition.IsGun) {
                 continue;
             }
@@ -342,6 +345,8 @@ internal class WeaponModifier : Modifier {
         if (!string.IsNullOrWhiteSpace(definition.PrefabPath)) {
             AddPath(definition.PrefabPath);
         }
+        foreach (var source in DlcCampaignWeapons.Sources.Where(w => w.WeaponId == (int)definition.WeaponId))
+            AddPath(source.CampaignPrefab.Of() + ".17");
 
         if (string.IsNullOrWhiteSpace(definition.UserParamsPath)) {
             return result;
@@ -369,7 +374,7 @@ internal class WeaponModifier : Modifier {
     }
 
     private void RecordReloadSpeedRolls(Randomizer randomizer, Dictionary<WeaponID, WeaponStatRolls> rolls) {
-        foreach (var definition in _weaponDefinitions.Guns.Where(x =>
+        foreach (var definition in _weaponDefinitions.Guns.Where(IsAvailable).Where(x =>
                      x.UserType == Enums.app.CharacterDefine.Type.Player)) {
             if (!TryGetReloadSpeedRange(randomizer, definition, out var min, out var max)) {
                 continue;
@@ -393,7 +398,7 @@ internal class WeaponModifier : Modifier {
             return;
         }
 
-        foreach (var definition in _weaponDefinitions.Guns.Where(x =>
+        foreach (var definition in _weaponDefinitions.Guns.Where(IsAvailable).Where(x =>
                      x.UserType == Enums.app.CharacterDefine.Type.Player)) {
             if (definition.UserParamsPath == null) {
                 continue;
