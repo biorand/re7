@@ -36,6 +36,7 @@ internal sealed class ModCommand : AsyncCommand<ModCommand.Settings> {
             return 1;
         }
 
+        Directory.CreateDirectory(settings.OutputPath);
         foreach (var mod in settings.Mods) {
             var modAttribute = mods.First(x => x.Name.Equals(mod, StringComparison.OrdinalIgnoreCase));
             var modBuilder = ExportedMods.ExportMod(settings.InputPath, modAttribute.Name);
