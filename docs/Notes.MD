@@ -127,6 +127,8 @@ Full function addresses, control-flow evidence, signatures, and implementation c
 
 Not a Hero and End of Zoe items:
 
+- The [DLC weapon investigation](weapons/dlc_weapons.md) records all 14 weapon identities, the opt-in four-weapon lab, runtime failures, and the player-system requirements for AMG-Dual. No weapon from that catalog is campaign-certified or enabled in normal pools.
+
 - `app.ItemManager::createItemInstance319138` (`0x142146680`) returns null when `ItemData` or `ItemPrefab` is missing, otherwise instantiates the prefab at the owner transform and parents it to the owner.
 - `app.fsm.ItemAddTest::start357511` (`0x14045C1B0`) tests its own `_Multiple`, `_ItemList`, and `_ItemDataID` path. Changing only the scene `app.Item.ItemDataID` is not sufficient for these interactions.
 - `app.CH9PassiveSkillItem::onInsertInventory113604` (`0x1415621D0`) requires `app.ICH9PlayerOrder` from the inventory owner and registers attack/guard amulets and the passive skill through that interface. Ethan cannot consume this callback unchanged.

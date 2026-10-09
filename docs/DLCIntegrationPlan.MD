@@ -1,7 +1,7 @@
 # Not a Hero and End of Zoe integration plan
 
-Status: Proposed
-Last updated: 2026-08-25
+Status: Proposed; isolated weapon experiments implemented, none certified
+Last updated: 2026-10-09
 
 ## Purpose
 
@@ -13,6 +13,7 @@ This plan builds on:
 
 - [Notes.MD](Notes.MD), especially the DLC integration and recipe notes.
 - [DLCIntegrationEvidence.MD](DLCIntegrationEvidence.MD), containing the binary-specific IDA evidence behind this plan.
+- [DLC weapon investigation](weapons/dlc_weapons.md), containing the source catalog, current lab boundary, live observations, and remaining AMG-Dual/player-system work.
 - [DLCAndModes.MD](../.analysis/knowledge/DLCAndModes.MD).
 - [ItemsInventoryRecipes.MD](../.analysis/knowledge/ItemsInventoryRecipes.MD).
 - [dlc-enemy-integration-findings.md](../.analysis/dlc-enemy-integration-findings.md).
