@@ -12,23 +12,50 @@ and [Lua API hazards](../reframework-lua.md).
 
 ## Implemented boundary
 
-- `DlcWeaponCatalog` records all 14 source weapons below, separately from the
-  campaign item/weapon repositories.
-- `DlcWeaponLabPatch` exports four experimental adapters: Tactical Knife,
-  Samurai Edge, Thor's Hammer, and Joe's M21. The other ten entries are rejected.
-- The patch runs **only for an explicit mod export**. `ApplyAll` discovers every
-  `IPatch`, so the early `ExportingMod` guard is essential. Normal seeds do not
-  read or write these assets or select these items.
-- Source DLC prefabs/settings are preserved. The export writes four namespaced
-  inventory PFBs, four detail PFBs, and four item-resource scenes. It merges four
-  records into campaign resource item settings, missing name/manual messages into
-  the campaign item message file, and four folders into the campaign item-resource
-  index. Existing campaign resource folders and DLC gameplay roots are preserved.
-- The optional Lua lab is not loaded by `BioRand7.lua`. Its manual runner is
-  `tools/dlc_weapon_lab.lua`. No weapon is granted automatically.
-- No main-game pickup templates, resident weapon changes, complete dependency
-  closure, production configuration, ammo distributions, or save migration are
-  supplied. **This is a developer experiment, not a playable all-weapons mod.**
+There are now two separate entry points, sharing `DlcWeaponImporter`:
+
+- `DlcWeaponLabPatch` remains an explicit mod export under `BioRand/DlcWeaponLab`.
+  Its manual Lua runner is not loaded by `BioRand7.lua` and grants nothing on load.
+- `DlcCampaignWeaponPatch` integrates four candidates under `BioRand/DlcWeapons`
+  when **both** `dlc-campaign-weapons` and `allow-dlc-items` are true. The new
+  experimental option defaults to false. Ordinary profiles retain their old pools.
+- The candidate set is Tactical Knife, Samurai Edge, Thor's Hammer, and Joe's M21.
+  The remaining ten catalog entries, including AMG-Dual, stay excluded.
+- Campaign integration includes item definitions, starting weapons and ammunition,
+  random weapon pools, pickup templates, item settings/messages, inspection
+  resource folders, and weapon-stat controls. Custom bird-cage entries are gated;
+  the default cage table still disables ordinary guns.
+- Inventory/detail PFBs and resource scenes are namespaced. CH8 gun parameters and
+  knife attack RCOL are copied to that namespace before stat changes. Joe's M21
+  deliberately shares campaign M21 parameters and controls. Source DLC settings
+  and inventory PFBs are not rewritten, and DLC gameplay roots stay inactive.
+- `_Data/dlc_weapon_assets.txt` lists 92 required installed resources, including
+  weapon render/motion/collision/VFX dependencies and import metadata. Generation
+  preflights every entry before registering anything and emits a clear error if
+  the baseline needs `setup --dlc-weapons`. Extracted game assets are not committed.
+- `BioRand7/dlc_weapons.lua` makes at most one deferred loading request per matching
+  campaign prefab per session. It does not grant items, force native initialization,
+  repair AI, or install attack/input hooks. Both flags imply REFramework is required.
+
+This implements the campaign generation path, **not completed playthrough
+certification**. Save migration is not implemented. Use backed-up test saves until
+normal acquisition, storage, save/load, and all relevant player transitions pass.
+
+### Preparing an opt-in seed
+
+Use an installation with Not a Hero and End of Zoe, with generated/mod PAKs removed
+from the setup input. Setup reads installed patch PAKs too: harvesting an already
+randomized installation can contaminate the baseline and make patches fail their
+expected-match checks. Do not weaken those checks to accept a dirty baseline.
+
+```powershell
+dotnet run --project src/biorand-re7 -- setup -i "<clean RE7 install>" -o out/dlc-baseline.pak --full --dlc-weapons
+dotnet run --project src/biorand-re7 -- generate --input out/dlc-baseline.pak --config "<profile.json>" --seed 1685410476 --output out/dlc-seed
+```
+
+The profile must set `"allow-dlc-items": true` and `"dlc-campaign-weapons": true`.
+Deploy a complete generated output with RE7 stopped; do not mix stale lab settings,
+new inventory prefabs, and a different seed's runtime configuration.
 
 ## Source inventory
 
@@ -111,10 +138,41 @@ Runtime: RE7 `1.0.0.7`, executable SHA-256
 `D550260029B51A580E206B9A12A4EB7F4A1B4DD230BBA5DEFCCA81DA40597321`,
 REFramework `v1.5.9.1+507-d1461375`.
 
-The HTTP/managed live endpoints timed out during this attempt. A temporary local
+The HTTP/managed live endpoints timed out during the initial attempt. A temporary local
 Lua command bridge executed bounded probes on `UpdateBehavior`. IDA MCP was not
 reachable; the IDA facts linked above are from the earlier investigation, not a
 new decompilation pass. Session-specific addresses are deliberately not recorded.
+
+### Campaign adapter pass
+
+The later pass used working read-only REFramework endpoints and a temporary
+`UpdateBehavior` command bridge for mutations. A cold restart loaded the staged
+110-file campaign export (92 dependencies plus 18 adapted/merged files).
+
+| Check | Observation | Remaining limitation |
+| --- | --- | --- |
+| Full seed generation | Completed with a clean baseline augmented by the manifest; starting loadouts selected the CH8 candidates and an extra chest selected Joe's M21 | The full generated seed was not deployed for a playthrough |
+| Cold prefab load | All four campaign handles became `Ready=true`, `Valid=true` without manual preparation | Readiness is not functional certification |
+| Samurai Edge ownership | Native item-box withdrawal created an inventory-owned pistol; inventory equip selected WeaponID 49 | Acquisition used a temporary boxed test grant, not a world pickup |
+| Samurai Edge firing | Normal mouse input reached native `shoot`/`fireBullet` for ID 49 and consumed rounds | Shot timing and balance are not certified |
+| Empty-magazine reload | Normal attack input on an empty magazine triggered the reload animation; 0 loaded / 30 reserve became 9 / 21 | Dedicated reload-key automation was inconclusive |
+| Normal Molded damage | User observed lethal headshots and lower body damage with Samurai Edge | Not a controlled damage/balance measurement; balancing deferred |
+| Tactical Knife | Box withdrawal and equip reached ID 48 / bank 30 | Hand pose and attack behavior were not certified |
+| Thor's Hammer | Box withdrawal produced the correct inventory ID | The session later crashed; firing/reload were not validated |
+| Joe's M21 | Serialized adapter and generated chest passed checks | No clean live equip/fire/reload pass yet |
+
+Two later sessions were invalidated by direct inventory/menu probes: a vanilla
+weapon storage call threw and was followed by process exit; another session
+developed an invalid native inventory reference before exiting after shotgun
+withdrawal. The latter crash log included native finalization frames. These facts
+do **not** isolate a weapon defect or exonerate the adapters. Do not count either
+session as a storage, persistence, or multi-weapon compatibility pass. The temporary
+bridge and diagnostic hooks are not part of the production module.
+
+Save files matched the pre-test backup after these sessions. No DLC-bearing save
+was written, so that comparison is preservation evidence, not a save/load test.
+
+### Earlier lab evidence
 
 | Check | Observation | What it does not prove |
 | --- | --- | --- |
@@ -131,7 +189,8 @@ new decompilation pass. Session-specific addresses are deliberately not recorded
 The forced pistol experiment included temporary motion-bank/name experiments and
 did not use a normal inventory-owned weapon throughout. It is useful evidence of
 the base bullet path, but must not be reported as a clean compatibility pass.
-The compiled lab still needs normal item-box withdrawal and equip validation.
+These historical lab results are superseded only where the campaign-pass table
+above records a stronger check; they must not be generalized to all four weapons.
 
 The campaign bullet RCOL already includes `Handgun_Albert_C` damage 300,
 `Handgun_Albert_C_L` damage 1000, and `Shotgun_Albert` damage 60. The inspected base
@@ -212,10 +271,40 @@ Other blocked families have distinct requirements:
    `app.Item.ItemDataID` and independent `app.fsm.ItemAddTest._ItemDataID` paths
    rebound. Native `ItemResource` registration/detail-search resources are a
    separate requirement from inventory prefab registration.
-10. **Certification and selection are separate.** Do not append the catalog to
-    `item_definitions.json` or weapon pools. Resolve the WeaponID 13 collision and
-    enforce DLC and unlockable gates independently; the existing unlockable-first
-    branch must not let a future DLC unlockable bypass DLC permission.
+10. **Certification and selection are separate.** Keep the experimental campaign
+    gate independent of DLC and unlockable permission. The full source catalog is
+    not a usable weapon pool. `Shotgun_DB` stays the canonical reverse lookup for
+    WeaponID 13; Joe's M21 is a separate inventory ID but shares stats/ammunition.
+    Non-repeating selections treat the two IDs as aliases.
+11. **Cached templates may already be wrong for the new mode.** The embedded
+    template scene already contains raw DLC objects. A create-only-if-missing
+    branch silently reused them. Campaign adapters explicitly replace those
+    cached entries once. Donor gun components must use the imported native ID,
+    not merely the new ItemDataID and mesh. Tactical Knife uses the MiaKnife pickup
+    shell because the ordinary Knife template lacks the required interaction child.
+12. **Preserved FSM pickups need identity repair too.** Replacing a template only
+    covers cloned pickups. Preserved objects and configured bird cages also need
+    their existing weapon component rebound. Matching local ItemAddTest IDs are
+    rewritten without changing object GUIDs or FSM UIDs. External parent/sibling
+    FSM references still require scene-specific runtime validation.
+13. **Check raw field names and offsets.** `InventoryItemIcon.ParentItemParam` is
+    backed by `<ParentItemParam>k__BackingField`, not a same-named field. At the
+    inspected layout, InventoryMenu offset `0x2A0` is `_SelectedMoveItem`, not
+    `_FocusItemIcon` (`0x298`). A plausible-looking generated property or nearby
+    offset is not enough to justify a mutation.
+14. **Lua assertions can change native argument counts.** `assert(value, message)`
+    returns both arguments. At the end of a Lua argument list, it can accidentally
+    pass the message to `object:call` as another native argument. Assert separately
+    or parenthesize the expression. Validate against the live TDB signature.
+15. **Input and capture failures are not weapon failures.** Short synthetic key
+    taps were inconsistently consumed by the game, including vanilla controls.
+    Prefer an observed native action and ammo transition over assuming a key was
+    received. Do not force reload/shoot and then call it normal-input validation.
+16. **Keep scope and parameter ownership explicit.** Readiness repair does not
+    supply missing meshes or sounds. Copy the dependency manifest and resource
+    registrations first. Isolate CH8 parameter/knife RCOL edits from source DLC;
+    document deliberate aliases such as Joe's M21. The added campaign
+    WeaponMotionController was not independently A/B-tested as a causal fix.
 
 These are the same broad lessons as Em4400: serialized component parity does not
 prove native initialization, and one successful animation does not prove a
@@ -258,28 +347,29 @@ the rest of the native lifecycle.
 
 ## Acceptance and next steps
 
-Automated coverage checks the 14 source identities, rejection of unsupported
-adapters, no-op behavior during ordinary generation, deterministic export,
-component/ammo/message serialization paths, and retained render/motion resources.
-Lua tests cover explicit activation, deferred commands, readiness checks,
-duplicate prevention, bounded preparation, failures without per-frame retries,
-cleanup ownership, and load/new-game invalidation.
+Automated coverage includes the 14 source identities, rejected unsupported
+adapters, default-off behavior, both permission gates, manifest extraction and
+missing-resource preflight, deterministic lab export, serialized native identities,
+pickup interaction rebinding, messages, ammo mapping, capacity changes, and the
+WeaponID 13 alias. Lua coverage checks exact namespace guards, deferred bounded
+loading, failures without repeated mutations, and load/new-game invalidation.
 
-The investigation's full solution run passed 579 tests; all 18 Lua suites passed
-under Lua 5.4. The machine's `lua` command was Lua 5.1 and failed on existing Lua
-5.4 syntax, so the compatible runtime was used instead. Automated success does
-not remove the manual risks above.
+The campaign integration full solution run passed 593 tests, and all 19 Lua suites
+passed under Lua 5.4. The machine's `lua` command was Lua 5.1, so a compatible
+Lua 5.4 runtime was used. Automated success does not remove the manual risks above.
 
-Next work, in order:
+Remaining acceptance work:
 
-1. Capture a healthy source-DLC inventory-to-equip trace and compare the campaign
-   counterpart without trainer/random-event interference. Resolve insertion and
-   resource-folder lifecycle before adding more repair hooks.
-2. Certify the four gun/knife candidates individually, including actual enemy
-   damage, reload, save/load, item-box round trips, and chapter/player transitions.
-3. Build and verify dependency manifests and pickup/resource registrations. Keep
-   DLC gameplay roots inactive and skip missing dependencies cleanly.
-4. Implement separate CH8 throw, CH9 throw/bomb/blade, and Joe knuckle adapters.
-   AMG-Dual needs explicit two-handed combat behavior, not a cosmetic alias.
-5. Only then add certified entries, independent DLC/unlockable gates, deterministic
-   distribution/ammo logic, and regression tests to the production randomizer.
+1. Reproduce normal pickup and item-box operations with no direct inventory/menu
+   probes, starting from clean sessions. Isolate the later invalid-reference crash.
+2. Test each candidate's equip, normal attack, enemy damage, reload, ammo switching,
+   inspect view, re-equip, and two-way storage. Check the knife's hand pose explicitly.
+3. Write and reload a disposable DLC-bearing save; cross scene/chapter boundaries,
+   item-box transfers, Mia and VHS/Clancy transitions, and title-menu reloads.
+4. Validate all candidate pickup families in a complete generated seed, including
+   parent-controlled FSMs and any explicitly enabled bird-cage entries. Check sound
+   loading separately; the curated manifest is not proof of a complete sound-bank
+   closure. Check randomized loaded ammo on scene pickups as well as inventory PFBs.
+5. Keep AMG/throwable/blade player-system ports deferred. They are not required to
+   finish this four-candidate campaign integration, and no runtime shim for them
+   should be hidden inside the conventional gun adapter.

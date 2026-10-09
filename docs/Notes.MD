@@ -127,7 +127,8 @@ Full function addresses, control-flow evidence, signatures, and implementation c
 
 Not a Hero and End of Zoe items:
 
-- The [DLC weapon investigation](weapons/dlc_weapons.md) records all 14 weapon identities, the opt-in four-weapon lab, runtime failures, and the player-system requirements for AMG-Dual. No weapon from that catalog is campaign-certified or enabled in normal pools.
+- The [DLC weapon investigation](weapons/dlc_weapons.md) records all 14 identities and the four-candidate campaign adapter. `dlc-campaign-weapons` is experimental and defaults off; both it and `allow-dlc-items` are required. Setup needs `--dlc-weapons` and a clean installed-asset baseline. Samurai Edge normal firing and empty-magazine reload were observed, but full pickup/storage/save/player-transition certification remains open. AMG-Dual and other player-system ports stay excluded.
+- DLC campaign pickups must replace cached raw DLC templates and rebind native weapon components, not just meshes and ItemDataIDs. Preserved FSM pickups need the same local identity repair without changing their GUIDs/state UIDs. Joe's M21 (`NumaItem072`) is a separate ItemDataID alias of WeaponID 13; keep `Shotgun_DB` canonical in reverse lookups and share its stats/ammunition.
 
 - `app.ItemManager::createItemInstance319138` (`0x142146680`) returns null when `ItemData` or `ItemPrefab` is missing, otherwise instantiates the prefab at the owner transform and parents it to the owner.
 - `app.fsm.ItemAddTest::start357511` (`0x14045C1B0`) tests its own `_Multiple`, `_ItemList`, and `_ItemDataID` path. Changing only the scene `app.Item.ItemDataID` is not sufficient for these interactions.
