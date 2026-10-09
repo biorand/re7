@@ -8,14 +8,14 @@ The map is intentionally conservative. It is not a navmesh, door graph, or exact
 
 | File | Purpose |
 | - | - |
-| `re7_world_map.json` | Generated scene map. Current coverage: 1,278 scenes, 487 main-campaign scenes, 791 DLC scenes. |
+| `re7_world_map.json` | Generated scene map. Checked-in snapshot (2026-05-13): 1,278 scenes, 487 main-campaign scenes, 791 DLC scenes. Regenerate after changing its source data. |
 | `Build-Re7WorldMap.ps1` | Rebuilds the JSON from the current repo data. |
 
 ## Safety Fields
 
 | Field | Meaning |
 | - | - |
-| `confidence` | `Confirmed` means the scene has configured `enemy_limits.csv` capacity and class evidence; `Likely`/`Hypothesis` are naming/path based. |
+| `confidence` | `Confirmed` means the scene has a configured `enemy_limits.csv` capacity. Placement class still uses naming/path heuristics; this is not runtime confirmation of placement safety. `Likely`/`Hypothesis` indicate no configured capacity. |
 | `safety.placementClass` | Coarse scene type such as `connectorOrPathway`, `smallRoom`, `openOrCombatArea`, `safeHub`, or `supportOrResource`. |
 | `safety.blockerRisk` | Traversal-block risk. Treat `critical`, `high`, and `noDirectPlacement` as rejection reasons for large or static blockers. |
 | `safety.largeEnemyPolicy` | `allow`, `discourage`, or `forbid` for large enemies such as Fat Molded or boss-scale enemies. |
@@ -26,13 +26,14 @@ The map is intentionally conservative. It is not a navmesh, door graph, or exact
 
 ## Placement Use
 
-Use the map as a hard prefilter:
+Use the map as a conservative prefilter when reviewing placements. The randomizer does not load this documentation JSON:
 
 1. Reject direct placement when `safety.blockerRisk` is `noDirectPlacement`.
 2. Reject large enemies when `safety.largeEnemyPolicy` is `forbid`.
 3. Reject Elder Eveline or other static blockers unless `safety.staticBlockerPolicy` is `manualOnly` and a live route probe proves traversal remains possible.
 4. Treat `confidence != "Confirmed"` as requiring manual or runtime validation before enabling new randomized placements.
-5. For Molded-style extras, keep checking `navigationMap` against the enemy navigation-surface rules in `.analysis/knowledge/EnemiesAndSpawning.MD`.
+5. Check `safety.needsManualValidation` even when `confidence` is `Confirmed`; DLC and scripted scenes can still require runtime validation.
+6. For Molded-style extras, check `navigationMap` against `MoldedAiMapByScenePrefix` and `ConfigureMoldedAiMap` in [ExtraEnemySceneBuilder.cs](../../src/Biohazard.BioRand.RE7/Modifiers/Enemies/ExtraEnemySceneBuilder.cs). The snapshot's map names are path-based hints, not proof of a usable navigation surface.
 
 ## Regeneration
 
