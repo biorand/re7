@@ -7,6 +7,7 @@ local suites = {
     "test_object_cache",
     "test_enemy_targets",
     "test_inventory",
+    "test_dlc_weapon_lab",
     "test_inventory_pause",
     "test_crafting",
     "test_enemy_drops",
