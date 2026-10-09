@@ -2,6 +2,7 @@
 using Biohazard.BioRand.RE7.REEngine;
 using Biohazard.BioRand.RE7.Serialization;
 using Biohazard.BioRand.RE7.Services;
+using Biohazard.BioRand.RE7.Weapons;
 using Enums.app;
 using IntelOrca.Biohazard.REE.Rsz;
 using System.Collections.Immutable;
@@ -145,6 +146,8 @@ internal class BirdCageModifier : Modifier {
                   throw new Exception("Unable to get bird cage data");
         var replacements = Csv.Deserialize<BirdCageReplacement>(csv)
             .Where(b => b.Enabled)
+            .Where(b => !DlcCampaignWeapons.Contains(b.ItemId)
+                || DlcCampaignWeapons.IsEnabled(randomizer.FileRepository))
             .ToImmutableList();
 
         var randomizeMagnum = randomizer.GetConfigOption<bool>("random-bird-cage-magnum");
@@ -250,6 +253,10 @@ internal class BirdCage {
 
         var newItemHolder = itemHolder
             .AddOrUpdateComponent(Item);
+        if (DlcCampaignWeapons.Contains(Item.ItemDataID)) {
+            newItemHolder = randomizer.TemplateService.RebindDlcPickup(newItemHolder,
+                itemHolder.FindComponent<app.Item>()!.ItemDataID, Item.ItemDataID);
+        }
 
         var hasBirthdaySkillVisuals = BirthdaySkillVisuals.TryGetResources(Item.ItemDataID, out var skillVisuals);
         if (hasBirthdaySkillVisuals) {
@@ -265,6 +272,12 @@ internal class BirdCage {
 
                 newItemHolder = newItemHolder.AddOrUpdateComponent(mesh);
                 newItemHolder = BirthdaySkillVisuals.ApplyRotationCorrection(newItemHolder);
+            } else if (DlcCampaignWeapons.Contains(Item.ItemDataID)) {
+                var definition = WeaponDefinitionRepository.Default.FromWeaponId(
+                    ItemDefinitionRepository.Default.FromId(Item.ItemDataID)!.WeaponId!.Value);
+                mesh = mesh.Set("Mesh", new RszResourceNode(definition.Mesh))
+                    .Set("Material", new RszResourceNode(definition.Material));
+                newItemHolder = newItemHolder.AddOrUpdateComponent(mesh);
             } else {
                 var newItem = randomizer.ItemPlacementService.FromId(Item.ItemDataID)
                     .FirstOrDefault(x => !string.IsNullOrWhiteSpace(x.Mesh) && !string.IsNullOrWhiteSpace(x.Material));

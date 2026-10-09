@@ -36,17 +36,18 @@ public class ItemDefinitionRepositoryTests {
     }
 
     [Fact]
-    public void WeaponIds_Must_Be_Unique() {
+    public void WeaponIds_Must_Be_UniqueExceptExplicitM21Alias() {
         var duplicates = repository
             .Items
             .Where(i => i.WeaponId != null)
             .GroupBy(i => i.WeaponId)
             .Where(g => g.Count() > 1)
-            .Select(g => g.Key)
             .ToList();
 
-        Assert.True(duplicates.Count == 0,
-            $"Duplicate WeaponIDs found: {string.Join(", ", duplicates)}");
+        var alias = Assert.Single(duplicates);
+        Assert.Equal(Enums.app.WeaponID.Shotgun_DB, alias.Key);
+        Assert.Equal(new[] { "NumaItem072", "Shotgun_DB" }, alias.Select(i => i.Id).Order().ToArray());
+        Assert.Equal("Shotgun_DB", repository.FromWeaponId(Enums.app.WeaponID.Shotgun_DB)!.Id);
     }
 
     [Fact]

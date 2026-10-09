@@ -1,5 +1,6 @@
 ﻿using Biohazard.BioRand.RE7.Serialization;
 using Enums.app;
+using Biohazard.BioRand.RE7.Weapons;
 using Enums.app.Item;
 using System.Collections.Immutable;
 
@@ -38,6 +39,7 @@ public sealed class ItemDefinitionRepository {
     }
 
     private void Initialize() {
+        Items.AddRange(DlcCampaignWeapons.CreateItemDefinitions());
         var relevantItems = Items
             .Where(x => !string.IsNullOrEmpty(x.Name))
             .ToArray();
@@ -52,7 +54,7 @@ public sealed class ItemDefinitionRepository {
             .ToImmutableDictionary(x => x.Key, x => x.ToImmutableArray());
 
         NameToItemMap = relevantItems
-            .Where(x => !x.IsDlcItem)
+            .Where(x => !x.IsDlcItem || DlcCampaignWeapons.Contains(x.Id))
             .Where(x => !string.IsNullOrEmpty(x.Name))
             .Where(x => !new string[]{
                 "CircularSawNo", "Candle_Lighted", "EvelynRadar",
@@ -67,6 +69,8 @@ public sealed class ItemDefinitionRepository {
 
         WeaponIdToItemMap = Items
             .Where(x => x.WeaponId != null)
+            // Joe's M21 is an inventory alias, not a second native weapon/stat identity.
+            .Where(x => x.Id != "NumaItem072")
             .ToImmutableDictionary(x => x.WeaponId!.Value);
     }
 

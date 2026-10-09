@@ -120,10 +120,12 @@ internal class ItemRandomizer {
     public bool IsItemAllowed(ItemDefinition itemDefinition) {
         if (itemDefinition.IsStoryProgressionItem)
             return false;
-        if (itemDefinition.IsUnlockable)
-            return _allowUnlockables;
-        if (itemDefinition.Dlc != null)
-            return _allowDlcItems;
+        if (itemDefinition.IsUnlockable && !_allowUnlockables)
+            return false;
+        if (itemDefinition.Dlc != null && !_allowDlcItems)
+            return false;
+        if (DlcCampaignWeapons.Contains(itemDefinition.Id) && !DlcCampaignWeapons.IsEnabled(_randomizer))
+            return false;
 
         return true;
     }
@@ -283,7 +285,9 @@ internal class ItemRandomizer {
 
     public void MarkItemPlaced(string id) => _placedItemIds.Add(id);
 
-    public bool IsItemPlaced(string id) => _placedItemIds.Contains(id);
+    public bool IsItemPlaced(string id) => _placedItemIds.Contains(id)
+        || (id == "NumaItem072" && _placedItemIds.Contains("Shotgun_DB"))
+        || (id == "Shotgun_DB" && _placedItemIds.Contains("NumaItem072"));
 
     private static bool IsGunCandidate(ItemDefinition item) {
         if (item.WeaponId == null)
@@ -318,7 +322,7 @@ internal class ItemRandomizer {
 
         var availableCount = 0;
         foreach (var item in pool) {
-            if ((allowReoccurance || !_placedItemIds.Contains(item.Id))
+            if ((allowReoccurance || !IsItemPlaced(item.Id))
                 && (extraCheck?.Invoke(item) != false)) {
                 availableCount++;
             }
@@ -329,7 +333,7 @@ internal class ItemRandomizer {
 
         var index = rng.Next(0, availableCount);
         foreach (var item in pool) {
-            if ((allowReoccurance || !_placedItemIds.Contains(item.Id))
+            if ((allowReoccurance || !IsItemPlaced(item.Id))
                 && (extraCheck?.Invoke(item) != false)
                 && index-- == 0) {
                 _placedItemIds.Add(item.Id);

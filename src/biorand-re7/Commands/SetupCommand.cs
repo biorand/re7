@@ -3,6 +3,7 @@ using Spectre.Console;
 using Spectre.Console.Cli;
 using System.Collections.Immutable;
 using System.Text.RegularExpressions;
+using Biohazard.BioRand.RE7.Weapons;
 
 namespace Biohazard.BioRand.RE7.Commands;
 
@@ -15,6 +16,7 @@ internal sealed class SetupCommand : AsyncCommand<SetupCommand.Settings> {
         [CommandOption("-o|--output")] public string? OutputPath { get; init; }
 
         [CommandOption("--full")] public bool Full { get; init; }
+        [CommandOption("--dlc-weapons")] public bool DlcWeapons { get; init; }
     }
 
     public override ValidationResult Validate(CommandContext context, Settings settings) {
@@ -34,15 +36,20 @@ internal sealed class SetupCommand : AsyncCommand<SetupCommand.Settings> {
         var patternList = FullPatterns;
         var gamePath = settings.InputPath!;
         using var pak = OpenGamePaks(gamePath);
+        var weaponAssets = settings.DlcWeapons ? DlcCampaignWeapons.RequiredAssetPaths : [];
+        foreach (var path in weaponAssets) {
+            if (pak.GetEntryData(path) == null)
+                throw new InvalidDataException($"DLC weapon setup requires installed Not a Hero and End of Zoe resources. Missing: {path}");
+        }
 
         var outputPath = settings.OutputPath!;
         if (outputPath.EndsWith(".pak", StringComparison.OrdinalIgnoreCase)) {
             var newPak = new PakFileBuilder();
-            HarvestFiles(pak, patternList, (path, data) => { newPak.AddEntry(path, data); });
+            HarvestFiles(pak, patternList, weaponAssets, (path, data) => { newPak.AddEntry(path, data); });
             GenerateCommand.EnsureParentDirectory(outputPath);
             newPak.Save(settings.OutputPath!, CompressionKind.Zstd);
         } else {
-            HarvestFiles(pak, patternList, (path, data) => {
+            HarvestFiles(pak, patternList, weaponAssets, (path, data) => {
                 var targetPath = Path.Combine(outputPath, path);
                 var targetDir = Path.GetDirectoryName(targetPath)!;
                 Directory.CreateDirectory(targetDir);
@@ -89,12 +96,14 @@ internal sealed class SetupCommand : AsyncCommand<SetupCommand.Settings> {
     private static void HarvestFiles(
         IPakFile pak,
         ImmutableArray<string> patternList,
+        ImmutableArray<string> additionalPaths,
         Action<string, byte[]> cb
     ) {
         var pakList = RandomizerExecutor.GetDefaultPakList();
         var patternListRegex = patternList.Select(x => new Regex(x, RegexOptions.IgnoreCase)).ToArray();
-        foreach (var path in pakList.Entries) {
-            if (!patternListRegex.Any(x => x.IsMatch(path)))
+        var explicitPaths = additionalPaths.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var path in pakList.Entries.Concat(additionalPaths).Distinct(StringComparer.OrdinalIgnoreCase)) {
+            if (!explicitPaths.Contains(path) && !patternListRegex.Any(x => x.IsMatch(path)))
                 continue;
 
             var file = pak.GetEntryData(path);

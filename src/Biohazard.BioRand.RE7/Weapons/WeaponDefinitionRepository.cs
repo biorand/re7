@@ -39,7 +39,7 @@ public sealed class WeaponDefinitionRepository {
 
     private void Initialize() {
         WeaponDefinitions = EmbeddedData.GetFile(WeaponDefinitionFileName).DeserializeJson<List<WeaponDefinition>>()
-            .ToImmutableList();
+            .Concat(DlcCampaignWeapons.CreateWeaponDefinitions()).ToImmutableList();
         IdToWeaponMap = WeaponDefinitions.ToImmutableDictionary(x => x.WeaponId, x => x);
     }
 

@@ -3,6 +3,7 @@ using Biohazard.BioRand.RE7.Inventory;
 using Biohazard.BioRand.RE7.Items;
 using Biohazard.BioRand.RE7.REEngine;
 using Biohazard.BioRand.RE7.Serialization;
+using Biohazard.BioRand.RE7.Weapons;
 using Enums.app;
 using IntelOrca.Biohazard.BioRand.REE;
 using IntelOrca.Biohazard.REE.Rsz;
@@ -35,6 +36,8 @@ internal class StartingInventoryModifier : Modifier {
         [WeaponID.Handgun_MPM] =[(ItemID.HandgunBullet, 20), (ItemID.HandgunBulletL, 20)],
         [WeaponID.Handgun_Albert] =[(ItemID.HandgunBullet, 20), (ItemID.HandgunBulletL, 20)],
         [WeaponID.Handgun_Albert_Reward] =[(ItemID.HandgunBullet, 20), (ItemID.HandgunBulletL, 20)],
+        [WeaponID.Handgun_Albert_C] =[(ItemID.HandgunBullet, 20), (ItemID.HandgunBulletL, 20)],
+        [WeaponID.Shotgun_Albert] =[(ItemID.ShotgunBullet, 15)],
         [WeaponID.ShotGun] =[(ItemID.ShotgunBullet, 15)],
         [WeaponID.Shotgun_M37] =[(ItemID.ShotgunBullet, 15)],
         [WeaponID.Shotgun_M37S] =[(ItemID.ShotgunBullet, 15)],
@@ -108,7 +111,7 @@ internal class StartingInventoryModifier : Modifier {
 
         var allowedWeapons = weapons.ToDictionary(
             category => category,
-            category => category.GetItemIds()
+            category => category.GetItemIds(DlcCampaignWeapons.IsEnabled(_randomizer.FileRepository))
         );
 
         var primaryCandidates = allowedWeapons.Keys
@@ -127,7 +130,7 @@ internal class StartingInventoryModifier : Modifier {
         return (primaryWeapon, secondaryWeapon);
     }
 
-    private static ItemID? PickAdditionalGun(
+    private ItemID? PickAdditionalGun(
         Rng rng,
         List<StartingWeaponCategory> weapons,
         List<StartingInventoryItem> inventory
@@ -136,11 +139,13 @@ internal class StartingInventoryModifier : Modifier {
             .Where(category => category is StartingWeaponCategory.Handgun or StartingWeaponCategory.MachineGun
                 or StartingWeaponCategory.Shotgun or StartingWeaponCategory.Burner
                 or StartingWeaponCategory.Magnum or StartingWeaponCategory.GrenadeLauncher)
-            .ToDictionary(category => category, category => category.GetItemIds());
+            .ToDictionary(category => category, category => category.GetItemIds(DlcCampaignWeapons.IsEnabled(_randomizer.FileRepository)));
         if (allowedGuns.Count == 0)
             return null;
 
         var existingItems = inventory.Select(item => item.ItemDataID).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (existingItems.Contains("Shotgun_DB")) existingItems.Add("NumaItem072");
+        if (existingItems.Contains("NumaItem072")) existingItems.Add("Shotgun_DB");
         var unusedGuns = allowedGuns
             .ToDictionary(pair => pair.Key,
                 pair => pair.Value.Where(id => !existingItems.Contains(id.ToString())).ToList())
@@ -236,7 +241,7 @@ internal class StartingInventoryModifier : Modifier {
         var id = weapon.ToString();
         items.Add(new StartingInventoryItem(){ ItemDataID = id, Num = 1 });
 
-        if (giveAmmo && Enum.TryParse(id, out WeaponID wpId) &&
+        if (giveAmmo && itemDefinitions.FromId(id)?.WeaponId is WeaponID wpId &&
             StarterAmmoLoadouts.TryGetValue(wpId, out var ammoLoadout)) {
             foreach (var (ammoType, ammoCount) in ammoLoadout) {
                 logger.LogLine($"Extra ammo: {ammoCount}x {ammoType}");
