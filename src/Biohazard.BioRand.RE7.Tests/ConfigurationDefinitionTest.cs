@@ -252,12 +252,18 @@ public class ConfigurationDefinitionTest {
     }
 
     [Theory]
-    [InlineData("item-drop-ratio-flower")]
-    [InlineData("enemy-drop-ratio-flower")]
-    public void Test_Supplements_Are_Configurable_Materials_With_Enabled_Defaults(string configId) {
+    [InlineData("item-drop-ratio-flower", "Supplements")]
+    [InlineData("enemy-drop-ratio-flower", "Supplements")]
+    [InlineData("item-drop-ratio-alloyclay", "Chilled Chem Fluid")]
+    [InlineData("enemy-drop-ratio-alloyclay", "Chilled Chem Fluid")]
+    [InlineData("item-drop-ratio-magnesium", "Weak Acid")]
+    [InlineData("enemy-drop-ratio-magnesium", "Weak Acid")]
+    [InlineData("item-drop-ratio-syntheticdetergent", "Acid Powder")]
+    [InlineData("enemy-drop-ratio-syntheticdetergent", "Acid Powder")]
+    public void Test_Crafting_Materials_Are_Configurable_With_Enabled_Defaults(string configId, string label) {
         var item = Assert.Single(items, item => item.Id == configId);
 
-        Assert.Equal("Supplements", item.Label);
+        Assert.Equal(label, item.Label);
         Assert.Equal(ItemDrops.CategoryMaterial, item.Category!.Label);
         Assert.Equal("range", item.Type);
         Assert.Equal(0.05, Convert.ToDouble(item.Default));

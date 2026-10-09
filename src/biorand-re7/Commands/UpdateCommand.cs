@@ -9,7 +9,7 @@ internal sealed class UpdateCommand : AsyncCommand<UpdateCommand.Settings> {
         // No arguments or options required
     }
 
-    protected override async Task<int>
+    public override async Task<int>
         ExecuteAsync(CommandContext context, Settings settings, CancellationToken token) {
         var sourceDir = FindSourceDirectory();
         if (sourceDir == null) {

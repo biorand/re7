@@ -1,4 +1,4 @@
-﻿using Spectre.Console;
+using Spectre.Console;
 using Spectre.Console.Cli;
 using static Biohazard.BioRand.RE7.DataGen.Commands.FixRszFileCommand;
 
@@ -14,7 +14,7 @@ internal sealed class FixRszFileCommand : Command<Settings> {
         [CommandArgument(2, "<typeName>")] public string OutputFileName { get; set; } = "";
     }
 
-    protected override int Execute(CommandContext context, Settings settings, CancellationToken token) {
+    public override int Execute(CommandContext context, Settings settings, CancellationToken token) {
         try {
             // TODO
             //AnsiConsole.MarkupLine($"[green]Generated[/] {settings.OutputFileName}");

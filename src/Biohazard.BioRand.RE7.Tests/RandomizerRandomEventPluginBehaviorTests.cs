@@ -16,13 +16,18 @@ public class RandomizerRandomEventPluginBehaviorTests {
         "BioRand7/enemy_drops.lua",
         "BioRand7/game.lua",
         "BioRand7/inventory.lua",
+        "BioRand7/inventory_pause.lua",
         "BioRand7/logger.lua",
         "BioRand7/madhouse_saves.lua",
+        "BioRand7/mia_opening_damage.lua",
         "BioRand7/object_cache.lua",
         "BioRand7/random_events.lua",
         "BioRand7/reload_speed.lua",
         "BioRand7/rng.lua",
         "BioRand7/static_mia.lua",
+        "BioRand7/spawn_groups.lua",
+        "BioRand7/spawn_group_engine.lua",
+        "BioRand7/spawn_group_static.lua",
         "BioRand7/ui.lua",
     ];
 

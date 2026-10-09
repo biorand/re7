@@ -7,6 +7,9 @@ namespace Biohazard.BioRand.RE7.Modifiers;
 internal sealed class ExtraEnemyPlacement {
     public bool Enabled { get; init; }
     public string Id { get; init; } = "";
+    public string Include { get; init; } = "";
+    public string Exclude { get; init; } = "";
+    public string SpawnGroup { get; init; } = "";
     public string Comment { get; init; } = "";
     public string SceneFile { get; init; } = "";
     public int Chapter { get; init; }
@@ -30,8 +33,26 @@ internal sealed class ExtraEnemyGeneratorBuild {
 }
 
 internal static class ExtraEnemyPlanner {
-    internal static bool IsRandomEnemyId(string id)
-        => id.Equals("random", StringComparison.OrdinalIgnoreCase);
+    internal static bool UsesConfiguredPool(ExtraEnemyPlacement placement)
+        => placement.Id.Trim().Equals("random", StringComparison.OrdinalIgnoreCase) ||
+           (string.IsNullOrWhiteSpace(placement.Id) && string.IsNullOrWhiteSpace(placement.Include));
+
+    internal static ImmutableArray<IEnemyDefinition> GetExplicitCandidates(ExtraEnemyPlacement placement,
+        EnemyPlacementRule rule) {
+        IEnumerable<IEnemyDefinition> candidates;
+        if (string.IsNullOrWhiteSpace(placement.Id)) {
+            // An authored Include list replaces legacy fixed/pipe IDs, independently of profile ratios.
+            candidates = EnemyDefinitions.Instance.Randomizable;
+        } else {
+            candidates = placement.Id.Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .Select(id => EnemyDefinitions.Instance.All.FirstOrDefault(enemy =>
+                        enemy.Id.Equals(id, StringComparison.OrdinalIgnoreCase)) ??
+                    EnemyDefinitions.Instance.FromId(id) ?? throw new InvalidOperationException(
+                        $"Unknown extra enemy id '{placement.Id}' (selected '{id}')."));
+        }
+        return candidates.Where(enemy => enemy.SupportsRandomEnemyPlacement && rule.AllowsReplacement(enemy))
+            .ToImmutableArray();
+    }
 
     internal static int? GetSharedChapter(IEnumerable<ExtraEnemyPlacement> placements) {
         var chapters = placements
@@ -80,9 +101,9 @@ internal static class ExtraEnemyPlanner {
         ExtraEnemyPlacement extraEnemy,
         IEnemyDefinition definition,
         out ResolvedExtraEnemyPlacement request) {
-        if (!definition.UsesEnemyGenerator) {
+        if (!definition.SupportsRandomEnemyPlacement) {
             logger.LogLine(
-                $"Skipping {definition.Name} at {extraEnemy.PosX}/{extraEnemy.PosY}/{extraEnemy.PosZ}: enemy has no generator spawn-info template.");
+                $"Skipping {definition.Name} at {extraEnemy.PosX}/{extraEnemy.PosY}/{extraEnemy.PosZ}: enemy is not supported for extra placement.");
             request = null!;
             return false;
         }

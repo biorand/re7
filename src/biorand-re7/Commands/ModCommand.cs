@@ -1,4 +1,4 @@
-﻿using Spectre.Console.Cli;
+using Spectre.Console.Cli;
 
 namespace Biohazard.BioRand.RE7.Commands;
 
@@ -11,7 +11,7 @@ internal sealed class ModCommand : AsyncCommand<ModCommand.Settings> {
         [CommandOption("-o|--output")] public string? OutputPath { get; init; }
     }
 
-    protected override async Task<int>
+    public override async Task<int>
         ExecuteAsync(CommandContext context, Settings settings, CancellationToken token) {
         if (settings.Mods == null || settings.Mods.Length == 0) {
             PrintMods();

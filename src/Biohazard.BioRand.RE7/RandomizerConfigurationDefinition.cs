@@ -114,6 +114,24 @@ internal static class RandomizerConfigurationDefinition {
         group = page.CreateGroup("Quality of Life");
 
         group.Items.Add(new GroupItem(){
+            Id = "pause-inventory",
+            Label = "Pause While Inventory Is Open",
+            Description =
+                "Pause gameplay while browsing the inventory and crafting tabs. Requires REFramework.",
+            Type = "switch",
+            Default = false
+        });
+
+        group.Items.Add(new GroupItem(){
+            Id = "disable-mia-opening-damage",
+            Label = "Disable Opening Mia Scripted Damage",
+            Description =
+                "Prevent health loss during Mia's first scripted knife encounter, including the stair throw and finishing struggle. Later Mia fights retain normal damage. Requires REFramework.",
+            Type = "switch",
+            Default = true
+        });
+
+        group.Items.Add(new GroupItem(){
             Id = "madhouse-normal-saves",
             Label = "Use Normal Saving on Madhouse",
             Description =
@@ -282,7 +300,9 @@ internal static class RandomizerConfigurationDefinition {
         var allEnemies = EnemyDefinitions.Instance.Randomizable.OrderBy(enemy => enemy.Name);
         var bosses = EnemyDefinitions.Instance.Bosses.OrderBy(boss => boss.Name);
         var nonBosses = EnemyDefinitions.Instance.NonBosses.OrderBy(nonBoss => nonBoss.Name);
-        var speedConfigurableEnemies = allEnemies.Where(enemy => enemy.SupportsSpeedRandomization);
+        // Vanilla encounters still support tuning when an enemy is excluded from placement.
+        var speedConfigurableEnemies = EnemyDefinitions.Instance.All
+            .Where(enemy => enemy.SupportsSpeedRandomization).OrderBy(enemy => enemy.Name);
 
         page = configDefinition.CreatePage("Enemies");
         group = page.CreateGroup("Randomization");

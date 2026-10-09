@@ -45,6 +45,8 @@ internal class Randomizer : IDisposable {
     private static readonly string[] _optionsThatRequireREFramework =[
         "debug-force-reframework",
         "madhouse-normal-saves",
+        "disable-mia-opening-damage",
+        "pause-inventory",
         "inventory-unrestricted-management",
         "random-events",
         "random-starting-inventory-skills-ethan",
@@ -62,6 +64,7 @@ internal class Randomizer : IDisposable {
 
     internal bool IsREFrameworkRequired()
         => DebugRecipes.Enabled
+           || SpawnGroupService.Membership.Count != 0
            || GetConfigOption<bool>("random-enemies")
            || GetConfigOption<double>("extra-enemy-amount") > 0
            || (GetConfigOption<bool>("random-items") && GetConfigOption<bool>("replace-weapons"))
@@ -98,7 +101,9 @@ internal class Randomizer : IDisposable {
                 _logFiles,
                 PakVersion,
                 IsREFrameworkRequired(),
-                DebugRecipes.Enabled
+                DebugRecipes.Enabled,
+                System.Text.Json.JsonSerializer.SerializeToUtf8Bytes(SpawnGroupService.Manifest,
+                    new System.Text.Json.JsonSerializerOptions(System.Text.Json.JsonSerializerDefaults.Web))
             );
             var assets = new List<RandomizerOutputAsset>{
                 new(
@@ -218,6 +223,7 @@ internal class Randomizer : IDisposable {
             new EnemyDirectiveModifier(this),
             new EnemyModifier(this),
             new EnemyMultiplierModifier(this),
+            new SpawnGroupModifier(this),
 
             // Player
             new PlayerModifier(this),
@@ -320,6 +326,8 @@ internal class Randomizer : IDisposable {
     public FlagService FlagService => GetService<FlagService>();
     public ChestService ChestService => GetService<ChestService>();
     public EnemySceneLimitService EnemySceneLimitService => GetService<EnemySceneLimitService>();
+    public EnemyPlacementService EnemyPlacementService => GetService<EnemyPlacementService>();
+    public SpawnGroupService SpawnGroupService => GetService<SpawnGroupService>();
 
     public void AddLogFile(string name, string content) {
         _logFiles[name] = content;

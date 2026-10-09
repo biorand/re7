@@ -233,25 +233,20 @@ public class RandomizerExtraEnemyGenerationBehaviorTests {
             !gameObject.Components.Any(EnemySpawnInfoRules.SupportsForceTargetingOption));
     }
 
-    [Fact]
-    public void ExtraEnemies_HivePlacement_AddsGeneratedInsectPoolInstances() {
-        using var result = RunWithExtraEnemies(BuildExtraEnemiesCsv(ExtraEnemyScenePath, 1, "Em5510"));
+    [Theory]
+    [InlineData("Em5510")]
+    [InlineData("Em5520")]
+    [InlineData("InsectHive")]
+    [InlineData("InsectSwarm")]
+    public void ExtraEnemies_SwarmAndHivePlacements_AreSkipped(string enemyId) {
+        using var result = RunWithExtraEnemies(BuildExtraEnemiesCsv(ExtraEnemyScenePath, 1, enemyId));
         var beforeScene = result.ReadBeforeScene(ExtraEnemyScenePath);
         var afterScene = result.ReadAfterScene(ExtraEnemyScenePath);
 
         var extraSpawnInfos = GetNewExtraSpawnInfos(afterScene, beforeScene);
-        var extraInstances = GetNewExtraEnemyInstances(afterScene, beforeScene);
-        var instanceAliases = extraInstances
-            .Select(gameObject => gameObject.Name)
-            .ToList();
-        var hive = Assert.Single(extraInstances, gameObject => gameObject.Name == "Em5510");
-
-        Assert.Single(extraSpawnInfos);
-        AssertExtraSpawnInfo(extraSpawnInfos, "Em5510", -50, 5, 100, 2400);
-        Assert.Equal(3, instanceAliases.Count(alias => alias == "Em5400"));
-        Assert.Equal(2, instanceAliases.Count(alias => alias == "Em5520"));
-        AssertHiveTemplateUsesEm5510Assets(hive);
-        AssertHiveNestedSpawnInfos(hive);
+        Assert.Empty(extraSpawnInfos);
+        Assert.Empty(GetNewGameObjects(afterScene, beforeScene));
+        Assert.False(result.WasFileModified(ExtraEnemyScenePath));
     }
 
     [Fact]
@@ -407,7 +402,9 @@ public class RandomizerExtraEnemyGenerationBehaviorTests {
                 config["enemy-variety"] = 1;
                 config["enemy-pack-max-size"] = 1;
                 ConfigureEnemyPool(config);
-            });
+            },
+            // Isolate extra placement from explicit aggro directives on vanilla enemies.
+            enemyPlacementsCsv: "Guid,SceneFile,IsSpawnInfo,Tags,Include,Exclude\n");
 
         var extraSpawnInfos = GetNewExtraSpawnInfos(result, RandomExtraEnemyScenePath);
 
@@ -461,6 +458,44 @@ public class RandomizerExtraEnemyGenerationBehaviorTests {
         Assert.Contains("selected 'BogusEnemy'", exception.Message, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void ExtraEnemies_ExplicitIncludeWorksWithoutConfiguredRatios() {
+        var csv = $"Enabled,Id,Include,Exclude,SceneFile,Chapter,PosX,PosY,PosZ,RotW\n" +
+                  $"TRUE,,MoldedQuick MoldedFat,MoldedFat,{RandomExtraEnemyScenePath},4,-50,5,100,1\n";
+        using var result = RunWithExtraEnemies(csv, config => ConfigureEnemyPool(config));
+        Assert.Equal("Em4100", GetSpawnInfo(Assert.Single(GetNewExtraSpawnInfos(result, RandomExtraEnemyScenePath))).UnitAlias);
+    }
+
+    [Fact]
+    public void ExtraEnemies_RandomFiltersFallbackBeyondAreaVarietyAndDoNotLeakBetweenRows() {
+        var csv = $"Enabled,Id,Include,Exclude,SceneFile,Chapter,PosX,PosY,PosZ,RotW\n" +
+                  $"TRUE,random,Molded*,MoldedFat,{RandomExtraEnemyScenePath},4,-50,5,100,1\n" +
+                  $"TRUE,random,MoldedFat,,{RandomExtraEnemyScenePath},4,-49,5,101,1\n";
+        using var result = RunWithExtraEnemies(csv, config => {
+            ConfigureEnemyPool(config, "MoldedQuick", "MoldedFat");
+            config["enemy-variety"] = 1;
+        });
+        var spawns = GetNewExtraSpawnInfos(result, RandomExtraEnemyScenePath).Select(GetSpawnInfo).ToArray();
+        Assert.Equal(2, spawns.Length);
+        Assert.Equal(new[] { "Em4100", "Em4200" }, spawns.Select(x => x.UnitAlias).Order());
+    }
+
+    [Theory]
+    [InlineData(1.0, 1)]
+    [InlineData(2.0, 2)]
+    public void ExtraEnemies_EmptyFilterDoesNotDuplicateOtherPlacements(double multiplier, int expected) {
+        var csv = $"Enabled,Id,Include,Exclude,SceneFile,Chapter,PosX,PosY,PosZ,RotW\n" +
+                  $"TRUE,random,MoldedQuick,Molded*,{RandomExtraEnemyScenePath},4,-50,5,100,1\n" +
+                  $"TRUE,Em4100,,,{RandomExtraEnemyScenePath},4,-49,5,101,1\n";
+        using var result = RunWithExtraEnemies(csv, config => {
+            ConfigureEnemyPool(config, "MoldedQuick");
+            config["enemy-multiplier"] = multiplier;
+        });
+        var spawns = GetNewExtraSpawnInfos(result, RandomExtraEnemyScenePath);
+        Assert.Equal(expected, spawns.Count);
+        Assert.All(GetPositions(spawns), position => Assert.Equal(-49, position.X));
+    }
+
     private static RandomizerRunResult RunWithExtraEnemies() {
         var extraEnemiesCsv = $"""
                                Enabled,Id,Comment,SceneFile,Chapter,PosX,PosY,PosZ,RotX,RotY,RotZ,RotW
@@ -474,7 +509,8 @@ public class RandomizerExtraEnemyGenerationBehaviorTests {
     private static RandomizerRunResult RunWithExtraEnemies(
         string extraEnemiesCsv,
         Action<RandomizerConfiguration>? configure = null,
-        string? enemyLimitsCsv = null)
+        string? enemyLimitsCsv = null,
+        string? enemyPlacementsCsv = null)
         => RandomizerTest.RunState(
             config => {
                 config["extra-enemy-amount"] = 1.0;
@@ -489,6 +525,11 @@ public class RandomizerExtraEnemyGenerationBehaviorTests {
                     randomizer.DynamicData.SetData(
                         DynamicDataName.EnemyLimits,
                         System.Text.Encoding.UTF8.GetBytes(enemyLimitsCsv));
+                }
+                if (enemyPlacementsCsv != null) {
+                    randomizer.DynamicData.SetData(
+                        DynamicDataName.Enemies,
+                        System.Text.Encoding.UTF8.GetBytes(enemyPlacementsCsv));
                 }
             });
 

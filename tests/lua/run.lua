@@ -7,14 +7,18 @@ local suites = {
     "test_object_cache",
     "test_enemy_targets",
     "test_inventory",
+    "test_inventory_pause",
     "test_crafting",
     "test_enemy_drops",
     "test_enemy_identity",
     "test_static_mia",
+    "test_mia_opening_damage",
     "test_rng",
     "test_session_state",
     "test_random_events",
     "test_performance",
+    "test_spawn_groups",
+    "test_spawn_group_static",
 }
 
 local failures = 0

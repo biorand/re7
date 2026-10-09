@@ -139,7 +139,7 @@ Not a Hero and End of Zoe items:
   - Defines what recipes are shown in the combine menu
   - Only contains ItemDataID keys for a `Dictionary` that is evaluated at runtime
   - All entries MUST be valid item IDs (see enum `app.ItemID`)! Otherwise the game does not load (infinite loop). Own IDs are not allowed.
-  - Must reference DataIDs from recipes in `prefab/item/itemcombinedata.user.2`
+  - Must reference recipe `ResultItemID` values from `prefab/item/itemcombinedata.user.2`, not recipe `DataID` labels. The local RT TDB (`reframework/il2cpp_dump_rt.json.gz`) declares `app.ItemCombineData.getData(System.String)` with parameter `resultItemID`; the exact-table recipe implementation likewise builds dictionary entries from result IDs. Multiple recipe variants share one visible result entry.
   - If there are more than 8 entries the additional ones won't be accessible in the combine menu, only the icons can be seen but the cursor can't be moved to them. Modding it via REFramework is possible but not ideal
   - Duplicate entries lead to weird GUI behaviour
 
@@ -269,6 +269,8 @@ Files where inventory size is changed:
 - em8900: Evie Final Form
 
 ### IMPORTANT WHEN RANDOMIZING
+
+- Enemy placement directives (`preserve`, `aggro`, `nodup`, `cull`, `Include`, and `Exclude`) are consumed from the enemy spreadsheet and embedded CSV. See `docs/enemies/enemy_spawning.md` for precedence, definition-ID wildcards, and remaining native encounter safeguards.
 
 - in the FSM, the UIDs are **not** arbitrary. they are actually state IDs hard-coded in .fsm.16 files!
 - therefore, only assign valid UIDs in biorand

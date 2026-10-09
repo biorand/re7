@@ -17,6 +17,7 @@ public enum DynamicDataName {
     DebugStartItems,
     BirthdaySkills,
     DebugRecipes,
+    SpawnGroups,
 }
 
 public sealed class DynamicData(bool download, bool downloadDebuggerData = false) {
@@ -30,6 +31,7 @@ public sealed class DynamicData(bool download, bool downloadDebuggerData = false
             [DynamicDataName.Enemies] = ("enemies.csv", 2063646676),
             [DynamicDataName.ExtraEnemies] = ("extra_enemies.csv", 2063983386),
             [DynamicDataName.EnemyLimits] = ("enemy_limits.csv", 1254028764),
+            [DynamicDataName.SpawnGroups] = ("spawn_groups.csv", 154763280),
             [DynamicDataName.Messages] = ("messages.csv", 1050646915),
             [DynamicDataName.BirdCages] = ("bird_cages.csv", 1920824337),
             [DynamicDataName.DebugStartItems] = ("debug_start_items.csv", 639198893),

@@ -7,6 +7,22 @@ using IntelOrca.Biohazard.REE.Rsz;
 namespace Biohazard.BioRand.RE7.Tests;
 
 public class EnemyCloneIsolationTests {
+    [Fact]
+    public void RandomizableTemplates_DoNotContainSwarmOrHiveSpawnInfos() {
+        using var randomizer = new Randomizer(new RandomizerInput {
+            Seed = 42,
+            Configuration = RandomizerTest.CreateFeatureTestConfiguration(),
+        }, "", new EmptyReporter());
+        foreach (var enemy in EnemyDefinitions.Instance.Randomizable) {
+            Assert.False(EnemySpawnInfoRules.IsSwarmOrHiveAlias(enemy.EnemyId.ToString()));
+            randomizer.TemplateService.GetEnemyTemplate(enemy.EnemyId.ToString()).VisitGameObjects(gameObject => {
+                var spawnInfo = gameObject.FindComponent<app.EnemySpawnInfo>();
+                if (spawnInfo?.Enabled == true)
+                    Assert.False(EnemySpawnInfoRules.IsSwarmOrHiveAlias(spawnInfo.UnitAlias), enemy.Id);
+            });
+        }
+    }
+
     [Theory]
     [InlineData("MiaChainsaw")]
     [InlineData("JackShears")]

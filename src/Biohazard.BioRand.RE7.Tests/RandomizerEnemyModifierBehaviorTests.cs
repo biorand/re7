@@ -58,7 +58,7 @@ public class RandomizerEnemyModifierBehaviorTests {
             config["enemy-variety"] = 1;
             config["enemy-pack-max-size"] = 1;
             ConfigureGeneratorEnemyPool(config, GeneratorEnemyIds);
-        });
+        }, prepareRandomizer: UseUnrestrictedEnemyPlacements);
 
         var changedScenePaths = GetChangedScenePaths(result);
         Assert.NotEmpty(changedScenePaths);
@@ -85,7 +85,7 @@ public class RandomizerEnemyModifierBehaviorTests {
             config["enemy-variety"] = GeneratorEnemyIds.Length;
             config["enemy-pack-max-size"] = 1;
             ConfigureGeneratorEnemyPool(config, GeneratorEnemyIds);
-        });
+        }, prepareRandomizer: UseUnrestrictedEnemyPlacements);
 
         var changedScenePaths = GetChangedScenePaths(result);
         Assert.NotEmpty(changedScenePaths);
@@ -199,7 +199,7 @@ public class RandomizerEnemyModifierBehaviorTests {
                 config["balanced-enemies"] = false;
                 config["enemy-variety"] = 4;
                 config["enemy-pack-max-size"] = 1;
-                ConfigureGeneratorEnemyPool(config, ["InsectHive", "Molded", "MoldedFat", "JackStalker"]);
+                ConfigureGeneratorEnemyPool(config, ["FlyingBug", "Molded", "MoldedFat", "JackStalker"]);
             },
             seed: 410980);
 
@@ -216,29 +216,29 @@ public class RandomizerEnemyModifierBehaviorTests {
         Assert.NotEmpty(beforeAliases);
         Assert.All(beforeAliases, alias => Assert.True(EnemySpawnInfoRules.IsInsectSpawnAlias(alias)));
         Assert.NotEmpty(afterAliases);
-        Assert.All(afterAliases, alias => Assert.Equal("Em5510", alias));
+        Assert.All(afterAliases, alias => Assert.Equal("Em5400", alias));
         Assert.NotEqual(beforeAliases, afterAliases);
         AssertStampSerializationDisabled(replacementInstances);
     }
 
-    [Fact]
-    public void RandomizeEnemies_ReplacingOldHouseInsectsWithHives_PreservesHiveInsectSpawnSlots() {
+    [Theory]
+    [InlineData("InsectHive")]
+    [InlineData("InsectSwarm")]
+    public void RandomizeEnemies_LegacySwarmOnlyProfile_PreservesVanillaEncounters(string enemyId) {
         using var result = RandomizerTest.RunState(
             config => {
                 config["random-enemies"] = true;
                 config["enemy-variety"] = 1;
                 config["enemy-pack-max-size"] = 1;
-                ConfigureGeneratorEnemyPool(config, ["InsectHive"]);
+                ConfigureGeneratorEnemyPool(config, []);
+                config[$"enemy-ratio-{enemyId.ToLowerInvariant()}"] = 1.0;
             },
             seed: 410980);
 
-        var afterScene = result.ReadAfterScene(OldHouseBugEnemyScenePath);
-        var nestedSpawnAliases =
-            GetSpawnAliasesByGameObjectNamePrefix(afterScene, "Em5400SpawnInfo", "Em5520SpawnInfo");
-
-        Assert.NotEmpty(nestedSpawnAliases);
-        Assert.All(nestedSpawnAliases["Em5400SpawnInfo"], alias => Assert.Equal("Em5400", alias));
-        Assert.All(nestedSpawnAliases["Em5520SpawnInfo"], alias => Assert.Equal("Em5520", alias));
+        Assert.False(result.WasFileModified(OldHouseBugEnemyScenePath));
+        Assert.Equal(
+            GetGeneratorSpawnAliases(result.ReadBeforeScene(OldHouseBugEnemyScenePath), "Bug"),
+            GetGeneratorSpawnAliases(result.ReadAfterScene(OldHouseBugEnemyScenePath), "Bug"));
     }
 
     [Fact]
@@ -409,7 +409,7 @@ public class RandomizerEnemyModifierBehaviorTests {
             config["enemy-variety"] = 1;
             config["enemy-pack-max-size"] = 1;
             ConfigureGeneratorEnemyPool(config, ["MiaChainsaw"]);
-        });
+        }, prepareRandomizer: UseUnrestrictedEnemyPlacements);
 
         Assert.DoesNotContain(
             GetChangedScenePaths(result),
@@ -424,7 +424,7 @@ public class RandomizerEnemyModifierBehaviorTests {
             config["enemy-variety"] = 1;
             config["enemy-pack-max-size"] = 1;
             ConfigureGeneratorEnemyPool(config, ["EvelineElderly"]);
-        });
+        }, prepareRandomizer: UseUnrestrictedEnemyPlacements);
 
         var replacements = new List<RszGameObject>();
         foreach (var path in GetChangedScenePaths(result)) {
@@ -503,7 +503,7 @@ public class RandomizerEnemyModifierBehaviorTests {
         using var result = RandomizerTest.RunState(config => {
             config["random-enemies"] = false;
             config[EnemyModifier.EnemyForceTargetingProbabilityConfigKey] = 1.0;
-        });
+        }, prepareRandomizer: UseUnrestrictedEnemyPlacements);
 
         var forceTargetingOptions = GetChangedScenePaths(result)
             .SelectMany(path => GetForceTargetingOptions(result.ReadAfterScene(path)))
@@ -521,6 +521,12 @@ public class RandomizerEnemyModifierBehaviorTests {
             configuration[$"enemy-ratio-{enemy.Id.ToLowerInvariant()}"] = enabledSet.Contains(enemy.Id) ? 1.0 : 0.0;
         }
     }
+
+    // Isolate pool/option mechanics from the curated per-placement sheet policies.
+    // RandomizerEnemyPlacementRuleBehaviorTests exercises those policies separately.
+    private static void UseUnrestrictedEnemyPlacements(Randomizer randomizer)
+        => randomizer.DynamicData.SetData(Serialization.DynamicDataName.Enemies,
+            System.Text.Encoding.UTF8.GetBytes("Guid,SceneFile,Tags,Include,Exclude\n"));
 
     private static List<string> GetChangedScenePaths(RandomizerRunResult result)
         => result.ChangedFiles.Keys

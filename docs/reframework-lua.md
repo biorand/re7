@@ -43,6 +43,32 @@ These tests execute the real Lua modules and hook callbacks against small, stric
 
 The .NET archive test also checks that every script in both release formats exactly matches its embedded source. Neither test harness can prove native hook execution, prefab availability, physics, or scene lifetime behavior inside RE7.
 
+## Opening Mia scripted damage
+
+`disable-mia-opening-damage` defaults to enabled in General / Quality of Life and independently requires REFramework. Both release archives include `BioRand7/mia_opening_damage.lua`. Disabling the option preserves vanilla damage; enabling it through configuration reload installs its hooks once.
+
+The guard checks the receiving `app.PlayerDamageController` for an active `app.PlayerGrappleEm2000` with the exact grapple name `Chapter1Battle1_ThrowStairs`, `Chapter1Battle1_Mount`, or `Chapter1Battle1_Finish`. It skips `DamageController.adjustHealth`, returns zero damage from `PlayerDamageController.calcDamage`, and clamps reductions requested through `setHealth`. Healing and the setter's maximum-health argument pass through. No health snapshot or scene object is retained, so an ended grapple or save reload cannot leave protection active. Later knife/axe and chainsaw encounters and enemy damage controllers remain unaffected. Grapple animations, damage records, and progression actions still execute.
+
+These methods and grapple names were verified against the live RT TDB on 2026-10-07. The standalone C# prototype was hot-loaded during `Chapter1Battle1_Finish`: a direct request to reduce HP from 1,000 to 999 left it at 1,000. The initial Lua port's global `canSubHealth` hook failed because its native implementation is a shared constant-return stub that also receives unrelated, non-managed arguments. The corrected script uses the player's damage calculation instead and validates pointers before managed-object conversion. Its config reads use literal keys, matching the configuration-ID audit and the other Lua modules.
+
+The packaged Lua script has offline coverage for all three phases, scope exclusions, healing, invalid pointers, null/unloaded objects, float return values, hook storage, and configuration reload. The corrected script was deployed and reset in the paused game, with the standalone prototype absent from the loaded-plugin list; live verification was interrupted by the user. Completing the encounter using the packaged Lua script remains a gameplay check. Keep the standalone `reframework/plugins/source/BioRandMiaOpeningDamage.cs` prototype removed so it cannot mask a Lua failure.
+
+## Inventory pause
+
+`pause-inventory` is an opt-in switch in General / Quality of Life and independently requires REFramework. Both release formats include `BioRand7/inventory_pause.lua`. It pauses gameplay while the ordinary inventory (including its crafting tab) is open and ready for input. Scripted item selection and item-box modes retain vanilla behavior. The readiness check lets reload/heal animations finish instead of freezing the player while the menu waits for them.
+
+The runtime checks `MenuManager.isOpenInventoryMenu()` and `isEnableControlInventoryScreen()` from the application update callback, which continues while gameplay is paused. It requests/releases only BioRand's reserved `0x40000000` pause bit through the static `GameManager.requestPause(app.GameManager.PauseRequestType)` and `requestReleasePause(...)` methods. It never clears another owner's pause or forces a global time scale. Requests are only sent on transitions; disabled profiles do no engine polling. Closing inventory, losing the menu manager, disabling the setting, save loading, a new game, and script reset release this request. No scene objects are retained.
+
+Evidence checked on 2026-10-07: `reframework/il2cpp_dump_rt.json.gz` confirms those methods and the raw UInt32 `GameManager.CurrentPause` field. The saved native decompilations under `.analysis/ida_app_pass_2026-05-22/raw/` show `requestPause173039` OR-ing the mask, `requestReleasePause173040` removing only the requested bits, and `applyPause173079` using nonzero requests to drive the pause manager and engine modules. The vanilla `PauseRequestType` enum occupies bits 0–18; bit 30 is reserved here for inventory. `isOpenInventoryMenu308790` selects Normal mode; `isOpenInventorySpecifyMode308793` excludes closed/closing menus. `updateStepOpenWait136577` uses the same control-readiness check.
+
+Lua regression tests cover transitions, overlapping native pauses, animations still in progress, configuration changes, absent/replaced managers, and session cleanup. .NET tests cover the default and both archives, including a disabled option alongside another runtime feature. The live MCP connection was unavailable during implementation: verify in-game that inventory navigation, crafting, closing/reopening, opening during reload/healing, Escape-menu overlap, and save loading all work with the packaged script, and that enemies resume only after the last pause ends.
+
+## SpawnGroups
+
+`spawn_groups.lua` controls generated main-game enemy groups using the native `EnemyGeneratorManager` lifecycle requests; `spawn_group_engine.lua` handles pool/FSM discovery and raw TDB fields. `spawn_group_static.lua` controls generated Mia/Eveline actors and records activity in native OtherObjectSave data. See [SpawnGroups authoring, lifecycle rules, and validation](enemies/spawn_groups.md). Both release archives carry a seed-specific manifest, including an empty manifest when no groups are authored.
+
+The 2026-10-07 live probe verified qualified FSM-state lookup and observed delayed spawn, suspension, resume, and terminal despawn on an Em4100 slot. It also established that these timers must use `via.Application.get_ElapsedSecond()` rather than the frame-scaled `get_DeltaTime()`. A different native slot rejected spawning; requests now isolate exceptions and retry at a bounded rate. Save-load hooks reset transient trigger state; native completion is never cleared by the production controller. The linked note records the limits of this validation and remaining gameplay checks.
+
 ## In-game checks
 
 Use a newly generated release archive containing the corrected scripts. Existing downloaded archives retain their old embedded versions. Remove any old BioRand managed plugin DLL left by a pre-Lua installation before testing, so both implementations do not run together.

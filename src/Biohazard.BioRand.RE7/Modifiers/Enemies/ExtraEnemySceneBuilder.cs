@@ -78,10 +78,17 @@ internal sealed class ExtraEnemySceneBuilder(
         spawnInfoComponent.UnitAlias = enemyId;
         spawnInfoComponent.Comment = $"{SpawnInfoPrefix}_{enemyId}_{index:000}";
         spawnInfoComponent.HealthParameter.Health = assignedHealth;
+        if (request.Enemy.Category == EnemyCategory.Jack)
+            spawnInfoComponent.IsCheckGroundForSpawn = true;
 
         ConfigureMoldedAiMap(spawnInfoComponent, enemyId, request.Placement.SceneFile);
         spawnInfoComponent.MyGUID = rng.NextGuid();
         spawnInfo = spawnInfo.AddOrUpdateComponent(spawnInfoComponent);
+        if (request.Enemy.Id is "Molded" or "MoldedBlade") {
+            var option = spawnInfo.FindComponent<app.EnemySpawnInfoOptionEm4000>()!;
+            option.IsUseBlade = request.Enemy.Id == "MoldedBlade";
+            spawnInfo = spawnInfo.AddOrUpdateComponent(option);
+        }
         spawnInfo = EnemyTemplateFactory.RefreshRuntimeGuids(spawnInfo, rng);
 
         logger.LogSpawnHealthAssignment(
@@ -239,7 +246,7 @@ internal sealed class ExtraEnemySceneBuilder(
     }
 
     internal static bool UsesStaticScenePlacement(IEnemyDefinition enemy)
-        => enemy.UsesEnemyGenerator && enemy.SpawnOptionType == null;
+        => enemy.SpawnOptionType == null;
 
     internal static string GetGeneratorScene(
         string requestScene,

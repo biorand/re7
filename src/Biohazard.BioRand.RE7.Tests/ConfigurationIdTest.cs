@@ -130,11 +130,13 @@ public class ConfigurationIdUsageTest {
         foreach (var enemy in EnemyDefinitions.Instance.Randomizable) {
             var id = enemy.Id.ToLowerInvariant();
             ids.Add($"enemy-ratio-{id}");
+        }
 
-            if (enemy.SupportsSpeedRandomization) {
-                ids.Add($"enemy-speed-min-{id}");
-                ids.Add($"enemy-speed-max-{id}");
-            }
+        // Vanilla-only enemies still read their speed settings through directive modifiers.
+        foreach (var enemy in EnemyDefinitions.Instance.All.Where(enemy => enemy.SupportsSpeedRandomization)) {
+            var id = enemy.SpeedConfigId.ToLowerInvariant();
+            ids.Add($"enemy-speed-min-{id}");
+            ids.Add($"enemy-speed-max-{id}");
         }
 
         foreach (var enemy in EnemyDefinitions.Instance.All) {

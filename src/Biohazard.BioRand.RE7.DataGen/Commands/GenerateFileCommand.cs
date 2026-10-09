@@ -1,4 +1,4 @@
-﻿using Biohazard.BioRand.RE7.Extensions;
+using Biohazard.BioRand.RE7.Extensions;
 using CsvHelper;
 using Spectre.Console;
 using Spectre.Console.Cli;
@@ -51,7 +51,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
         return writer.ToString();
     }
 
-    protected override int Execute(CommandContext context, GenerateSettings settings, CancellationToken token) {
+    public override int Execute(CommandContext context, GenerateSettings settings, CancellationToken token) {
         var idSet = new HashSet<string>(settings.Generators, StringComparer.OrdinalIgnoreCase);
         var fileGenerators = new List<IFileGenerator>();
         var generatorLoadFailures = new List<(Type Type, Exception Exception)>();

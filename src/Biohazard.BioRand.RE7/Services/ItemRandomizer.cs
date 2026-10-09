@@ -4,6 +4,7 @@ using Biohazard.BioRand.RE7.Weapons;
 using Enums.app.GameFlowFsmManager;
 using Enums.app.Item;
 using System.Globalization;
+using RandomizerUserException = IntelOrca.Biohazard.BioRand.RandomizerUserException;
 
 namespace Biohazard.BioRand.RE7.Services;
 
@@ -153,7 +154,16 @@ internal class ItemRandomizer {
         if (!_generalDrops.TryGetValue(settings, out var result)) {
             var weights = new Dictionary<string, decimal>();
             foreach (var dropKind in ItemDrops.GenericDrops) {
-                var weight = ConvertToWeight(settings.GetItemRatio(dropKind));
+                var ratio = settings.GetItemRatio(dropKind);
+                // Profiles can be submitted without using the slider UI. Bound weights before
+                // expanding the bag: a large ratio and a small fractional ratio otherwise
+                // allocate billions of entries and can terminate the public generation agent.
+                if (!double.IsFinite(ratio) || ratio < 0 || ratio > 1) {
+                    throw new RandomizerUserException(
+                        $"Item drop ratio for '{dropKind}' must be a finite number between 0 and 1.");
+                }
+
+                var weight = ConvertToWeight(ratio);
                 if (weight > 0) {
                     weights.Add(dropKind, weight);
                 }

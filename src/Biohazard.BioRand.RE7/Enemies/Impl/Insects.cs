@@ -9,10 +9,15 @@ internal class FlyingBug : InsectBase {
 internal class InsectHive : InsectBase {
     public InsectHive() : base("InsectHive", EnemyID.Em5510, "Insect Hive", 2400) { }
     // Also has variants Em5511 and Em5512, but they only differ in their appearance.
+    // Hives generate Em5520 swarms internally, so they must share the swarm placement ban.
+    public override bool SupportsRandomEnemyPlacement => false;
 }
 
 internal class InsectSwarm : InsectBase {
     public InsectSwarm() : base("InsectSwarm", EnemyID.Em5520, "Insect Swarm", 800) { }
+    // Off-location swarms can get stuck and have been associated with native crashes.
+    // Retain the definition for vanilla encounters and old profiles, but never add new ones.
+    public override bool SupportsRandomEnemyPlacement => false;
 }
 
 // ?
@@ -52,6 +57,7 @@ internal abstract class InsectBase(string id, EnemyID enemyId, string name, int 
     public bool UsesEnemyGenerator => true;
 
     public bool SupportsSpeedRandomization => true;
+    public virtual bool SupportsRandomEnemyPlacement => true;
 }
 
 internal class InsectsDirectiveModifier : IDirectiveModifier {

@@ -93,3 +93,110 @@ The useful static mapping is therefore:
 This avoids a manual vanilla-scene-file column. The pooled `EnemySpawnInfo` records can still live in separate files such as
 `natives/stm/scenes/chapter/chapter4/chapter4_2/moldeads.scn.20`; the cap acts on the General scene's requests that point at those records.
 For neutral or upward multipliers, scene limits cap added vanilla enemies but do not delete the baseline vanilla requests.
+
+Deleting a spawn-info slot also requires retiring references outside its scene.
+Static replacements, multiplier removals, and explicit culls track the retired
+GUIDs even when SpawnGroups are unused. The final scene pass disables matching
+`app.fsm.EnemyGenerate` actions across difficulty/level scenes and disables and
+clears `app.CharacterExistZoneGroup.SpawnUnit` entries that reference the removed
+slot. For example, the Chapter 3-4 crawler
+`f0873263-24a2-4b98-84ea-b8cfbc8e0a6e` has requests in both `moldeads.scn.20` and
+`hard.scn.20`, plus existence-zone references in the former. FSM action UIDs and
+unrelated progression state are retained.
+
+## Enemy placement spreadsheet directives
+
+`Enemy Placements` / `_Data/enemies.csv` uses `Tags`, `Include`, and `Exclude`.
+The embedded snapshot and downloaded sheet go through the same `EnemyPlacementService`.
+Rows are matched by normalized scene path and GUID; generation actions in another
+scene resolve their spawn-info GUID back to the placement rule.
+
+- `preserve` keeps the original placement out of replacement and count changes.
+  Probabilistic forced targeting also leaves it alone. Explicit `aggro` can still
+  target the player while keeping the original enemy type.
+- `aggro` sets `EnemySpawnInfo.IsPlayerTargetingAtStart` and supported spawn options'
+  `IsForceTargetingToPlayer` after replacement. It works with enemy randomization
+  disabled and survives multiplication. It requires an `IsSpawnInfo` row; static
+  actors have no generic supported targeting path.
+- `nodup` excludes the spawn from duplication. It still permits replacement and
+  removal when the enemy multiplier reduces the count.
+- `cull` removes the selected enemy even when randomization is disabled, and
+  disables `app.fsm.EnemyGenerate` actions referencing its spawn-info GUID across
+  campaign scenes. Shared pooled instances remain available to other spawn slots.
+  For mesh rows under an `app.EnemySave` actor, culling removes that actor root
+  rather than leaving an invisible active enemy. Do not apply this to a required
+  boss/story actor without checking the progression FSM.
+
+Tags are whitespace-separated and case-insensitive. Legacy `prefab` and `exclude`
+tags are accepted as `preserve`. Unknown tags and contradictory `cull preserve` /
+`cull aggro` combinations fail with the placement GUID and scene in the error.
+Flashback scenes remain protected; explicit `aggro` or `cull` there is rejected.
+
+`Include` and `Exclude` are whitespace-separated `EnemyDefinitions.Id` patterns,
+case-insensitive, with `*` and `?` wildcards. They match definition IDs such as
+`MoldedBlade`, not `Em4000` aliases: normal and blade Molded share that engine alias.
+Blank Include admits the configured pool; Exclude wins over Include. Filters
+intersect configured ratios, balance restrictions, and native encounter safeguards.
+If the area variety pool has no allowed candidate, selection retries the full
+compatible configured pool. If that is also empty, the original enemy stays.
+Different slot restrictions can therefore exceed an area's requested variety.
+
+The curated snapshot preserves templates, pooled actors, bosses, flashbacks, barn
+and pit fights, and special crawler appearances. Ordinary Molded slots allow normal,
+blade, and four-legged Molded; existing fat slots additionally allow fat Molded.
+Old House insect spawns admit only insects. No slot is culled by default. DataGen
+emits the same schema and conservative defaults; running the enemies generator
+rebuilds its output, so refresh from the sheet to retain subsequent manual edits.
+
+Regression tests cover the CSV rules, serialized replacements and targeting,
+cross-scene culling, and multiplier restrictions. In-game validation is still
+needed for progression after authoring new culls and for unusual replacement pools.
+
+### Swarm stability restriction
+
+Insect Swarm (`Em5520`) and Insect Hive (`Em5510`) are disabled as randomized
+replacements and extra placements, including legacy explicit IDs and authored
+Include lists. A hive indirectly creates two swarms and three flying bugs, so
+disabling the swarm choice alone would still introduce swarms. The multiplier
+also refuses to duplicate swarms or any hive appearance (`Em5510`–`Em5512`), even
+if a downloaded placement row omits `nodup`. Existing vanilla encounters remain
+available; their native progression logic is preserved. Flying Bug remains a
+supported insect replacement. This is a conservative removal pending a verified
+swarm fix, not proof that swarms caused the separate dog-head-door mesh registry
+crash.
+
+## Extra enemy Include / Exclude
+
+`Extra Enemy Placements` / `_Data/extra_enemies.csv` also accepts `Include` and
+`Exclude`, using the same whitespace-separated definition IDs, case-insensitive
+matching, and `*` / `?` wildcards. Exclude always wins. Use `MoldedQuick`, not
+`Em4100`, in these columns; `Molded` and `MoldedBlade` are separate choices.
+
+| Id | Include | Exclude | Result |
+| --- | --- | --- | --- |
+| blank | `MoldedQuick` | blank | Always choose a crawler. |
+| blank | `Molded MoldedQuick MoldedFat` | `MoldedFat` | Choose normal Molded or a crawler with equal probability. |
+| `random` | `Molded*` | `MoldedFat` | Restrict the configured, weighted extra-enemy pool to matching types. |
+| blank or `random` | blank | `Jack*` | Use the configured extra-enemy pool without Jack variants. |
+
+Blank Id with a nonblank Include is an explicit authored pool, independent of
+profile ratios and balance mode, just like the previous fixed/pipe-separated Id
+choices. Only definitions with extra-enemy generator support are eligible. An
+explicit Include can select normal/blade Molded, which the existing automatic
+extra-enemy pool omits because of idle-animation issues.
+
+`Id = random` keeps profile ratios, balance mode, and existing extra-enemy safety
+restrictions; Include/Exclude narrows that pool. When an area's variety selection
+has no match, the row retries the full compatible configured pool, as ordinary
+enemy placement rules do. Restrictive rows can therefore exceed requested variety.
+Pack selection is shared only between rows with the same eligible candidate pool.
+
+If no candidate remains, the placement is skipped and other rows are not duplicated
+to compensate. Extra amount, scene limits, and enemy multiplication still apply.
+Multiplier copies use only successfully resolved placements.
+
+Existing single native IDs and pipe-separated Id values remain readable for old
+downloaded data; their candidates are also filtered. The maintained sheet and
+embedded snapshot use Include for explicit choices, so new rows do not need pipes.
+
+SpawnGroups cover the currently spawnable enemy definitions through their supported placement paths, including static Mia extras and elderly Eveline replacements/explicit extras. See [SpawnGroups](spawn_groups.md) for the support scope and native lifecycle/save behavior.

@@ -119,6 +119,8 @@ public class RandomizerEnemyMultiplierBehaviorTests {
                 .SelectMany(EnemyCloneIsolationTests.GetStateIds).ToHashSet();
             foreach (var copy in copies) {
                 copy.VisitComponents(component => {
+                    if (component.Type.Name == "app.StampController")
+                        Assert.False(component.Get<bool>("IsSerializeTexture"));
                     foreach (var field in new[] { "SaveGUID", "InstanceGuid" }) {
                         var index = component.Type.FindFieldIndex(field);
                         if (index >= 0) {
@@ -158,6 +160,60 @@ public class RandomizerEnemyMultiplierBehaviorTests {
             currentEnemyCount: 7,
             uncappedTargetCount: 14,
             maxEnemyCount: 0));
+    }
+
+    [Fact]
+    public void MultiplierRemoval_RetiresExternalDifficultyRequestsWithoutSpawnGroupsOrSceneLimits() {
+        const string path = "natives/stm/scenes/chapter/chapter3/chapter3_4/moldeads.scn.20";
+        const string hardPath = "natives/stm/scenes/chapter/chapter3/chapter3_4/hard.scn.20";
+        var guid = new Guid("f0873263-24a2-4b98-84ea-b8cfbc8e0a6e");
+        using var result = RandomizerTest.RunState(config => config["enemy-multiplier"] = 0.0,
+            prepareRandomizer: randomizer => randomizer.DynamicData.SetData(DynamicDataName.EnemyLimits,
+                System.Text.Encoding.UTF8.GetBytes("SceneFile,MaxEnemies\n")));
+        Assert.Empty(result.Randomizer.SpawnGroupService.Membership);
+        Assert.NotNull(result.ReadBeforeScene(path).FindGameObject(guid));
+        Assert.Null(result.ReadAfterScene(path).FindGameObject(guid));
+        Assert.Contains(guid, result.Randomizer.SpawnGroupService.RetiredSpawnInfos);
+
+        var beforeReferences = 0;
+        result.ReadBeforeScene(hardPath).Visit(node => {
+            if (node is RszObjectNode action && action.Type.Name == "app.fsm.EnemyGenerate" &&
+                action.Get<Guid>("SpawnInfo") == guid)
+                beforeReferences++;
+            return node;
+        });
+        Assert.True(beforeReferences > 0);
+        foreach (var scenePath in new[] {path, hardPath}) {
+            result.ReadAfterScene(scenePath).Visit(node => {
+                if (node is RszObjectNode action && action.Type.Name == "app.fsm.EnemyGenerate")
+                    Assert.NotEqual(guid, action.Get<Guid>("SpawnInfo"));
+                if (node is RszObjectNode spawnUnit && spawnUnit.Type.Name == "app.CharacterExistZoneGroup.SpawnUnit")
+                    Assert.NotEqual(guid, spawnUnit.Get<Guid>("spawnInfo"));
+                return node;
+            });
+        }
+    }
+
+    [Theory]
+    [InlineData("Em5510")]
+    [InlineData("Em5511")]
+    [InlineData("Em5512")]
+    [InlineData("Em5520")]
+    public void ProcessScene_SwarmsAndHivesAreNeverDuplicatedEvenWithoutNoDupDirective(string alias) {
+        using var result = RandomizerTest.RunState();
+        var (scenePath, scene, slots) = FindSceneWithSlots(result, minSlots: 2);
+        foreach (var slot in slots) {
+            var gameObject = scene.FindGameObject(slot.SpawnInfoGuid)!;
+            var spawnInfo = gameObject.FindComponent<app.EnemySpawnInfo>()!;
+            spawnInfo.UnitAlias = alias;
+            scene = scene.UpdateGameObject(gameObject.AddOrUpdateComponent(spawnInfo));
+        }
+
+        var afterScene = EnemyMultiplierModifier.ProcessScene(scene, result.Randomizer,
+            new RandomizerLogger(), scenePath, 3.0, new Rng(0x5151));
+
+        Assert.Same(scene, afterScene);
+        Assert.Equal(slots.Length, EnemyMultiplierModifier.CollectMultipliableSpawnSlots(afterScene).Length);
     }
 
     [Fact]

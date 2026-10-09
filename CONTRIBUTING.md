@@ -15,7 +15,7 @@ Large feature work is welcome too, but please open an issue first so the design 
 ## Development Setup
 
 ```powershell
-git clone --recursive https://github.com/juliangrtz/re7.git
+git clone --recursive https://github.com/biorand/re7.git
 cd re7
 dotnet restore .\biorand-re7.sln
 dotnet build .\biorand-re7.sln --no-restore

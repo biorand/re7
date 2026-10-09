@@ -2,6 +2,8 @@
 
 Refers to RE7's Uvar variables in `natives/stm/userdata/globalvariables.uvar.2`. These play an important role for the game's internal state.
 
+**Adding spawn groups?** These variables are not accepted by the current `SpawnGroups.State` field. Use the [spawn-group authoring guide](enemies/spawn_groups.md) and its [FSM state reference](enemies/spawn_group_states.md) for exact supported trigger values. A Uvar GUID is not an FSM owner GUID, and integer counters such as `c03_1_Main` are not state names.
+
 ## FSM / Scene Usage Notes
 
 Findings below come from the IDA-backed REFramework type database plus vanilla `LevelDesign/Fsm/**/*.scn.20` and `LevelDesign/Flag/**/*.user.2` scene data.

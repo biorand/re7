@@ -100,10 +100,22 @@ internal class EnemyMultiplierModifier : Modifier {
         Rng rng,
         int? maxEnemyCount = null,
         EnemySceneLimitService? enemyLimitService = null) {
-        var slots = CollectMultipliableSpawnSlots(scene);
-        var limitableSlots = maxEnemyCount == null
+        var allSlots = CollectMultipliableSpawnSlots(scene);
+        var placements = randomizer.EnemyPlacementService;
+        var slots = allSlots.Where(slot => {
+            var rule = placements.GetRule(scenePath, slot.SpawnInfoGuid);
+            return !rule.Preserve && !rule.Cull;
+        }).ToImmutableArray();
+        var allLimitableSlots = maxEnemyCount == null
             ? []
             : CollectLimitableSpawnSlots(scene, enemyLimitService);
+        var limitableSlots = allLimitableSlots.Where(slot => {
+            var rule = placements.GetSpawnRule(slot.SpawnInfoGuid);
+            return !rule.Preserve && !rule.Cull;
+        }).ToImmutableArray();
+        var preservedCount = allLimitableSlots.IsDefaultOrEmpty
+            ? allSlots.Count(slot => placements.GetRule(scenePath, slot.SpawnInfoGuid).Preserve)
+            : allLimitableSlots.Count(slot => placements.GetSpawnRule(slot.SpawnInfoGuid).Preserve);
         var currentEnemyCount = limitableSlots.IsDefaultOrEmpty
             ? slots.Length
             : limitableSlots.Length;
@@ -114,7 +126,7 @@ internal class EnemyMultiplierModifier : Modifier {
         var uncappedTargetCount = GetTargetEnemyCount(currentEnemyCount, multiplier);
         var targetCount = maxEnemyCount == null
             ? uncappedTargetCount
-            : ApplyMaxEnemyCount(currentEnemyCount, uncappedTargetCount, maxEnemyCount.Value);
+            : ApplyMaxEnemyCount(currentEnemyCount, uncappedTargetCount, Math.Max(0, maxEnemyCount.Value - preservedCount));
         if (targetCount == currentEnemyCount)
             return scene;
 
@@ -124,10 +136,15 @@ internal class EnemyMultiplierModifier : Modifier {
         logger.Push($"{scenePath}: enemy multiplier {currentEnemyCount} => {targetCount}{limitLabel}");
         if (targetCount < currentEnemyCount) {
             scene = limitableSlots.IsDefaultOrEmpty
-                ? RemoveSpawnSlots(scene, slots, currentEnemyCount - targetCount, logger, rng)
-                : DisableGenerateSlots(scene, limitableSlots, currentEnemyCount - targetCount, logger, rng);
+                ? RemoveSpawnSlots(scene, slots, currentEnemyCount - targetCount, logger, rng, randomizer)
+                : DisableGenerateSlots(scene, limitableSlots, currentEnemyCount - targetCount, logger, rng, randomizer);
         } else if (slots.Length != 0) {
-            scene = AddSpawnSlots(scene, randomizer, slots, targetCount - currentEnemyCount, logger, rng);
+            var duplicableSlots = slots.Where(slot =>
+                !placements.GetRule(scenePath, slot.SpawnInfoGuid).NoDuplicates &&
+                !EnemySpawnInfoRules.IsSwarmOrHiveAlias(slot.UnitAlias)).ToImmutableArray();
+            if (!duplicableSlots.IsDefaultOrEmpty) {
+                scene = AddSpawnSlots(scene, randomizer, duplicableSlots, targetCount - currentEnemyCount, logger, rng);
+            }
         }
 
         logger.Pop();
@@ -287,7 +304,8 @@ internal class EnemyMultiplierModifier : Modifier {
         ImmutableArray<EnemySpawnSlot> slots,
         int removeCount,
         RandomizerLogger logger,
-        Rng rng) {
+        Rng rng,
+        Randomizer randomizer) {
         var removedSlots = SelectRandomSlotsWithoutReplacement(slots, removeCount, rng);
         var removedSpawnInfosByGeneration = removedSlots
             .GroupBy(slot => slot.GenerationGameObjectGuid)
@@ -305,6 +323,7 @@ internal class EnemyMultiplierModifier : Modifier {
 
         foreach (var slot in removedSlots) {
             logger.LogLine($"Removing {slot.UnitAlias} ({slot.SpawnInfoGuid})");
+            randomizer.SpawnGroupService.RetireSpawnInfo(slot.SpawnInfoGuid);
             scene = scene.RemoveGameObject(slot.SpawnInfoGuid);
         }
 
@@ -316,7 +335,8 @@ internal class EnemyMultiplierModifier : Modifier {
         ImmutableArray<EnemyGenerateSlot> slots,
         int removeCount,
         RandomizerLogger logger,
-        Rng rng) {
+        Rng rng,
+        Randomizer randomizer) {
         var removedSlots = SelectRandomSlotsWithoutReplacement(slots, removeCount, rng);
         var removedSpawnInfosByGeneration = removedSlots
             .GroupBy(slot => slot.GenerationGameObjectGuid)
@@ -334,6 +354,7 @@ internal class EnemyMultiplierModifier : Modifier {
 
         foreach (var slot in removedSlots) {
             logger.LogLine($"Disabling {slot.UnitAlias} ({slot.SpawnInfoGuid})");
+            randomizer.SpawnGroupService.Suppress(slot.SpawnInfoGuid);
         }
 
         return scene;
@@ -405,6 +426,7 @@ internal class EnemyMultiplierModifier : Modifier {
         generationClone = RefreshGenerationObjectInstanceIds(generationClone, rng);
 
         logger.LogLine($"Duplicating {sourceSlot.UnitAlias}: {sourceSlot.SpawnInfoGuid} => {spawnInfoClone.Guid}");
+        randomizer.SpawnGroupService.RegisterDuplicate(sourceSlot.SpawnInfoGuid, spawnInfoClone.Guid);
         return AddSiblingAfter(scene, sourceSlot.GenerationGameObjectGuid, generationClone);
     }
 
@@ -423,14 +445,14 @@ internal class EnemyMultiplierModifier : Modifier {
 
         if (existingInstance != null) {
             var clone = CloneGameObject(existingInstance, rng).WithName(existingInstance.Name + "_BioRandMultiplier");
-            return EnemyTemplateFactory.RefreshRuntimeGuids(clone,
-                randomizer.GetRng("enemy-multiplier/instance-state", clone.Guid));
+            return EnemyTemplateFactory.DisableEnemyStampSerialization(EnemyTemplateFactory.RefreshRuntimeGuids(clone,
+                randomizer.GetRng("enemy-multiplier/instance-state", clone.Guid)));
         }
 
         try {
             var clone = CloneGameObject(randomizer.TemplateService.GetEnemyTemplate(sourceSlot.UnitAlias), rng);
-            return EnemyTemplateFactory.RefreshRuntimeGuids(clone,
-                randomizer.GetRng("enemy-multiplier/instance-state", clone.Guid));
+            return EnemyTemplateFactory.DisableEnemyStampSerialization(EnemyTemplateFactory.RefreshRuntimeGuids(clone,
+                randomizer.GetRng("enemy-multiplier/instance-state", clone.Guid)));
         }
         catch {
             return null;

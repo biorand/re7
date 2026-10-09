@@ -5,20 +5,26 @@ namespace Biohazard.BioRand.RE7.Tests;
 [Trait("Category", "RequiresPak")]
 public class RandomizerItemDropTableBehaviorTests {
     [Theory]
-    [InlineData(0.05)]
-    [InlineData(0.0)]
-    public void ItemDropTable_Supplements_RespectConfiguredWeight(double ratio) {
+    [InlineData("Flower", 0.05)]
+    [InlineData("Flower", 0.0)]
+    [InlineData("AlloyClay", 0.05)]
+    [InlineData("AlloyClay", 0.0)]
+    [InlineData("Magnesium", 0.05)]
+    [InlineData("Magnesium", 0.0)]
+    [InlineData("SyntheticDetergent", 0.05)]
+    [InlineData("SyntheticDetergent", 0.0)]
+    public void ItemDropTable_CraftingMaterials_RespectConfiguredWeight(string itemId, double ratio) {
         using var result = RandomizerTest.RunState(config => {
-            config["item-drop-ratio-flower"] = ratio;
+            config[$"item-drop-ratio-{itemId.ToLowerInvariant()}"] = ratio;
         });
         var table = result.ReadAfterUserFile<app.ReliefItemTable>(RandomizerTestPaths.Chapter4DropTablePath);
 
         if (ratio == 0) {
-            Assert.DoesNotContain(table.DataList, drop => drop.ItemID == "Flower");
+            Assert.DoesNotContain(table.DataList, drop => drop.ItemID == itemId);
             return;
         }
 
-        var drop = Assert.Single(table.DataList, drop => drop.ItemID == "Flower");
+        var drop = Assert.Single(table.DataList, drop => drop.ItemID == itemId);
         Assert.Equal((5u, 5u, 5u), (drop.EasyDropRate, drop.NormalDropRate, drop.HardDropRate));
         Assert.Equal((1u, 1u, 1u), (drop.ReliefNum, drop.NormalDropNum, drop.ReliefDropNum));
     }
