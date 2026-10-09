@@ -98,6 +98,10 @@ function UI:debug_tools()
     imgui.same_line()
     if imgui.button("Clear random event state") then self.context.features.random_events:clear() end
 
+    local weapons = self.context.features.dlc_weapons
+    if imgui.button("Add supported DLC weapons to item box") then weapons:request_add_to_item_box() end
+    if weapons.grant_status then self:label("DLC weapons", weapons.grant_status) end
+
     local events = self.context.features.random_events
     if imgui.tree_node("Random event effects") then
         self:label("State", events:state_label())

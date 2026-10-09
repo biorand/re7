@@ -34,8 +34,17 @@ There are now two separate entry points, sharing `DlcWeaponImporter`:
   preflights every entry before registering anything and emits a clear error if
   the baseline needs `setup --dlc-weapons`. Extracted game assets are not committed.
 - `BioRand7/dlc_weapons.lua` makes at most one deferred loading request per matching
-  campaign prefab per session. It does not grant items, force native initialization,
-  repair AI, or install attack/input hooks. Both flags imply REFramework is required.
+  campaign prefab per session. It does not automatically grant items, force native
+  initialization, repair AI, or install attack/input hooks. Both flags imply
+  REFramework is required.
+- **BioRand 7 > Debug tools > Add supported DLC weapons to item box** queues a
+  one-shot grant on `UpdateBehavior`. It adds one of each of the four candidates,
+  skipping weapons already owned in inventory or storage. Both integration flags,
+  campaign Ethan, and all four ready campaign prefabs are required. Missing/foreign
+  adapters abort before any additions; a native add failure stops the batch without
+  retrying or removing earlier successes. The menu reports the result. Loading a
+  save, starting a new game, resetting scripts, or reloading config cancels pending
+  requests. The button does not deploy assets, equip weapons, or save the game.
 
 This implements the campaign generation path, **not completed playthrough
 certification**. Save migration is not implemented. Use backed-up test saves until
