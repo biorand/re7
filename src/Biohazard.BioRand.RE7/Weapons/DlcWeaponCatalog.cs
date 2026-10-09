@@ -31,6 +31,15 @@ public sealed record DlcWeaponSource(
     string ItemId, string Name, int Chapter, int WeaponId, string ComponentType, DlcWeaponAdapter Adapter) {
     public bool IsLabCandidate => Adapter != DlcWeaponAdapter.None;
     public string CampaignPrefab => $"BioRand/DlcWeaponLab/{ItemId}/Item.pfb";
+    public string ResourceScene => $"BioRand/DlcWeaponLab/{ItemId}/Resource.scn";
+    public string DetailPrefab => $"BioRand/DlcWeaponLab/{ItemId}/Detail.pfb";
+    public string SourceResourceScene => ItemId switch {
+        "CKnife" => "ch8/scenes/items/resources_chapter8/chrisknife.scn",
+        "Handgun_Albert_C" => "ch8/scenes/items/resources_chapter8/chrishandgun.scn",
+        "Shotgun_Albert" => "ch8/scenes/items/resources_chapter8/chrisshotgun.scn",
+        "NumaItem072" => "ch9/scenes/items/resource/numaitem072.scn",
+        _ => throw new InvalidOperationException($"No campaign resource adapter for {ItemId}."),
+    };
 }
 
 public enum DlcWeaponAdapter { None, Knife, Gun }

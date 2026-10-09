@@ -20,11 +20,13 @@ and [Lua API hazards](../reframework-lua.md).
   `IPatch`, so the early `ExportingMod` guard is essential. Normal seeds do not
   read or write these assets or select these items.
 - Source DLC prefabs/settings are preserved. The export writes four namespaced
-  PFBs, merges four records into campaign resource item settings, and merges
-  missing name/manual messages into the campaign item message file.
+  inventory PFBs, four detail PFBs, and four item-resource scenes. It merges four
+  records into campaign resource item settings, missing name/manual messages into
+  the campaign item message file, and four folders into the campaign item-resource
+  index. Existing campaign resource folders and DLC gameplay roots are preserved.
 - The optional Lua lab is not loaded by `BioRand7.lua`. Its manual runner is
   `tools/dlc_weapon_lab.lua`. No weapon is granted automatically.
-- No main-game pickup templates, resident scene changes, complete dependency
+- No main-game pickup templates, resident weapon changes, complete dependency
   closure, production configuration, ammo distributions, or save migration are
   supplied. **This is a developer experiment, not a playable all-weapons mod.**
 

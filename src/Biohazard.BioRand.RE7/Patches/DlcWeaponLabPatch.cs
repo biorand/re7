@@ -38,12 +38,41 @@ internal sealed class DlcWeaponLabPatch(IPatchContext context) : IPatch {
                 ? "ch8/message/ch8_item_mes.msg" : "message/ch9_item_mes.msg").MessageFile());
             CopyMessage(messages, sourceMessages, item.NameMsg);
             CopyMessage(messages, sourceMessages, item.ManualMsg);
+            ImportItemResource(weapon);
         }
 
         var ids = imported.Select(x => x.ItemDataID).ToHashSet(StringComparer.Ordinal);
         campaign._Settings = [.. campaign._Settings.Where(x => !ids.Contains(x.ItemDataID)), .. imported];
         context.SerializeUserFile(CampaignSettings, campaign);
         context.SetMsgFile(CampaignMessages, messages.Build());
+        RegisterItemResources(candidates);
+    }
+
+    private void ImportItemResource(DlcWeaponSource weapon) {
+        var resource = context.GetScnFile(weapon.SourceResourceScene.SceneFile()).ToBuilder(context.TypeRepository);
+        var component = resource.Scene.GetGameObjects().SelectMany(go => go.Components)
+            .Single(c => c.Type.Name == "app.ItemResource");
+        if (component.Get<string>("_ItemDataId") != weapon.ItemId)
+            throw new InvalidOperationException($"Unexpected item resource for {weapon.ItemId}.");
+        var detail = component.Get<RszResourceNode>("_ResourcePrefab.Path").Value
+            ?? throw new InvalidOperationException($"Missing detail prefab for {weapon.ItemId}.");
+        context.SetPfbFile(PrefabPath(weapon.DetailPrefab), context.GetPfbFile(PrefabPath(detail)));
+        resource.Scene = resource.Scene.VisitComponents((_, c) => c != component ? c : c
+            .Set("_ResourcePrefab.Path", new RszResourceNode(weapon.DetailPrefab))
+            .Set("_ResourcePrefab.Standby", true));
+        context.SetScnFile(weapon.ResourceScene.SceneFile(), resource.RebuildResources().Build());
+    }
+
+    private void RegisterItemResources(IReadOnlyList<DlcWeaponSource> weapons) {
+        context.ModifyScnFile("scenes/items/itemresources.scn".SceneFile(), scene => {
+            var template = scene.Children.OfType<RszFolder>().First(f => f.Name == "PowerUpCoin01A");
+            var ids = weapons.Select(w => w.ItemId).ToHashSet(StringComparer.Ordinal);
+            return scene.WithChildren([
+                .. scene.Children.Where(c => c is not RszFolder f || !ids.Contains(f.Name)),
+                .. weapons.Select(w => new RszFolder(template.Settings
+                    .Set("Name", w.ItemId).Set("ScenePath", w.ResourceScene), [])),
+            ]);
+        });
     }
 
     internal static RszScene AdaptPrefab(RszScene scene, RszTypeRepository types, DlcWeaponSource weapon) {

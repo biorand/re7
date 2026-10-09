@@ -72,8 +72,18 @@ public sealed class DlcWeaponLabTests {
             }
         }
         Assert.DoesNotContain(first.Files.Keys, p => p.StartsWith("natives/stm/ch8/") || p.StartsWith("natives/stm/ch9/"));
-        Assert.DoesNotContain(first.Files.Keys, p => p.Contains(".scn."));
-        Assert.Equal(6, first.Files.Count);
+        var resourceIndex = first.GetScnFile("scenes/items/itemresources.scn".SceneFile()).ReadScene(first.TypeRepository);
+        foreach (var weapon in DlcWeaponCatalog.Weapons.Where(w => w.IsLabCandidate)) {
+            var folder = Assert.Single(resourceIndex.Children.OfType<RszFolder>(), f => f.Name == weapon.ItemId);
+            Assert.Equal(weapon.ResourceScene, folder.Settings.Get<RszResourceNode>("ScenePath").Value);
+            var resource = first.GetScnFile(weapon.ResourceScene.SceneFile()).ReadScene(first.TypeRepository);
+            var component = Assert.Single(resource.GetGameObjects().SelectMany(go => go.Components), c => c.Type.Name == "app.ItemResource");
+            Assert.Equal(weapon.ItemId, component.Get<string>("_ItemDataId"));
+            Assert.Equal(weapon.DetailPrefab, component.Get<RszResourceNode>("_ResourcePrefab.Path").Value);
+            Assert.True(component.Get<bool>("_ResourcePrefab.Standby"));
+            Assert.NotEmpty(first.GetPfbFile(weapon.DetailPrefab.Of() + ".17").ReadScene(first.TypeRepository).GetGameObjects());
+        }
+        Assert.Equal(15, first.Files.Count);
     }
 
     [Fact]
