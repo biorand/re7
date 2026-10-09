@@ -1,7 +1,7 @@
 # Not a Hero and End of Zoe integration plan
 
 Status: Proposed
-Last updated: 2026-08-25
+Last updated: 2026-10-09 (documentation review; native evidence remains dated 2026-08-25)
 
 ## Purpose
 
@@ -13,10 +13,10 @@ This plan builds on:
 
 - [Notes.MD](Notes.MD), especially the DLC integration and recipe notes.
 - [DLCIntegrationEvidence.MD](DLCIntegrationEvidence.MD), containing the binary-specific IDA evidence behind this plan.
-- [DLCAndModes.MD](../.analysis/knowledge/DLCAndModes.MD).
-- [ItemsInventoryRecipes.MD](../.analysis/knowledge/ItemsInventoryRecipes.MD).
-- [dlc-enemy-integration-findings.md](../.analysis/dlc-enemy-integration-findings.md).
-- The abandoned `origin/dlc-enemies` implementation and its runtime experiments.
+- Local research notes `.analysis/knowledge/DLCAndModes.MD`, `.analysis/knowledge/ItemsInventoryRecipes.MD`, and `.analysis/dlc-enemy-integration-findings.md`. These ignored files are not included in a fresh checkout; the checked-in evidence appendix records the native findings used here.
+- The earlier `origin/dlc/enemies` implementation and its runtime experiments, including commit `1093b7c` (`Working Mama Mold`).
+
+The compatibility registry, support states, and certification gates below are proposed work, not capabilities already implemented on `master`.
 
 ## Executive conclusion
 
@@ -38,7 +38,7 @@ Only certified content should enter normal randomization pools. Discovered or ex
 
 The placement generator can see DLC scenes: the current placement data contains 203 Not a Hero placements and 182 End of Zoe placements. The item definition generator, however, scans only `natives/stm/prefab/item/`, and the weapon definition generator still has a `TODO DLCs` marker. As a result, placement discovery and usable item definitions disagree before runtime integration begins.
 
-The current item data contains no Not a Hero or End of Zoe definitions. The current weapon data contains only main-game weapons.
+The current item data contains no Not a Hero or End of Zoe definitions. The weapon data likewise contains no CH8/CH9 weapon definitions, but does include Birthday blasters as well as campaign weapons. A metadata entry alone does not make a weapon eligible for campaign randomization; `ItemRandomizer` explicitly excludes the three blasters from its gun pool.
 
 ### DLC assets are scene-mounted, not merely referenced
 
@@ -237,7 +237,7 @@ Tests must assert that:
 
 ### 1. Treat the old branch as a research archive
 
-Use `origin/dlc-enemies` to recover:
+Use `origin/dlc/enemies` to recover:
 
 - Enemy metadata and alias mappings.
 - Typed generator/pool/spawn-info helpers.
@@ -278,7 +278,7 @@ Import both the enemy template and spawn-info template. Preserve DLC-owned field
 
 Missing or ambiguous sources must be reported and skipped. Do not emit a partially populated enemy.
 
-Known unavailable prototype sources include Em5700, Em5800, Em5850, and Em6700. Known imported CH9 sources include Em7500, Em7700, Em7800, and Em7900.
+In the earlier prototype, no usable template sources were found for Em5700, Em5800, Em5850, or Em6700. That prototype imported CH9 sources for Em7500, Em7700, Em7800, and Em7900; this is historical extraction evidence, not a claim that `master` supports their campaign import.
 
 ### 4. Test per-family sidecar generators
 
@@ -408,7 +408,7 @@ Never add CH8/CH9 progression keys, mission items, or files to generic campaign 
 Every ingredient and result must already be certified independently. Recipe generation must validate:
 
 - All values are valid `app.ItemID` entries.
-- The combine dictionary references valid recipe DataIDs.
+- The combine dictionary references valid recipe `ResultItemID` values, not recipe `DataID` labels. Multiple recipe variants share one visible result entry.
 - No duplicate dictionary entries exist.
 - The visible recipe count stays within the vanilla menu limit unless the REFramework extension is enabled and tested.
 - Stack conversion behavior survives inventory and save/load tests.
@@ -486,7 +486,7 @@ Unit tests cannot prove AI quality or player-system compatibility. Each certifie
 ### Phase 0: Recover evidence and freeze scope
 
 - Keep the main branch as the source of truth.
-- Inventory useful files and tests on `origin/dlc-enemies`.
+- Inventory useful files and tests on `origin/dlc/enemies`.
 - Port documentation, metadata, read-only diagnostics, and tests first.
 - Do not port the complete runtime bridge.
 - Define the compatibility registry and support-state schema.
@@ -568,7 +568,7 @@ The first work package should contain only:
 
 1. Compatibility registry and support-state types.
 2. CH8/CH9 item and weapon discovery with all new entries marked `Discovered`.
-3. Ported static DLC enemy tests and alias mappings from `origin/dlc-enemies`.
+3. Ported static DLC enemy tests and alias mappings from `origin/dlc/enemies`.
 4. Dependency-manifest generation and support-folder allowlists.
 5. Source-vs-campaign diagnostic snapshot output.
 6. CH9 `NumaItem013` as the first certification candidate.

@@ -91,6 +91,12 @@ dotnet build .\biorand-re7.sln --no-restore
 dotnet test .\biorand-re7.sln --no-build --verbosity normal
 ```
 
+PAK-backed tests require a baseline supplied through `BIORAND_RE7_TEST_PAK` or stored at `%USERPROFILE%\.biorand\biorand-re7.pak`. The harness can also copy an embedded baseline when available, but that PAK is not tracked in this repository. Without one, run the tests that do not need game data:
+
+```powershell
+dotnet test .\biorand-re7.sln --no-build --filter "Category!=RequiresPak"
+```
+
 The REFramework runtime also has executable Lua tests, independent of the game and baseline PAK:
 
 ```powershell
@@ -119,7 +125,7 @@ To run a single scenario:
 dotnet run -c Release --project .\src\Biohazard.BioRand.RE7.Benchmarks\Biohazard.BioRand.RE7.Benchmarks.csproj -- --filter *DefaultProfile*
 ```
 
-The `RealisticProfile` scenario uses the checked-in profile under `src/Biohazard.BioRand.RE7.Benchmarks/Profiles/`. Benchmarks disable dynamic Google Sheets downloads by default; set `BIORAND_RE7_BENCHMARK_DOWNLOAD_DATA=1` to include that external fetch cost.
+The `RealisticProfile` scenario uses the checked-in profile under `src/Biohazard.BioRand.RE7.Benchmarks/Profiles/`. Benchmarks disable dynamic Google Sheets downloads by default; set `BIORAND_RE7_BENCHMARK_DOWNLOAD_DATA=1` to include that external fetch cost in `RealisticProfile`. The other scenarios always use embedded data.
 
 ## Data Workflows
 
@@ -141,7 +147,11 @@ dotnet run --project .\src\Biohazard.BioRand.RE7.DataGen\Biohazard.BioRand.RE7.D
 ```
 
 Generated files are written to `GeneratedFiles/`. Some generators also copy outputs into `_Data/`.
-The key item route graph image is refreshed into `docs/key_item_route_graph.png` when the DataGen project builds.
+Refresh the key item route graph image explicitly; an ordinary DataGen build does not regenerate it:
+
+```powershell
+dotnet run --project .\src\Biohazard.BioRand.RE7.DataGen\Biohazard.BioRand.RE7.DataGen.csproj -- generate key_item_route_graph -f Binary --output-dir .\docs
+```
 
 ## Repository Layout
 

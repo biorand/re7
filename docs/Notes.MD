@@ -17,7 +17,7 @@ I've gathered this information while working on the randomizer.
 
 - message text and markup
   - re_chunk_000/natives/stm/message/*.msg.17
-  - See `docs/items/MessageMarkup.MD` for RE7 message tags such as `<COLOR RRGGBB>`, `<SIZE n>`, `<ICON NAME>`, `<PAGE>`, `<TIME ...>`, and engine-supported but unobserved tag types.
+  - See [MessageMarkup.MD](items/MessageMarkup.MD) for RE7 message tags such as `<COLOR RRGGBB>`, `<SIZE n>`, `<ICON NAME>`, `<PAGE>`, `<TIME ...>`, and unobserved engine enum entries.
 
 ## Key Item Location Randomizer
 
@@ -62,7 +62,7 @@ The .pak files are found in the `dlc` directory.
 
 ## Internal DLC IDs
 
-`
+```text
 (chapter|c)0?7_1 => Bedroom
 ((chapter|c)0?7_2)|cardgame|survival => 21
 (chapter|c)0?7_3 => Nightmare
@@ -76,7 +76,7 @@ birthday => Jacks55thBirthday
 (dlcitem|coin)_03 => InstinctCoinAndMadhouseUnlock
 (dlcitem|coin)_04 => ReloadCoinAndMadhouseUnlock
 (dlcitem|coin)_05 => UniversalCoinAndMadhouseUnlock
-`
+```
 
 ## DLC integration notes
 
@@ -98,6 +98,7 @@ Birthday skills:
 - Direct placement of `Prefab/Skill/skl001/Skl001PassiveSkill.user` into Ethan's `app.PlayerPassiveSkillManager.PlayerPassiveSkill` worked and granted infinite ammo, proving the main-game player manager can consume Birthday passive userdata.
 - For inventory support, the important chain is the original skill inventory prefab `Prefab/Skill/skl###/Skl###.pfb`, its `app.PassiveSkillItem`, the referenced `PlayerPassiveSkill.user`, messages copied into `ui_item_mes.msg.17`, and REFramework handling to avoid the native Birthday-only inventory callback freeze.
 - Birthday skills do not have normal world pickup meshes. Static/random placements should use a known-good pickup shell and override `app.Item.ItemDataID` to the chosen `skl###`.
+- The Guest House attic M19 (`b09f6174-47f2-4851-acc3-3106d0902bfa` in `environment/scene/chapter1/c01_3f.scn.20`) can duplicate randomized Birthday skills when its `GetItemEvent` pickup shape is retained. The user verified that replacing the event object with a regular item template fixes collection while retaining the "OK, fine!" dialogue. `ItemModifier` therefore replaces this reviewed event pickup with the selected item's regular template, retaining its root GUID, transform, and `app.Item` settings, and generating a fresh save GUID. The replacement interaction must retain `abb411f5-de67-0b95-0a58-a794254c3417`: `1200_HandGunGet_Mes` in `leveldesign/fsm/chapter1/levelfsm_c01.scn.20` references that child via `app.fsm.InteractTest.InteractObj`. Other cloned children receive fresh GUIDs. `preserve-item-models` still retains the original mesh. Keep other FSM-controlled pickups intact until their event and progression behavior is separately verified. The generated fix has been confirmed working in-game; save/reload persistence has not been separately verified.
 
 Not a Hero and End of Zoe enemies:
 
@@ -140,13 +141,13 @@ Not a Hero and End of Zoe items:
   - Only contains ItemDataID keys for a `Dictionary` that is evaluated at runtime
   - All entries MUST be valid item IDs (see enum `app.ItemID`)! Otherwise the game does not load (infinite loop). Own IDs are not allowed.
   - Must reference recipe `ResultItemID` values from `prefab/item/itemcombinedata.user.2`, not recipe `DataID` labels. The local RT TDB (`reframework/il2cpp_dump_rt.json.gz`) declares `app.ItemCombineData.getData(System.String)` with parameter `resultItemID`; the exact-table recipe implementation likewise builds dictionary entries from result IDs. Multiple recipe variants share one visible result entry.
-  - If there are more than 8 entries the additional ones won't be accessible in the combine menu, only the icons can be seen but the cursor can't be moved to them. Modding it via REFramework is possible but not ideal
+  - The native combine menu only navigates 8 entries. BioRand's REFramework recipe handling enables additional entries; normal recipe generation caps the dictionary at `RecipeModifier.MaxRecipeCount` distinct result items (20, arranged in 4 columns and 5 rows).
   - Duplicate entries lead to weird GUI behaviour
 
 - `prefab/item/itemcombinedata.user.2`
-  - DataID is referenced by the dictionary above
+  - `DataID` labels a recipe; the dictionary above references its `ResultItemID` instead.
   - source item IDs and result item ID must be valid
-  - the combine GUI has very strict validations, random combinations do _not_ appear!
+  - The native combine GUI has strict validations. Randomized combinations need BioRand's REFramework recipe handling to appear correctly.
   - items _can_ be combined with themselves
   - EnableFlag refers to a flag which allows the item to be crafted. E.g. the flag `eab670f7-4475-4258-b900-cbe91664c9a3` which is `cmb_enable_DybbukMedicine` activates the ability to craft the serum
   - IsTrophyTarget: Likely refers to the achievement "1st Place at the Science Fair" where you must create all items that contain Chem Fluid and Strong Chem Fluid
@@ -192,15 +193,15 @@ Recipes in the combine GUI:
 
 ```
 
-Ideas for new recipes:
+Historical ideas for new recipes (pseudocode; author current recipes in `_Data/recipes.csv` using the `RecipeModel` schema):
 
 ```cs
         // Ammo -> Ammo
-        CreateRecipe("HandgunBulletL", 20, "ChemicalL", 1, "MagnumBullet", 10), // Enhanced Handgun Ammo + Strong Chem Fluid => 44 MAG Ammo
+        CreateRecipe("HandgunBulletL", 20, "ChemicalL", 1, "MagnumBullet", 10), // Enhanced Handgun Ammo + Separating Agent => 44 MAG Ammo
         CreateRecipe("ShotgunBullet", 10, "ChemicalM", 1, "MagnumBullet", 5), // Shotgun Shell + Strong Chem Fluid => 44 MAG Ammo
         CreateRecipe("HandgunBulletL", 10, "MagnumBullet", 5, "ShotgunBullet", 20), // Enhanced Handgun Ammo + 44 MAG Ammo => Shotgun Shells
         CreateRecipe("BurnerBullet", 100, "HandgunBulletL", 10, "FlameBulletS", 5), // Burner Fuel + Enhanced Handgun Ammo => Flame Rounds
-        CreateRecipe("HandgunBulletL", 10, "ChemicalS", 1, "AcidBulletS", 5), // Enhanced Handgun Ammo + Strong Chem Fluid => Neuro Rounds
+        CreateRecipe("HandgunBulletL", 10, "ChemicalS", 1, "AcidBulletS", 5), // Enhanced Handgun Ammo + Chem Fluid => Neuro Rounds
 
         // Heal -> Heal
         CreateRecipe("RemedyM", 1, "RemedyM", 1, "RemedyL", 1), // First Aid Med + First Aid Med => Strong First Aid Med
@@ -212,11 +213,11 @@ Ideas for new recipes:
 
 ## Inventory
 
-Ethan starting inventory: natives/stm/leveldesign/fsm/chapter1/other -> tested successfully with chainsaw
+Ethan starting inventory: `natives/stm/leveldesign/fsm/chapter1/other/ch1_startinventory.user.2` -> tested successfully with chainsaw
 
-Mia starting inventory (VHS): natives/stm/leveldesign/fsm/chapter4/chapter4_1/other/4-1startinventory.user.2
+Mia starting inventory (present-day ship): `natives/stm/leveldesign/fsm/chapter4/chapter4_1/other/4-1startinventory.user.2`
 
-Mia starting inventory (w/ machine gun): natives/stm/leveldesign/fsm/ff050/other/ff050_startinventory.user.2
+Mia starting inventory (Old Videotape, with machine gun): `natives/stm/leveldesign/fsm/ff050/other/ff050_startinventory.user.2`
 
 Clancy VHS starting inventory natives/stm/leveldesign/fsm/ff000/other/startinventory_ff000.user.2
 

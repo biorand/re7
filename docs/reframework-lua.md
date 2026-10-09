@@ -1,6 +1,6 @@
 # REFramework Lua validation
 
-The entrypoint is `_Data/reframework/autorun/BioRand7.lua`; its feature modules live in the adjacent `BioRand7/` directory. `RandomizerOutput` embeds the same scripts into both patch and Fluffy ZIPs. Configuration is read from `reframework/data/BioRand7/config.json`.
+The entrypoint is `src/Biohazard.BioRand.RE7/_Data/reframework/autorun/BioRand7.lua`; its feature modules live in the adjacent `BioRand7/` directory. When runtime support is required, `RandomizerOutput` includes the same embedded scripts in both patch and Fluffy ZIPs. Configuration is read from `reframework/data/BioRand7/config.json`.
 
 ## Fields and methods
 
@@ -65,7 +65,7 @@ Lua regression tests cover transitions, overlapping native pauses, animations st
 
 ## SpawnGroups
 
-`spawn_groups.lua` controls generated main-game enemy groups using the native `EnemyGeneratorManager` lifecycle requests; `spawn_group_engine.lua` handles pool/FSM discovery and raw TDB fields. `spawn_group_static.lua` controls generated Mia/Eveline actors and records activity in native OtherObjectSave data. See [SpawnGroups authoring, lifecycle rules, and validation](enemies/spawn_groups.md). Both release archives carry a seed-specific manifest, including an empty manifest when no groups are authored.
+`spawn_groups.lua` controls generated main-game enemy groups using the native `EnemyGeneratorManager` lifecycle requests; `spawn_group_engine.lua` handles pool/FSM discovery and raw TDB fields. `spawn_group_static.lua` controls generated Mia/Eveline actors and records activity in native OtherObjectSave data. See [SpawnGroups authoring, lifecycle rules, and validation](enemies/spawn_groups.md). When REFramework support is included, both release archives carry a seed-specific manifest, including an empty manifest when no groups are authored.
 
 The 2026-10-07 live probe verified qualified FSM-state lookup and observed delayed spawn, suspension, resume, and terminal despawn on an Em4100 slot. It also established that these timers must use `via.Application.get_ElapsedSecond()` rather than the frame-scaled `get_DeltaTime()`. A different native slot rejected spawning; requests now isolate exceptions and retry at a bounded rate. Save-load hooks reset transient trigger state; native completion is never cleared by the production controller. The linked note records the limits of this validation and remaining gameplay checks.
 
@@ -114,7 +114,7 @@ The follow-up audit covered the entrypoint and every feature/helper module:
 | Entrypoint/helpers | Pass update functions directly to `xpcall`, retaining feature-specific error isolation. Keep bounded object discovery, cached TDB definitions, and scene-lifetime checks. |
 | Drops, knee-down, RNG/data, logging | Reviewed; already event-driven or pure Lua. Retain drop physics and seeded draw order, reaction guards, and error diagnostics. No speculative object-lifetime caches or broad registry hooks. |
 
-REF does not document a Lua unhook API. Deferred hooks remain installed until ScriptRunner reset once they have been needed; their inactive guards still apply. Configuration reloads and state-clear buttons must not install duplicate hooks. A newly created passive manager may take up to 0.25 seconds to receive an active status effect; expiry and restoration are not throttled. The eight Lua suites include call-count/allocation checks and reload, hook-registration, suppression, and restoration regressions. Existing ZIP source-equality tests cover the changed embedded scripts; no additional runtime module is required in this pass.
+REF does not document a Lua unhook API. Deferred hooks remain installed until ScriptRunner reset once they have been needed; their inactive guards still apply. Configuration reloads and state-clear buttons must not install duplicate hooks. A newly created passive manager may take up to 0.25 seconds to receive an active status effect; expiry and restoration are not throttled. The Lua suites include call-count/allocation checks and reload, hook-registration, suppression, and restoration regressions. Existing ZIP source-equality tests cover the changed embedded scripts; no additional runtime module is required in this pass.
 
 The second live comparison on 2026-09-27 sampled 41 points over roughly 17 seconds per window, after builds/tests finished. With the same stationary view and menu closed, the fresh baseline was 112.6 FPS (median sampled frame time 8.65 ms); after reload the two windows were 113.7 FPS / 8.33 ms and 116.4 FPS / 8.65 ms. These small, variable differences do not establish a repeatable FPS gain. The 25% reduction in idle discovery calls and reductions in event/UI work are regression-tested, not inferred from these FPS samples. All 17 deployed scripts matched their repository sources, and BioRand reloaded without logged Lua errors. The pre-existing shared component-array exceptions continued.
 

@@ -16,6 +16,8 @@ internal class ItemModifier : Modifier {
     private static readonly ItemDefinitionRepository _itemDefinitions = ItemDefinitionRepository.Default;
     private static readonly AreaDefinitionRepository _areaDefinitions = AreaDefinitionRepository.Default;
     private static readonly HashSet<Guid> _birdCageGuids = [.. BirdCageModifier.Guids];
+    private static readonly Guid _guestHouseAtticHandgunGuid = new("b09f6174-47f2-4851-acc3-3106d0902bfa");
+    private static readonly Guid _guestHouseAtticHandgunInteractionGuid = new("abb411f5-de67-0b95-0a58-a794254c3417");
 
     public override void Apply(RandomizerLogger logger) {
         var randomizer = _randomizer;
@@ -43,7 +45,6 @@ internal class ItemModifier : Modifier {
             return;
 
         var replacements = CreateReplacementMap(candidates, itemRandomizer, rng, randomItemSettings);
-
         foreach (var areaGroup in candidates.GroupBy(candidate => candidate.AreaPath)) {
             var itemsToReplace = areaGroup
                 .Where(candidate => replacements.ContainsKey(candidate.Key))
@@ -91,7 +92,8 @@ internal class ItemModifier : Modifier {
                     var templateItemId = itemRandomizer.GetItemTemplateIdForDrop(drop.Id, rng, randomItemSettings);
                     var template = templateService.GetItemTemplate(templateItemId);
 
-                    if (originalMatch.HasFsmInHierarchy) {
+                    var replaceEventPickup = CanReplaceEventPickup(placement);
+                    if (originalMatch.HasFsmInHierarchy && !replaceEventPickup) {
                         if (!preserveItemModels) {
                             originalGameObject = originalGameObject.ApplyVisualResourcesFromTemplate(template);
                         }
@@ -102,7 +104,16 @@ internal class ItemModifier : Modifier {
                         continue;
                     }
 
-                    var newGameObject = template.CloneWithNewGuids(templateInstanceRng, originalGameObject.Guid);
+                    Dictionary<Guid, Guid>? childGuidOverrides = null;
+                    if (replaceEventPickup) {
+                        var interaction = template.Children.Single(child =>
+                            child.FindComponent("app.InteractDetailSearch") != null ||
+                            child.FindComponent("app.InteractWeapon") != null);
+                        childGuidOverrides = new() { [interaction.Guid] = _guestHouseAtticHandgunInteractionGuid };
+                    }
+
+                    var newGameObject = template.CloneWithNewGuids(templateInstanceRng, originalGameObject.Guid,
+                        childGuidOverrides);
                     newGameObject = newGameObject.AddOrUpdateComponent(originalTransform);
                     newGameObject = newGameObject.AddOrUpdateComponent(itemComponent);
 
@@ -131,6 +142,12 @@ internal class ItemModifier : Modifier {
 
             logger.Pop();
         }
+    }
+
+    private static bool CanReplaceEventPickup(ItemPlacement placement) {
+        return placement.Guid == _guestHouseAtticHandgunGuid &&
+               placement.SceneFile.Equals("natives/stm/environment/scene/chapter1/c01_3f.scn.20",
+                   StringComparison.OrdinalIgnoreCase);
     }
 
     private static T ReplaceGameObjects<T>(T node, IReadOnlyDictionary<Guid, RszGameObject> replacements)
