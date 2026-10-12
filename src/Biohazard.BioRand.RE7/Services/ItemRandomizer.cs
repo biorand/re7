@@ -73,7 +73,7 @@ internal class ItemRandomizer {
     public ItemRandomizer(Randomizer randomizer) {
         _randomizer = randomizer;
         _allowUnlockables = randomizer.GetConfigOption<bool>("allow-bonus-items");
-        _allowDlcItems = randomizer.GetConfigOption<bool>("allow-dlc-items");
+        _allowDlcItems = DlcContent.IsAllowed(randomizer) && randomizer.GetConfigOption<bool>("allow-dlc-items");
         _allowedItemsByCategory = _itemDefinitions.Kinds
             .ToDictionary(
                 kind => kind,
@@ -131,7 +131,8 @@ internal class ItemRandomizer {
     }
 
     public bool IsGeneralDropAvailable(string id)
-        => !DlcCampaignWeapons.Contains(id) || DlcCampaignWeapons.IsEnabled(_randomizer);
+        => DlcContent.IsItemAllowed(_randomizer, id)
+           && (!DlcCampaignWeapons.Contains(id) || DlcCampaignWeapons.IsEnabled(_randomizer));
 
     public Item GetNextGeneralDrop(Rng rng, RandomItemSettings settings) {
         var bag = CreateGeneralItemPool(settings, rng);
@@ -226,6 +227,7 @@ internal class ItemRandomizer {
 
                     break;
                 case ItemDrops.DlcCoin:
+                    if (!DlcContent.IsAllowed(_randomizer)) break;
                     foreach (var (coinId, minDropRate, maxDropRate) in ItemDrops.DlcCoinDrops) {
                         result.Add(CreateValuableDrop(
                             coinId,

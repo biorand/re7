@@ -18,9 +18,11 @@ public static class DlcCampaignWeapons {
 
     public static bool Contains(string id) => Sources.Any(w => w.ItemId == id);
     internal static bool IsEnabled(IPatchContext context)
-        => context.GetConfigOption<bool>(ConfigKey) && context.GetConfigOption<bool>("allow-dlc-items");
+        => DlcContent.IsAllowed(context) && context.GetConfigOption<bool>(ConfigKey)
+           && context.GetConfigOption<bool>("allow-dlc-items");
     internal static bool IsEnabled(Randomizer randomizer)
-        => randomizer.GetConfigOption<bool>(ConfigKey) && randomizer.GetConfigOption<bool>("allow-dlc-items");
+        => DlcContent.IsAllowed(randomizer) && randomizer.GetConfigOption<bool>(ConfigKey)
+           && randomizer.GetConfigOption<bool>("allow-dlc-items");
 
     internal static IEnumerable<ItemDefinition> CreateItemDefinitions() => Sources.Select(w => new ItemDefinition {
         Id = w.ItemId, Name = w.Name, CategoryType = w.IsStackWeapon ? ItemCategoryType.StackWeapon : ItemCategoryType.Weapon,

@@ -89,6 +89,7 @@ end
 function Inventory:install_birthday_skill_hook()
     local game = self.context.game
     game:hook("app.PassiveSkillItem", "onInsertInventory(app.Inventory)", function(args)
+        if self.context.config:get("base-game-only", true) then return end
         local skill_item = game:object(args[2])
         local item = skill_item:get_field("Item")
         if not self:is_birthday_skill(item) then

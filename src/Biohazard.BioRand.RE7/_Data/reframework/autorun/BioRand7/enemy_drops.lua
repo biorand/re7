@@ -108,6 +108,7 @@ end
 
 function EnemyDrops:candidates(rng, boss)
     local candidates = {}
+    local dlc_enabled = not self.context.config:get("base-game-only", true)
     local allowed_ammo = nil
     if self:config("enemy-drop-ammo-only-available-weapons", "item-drop-ammo-only-available-weapons", true) then
         local chapter = self.context.game:singleton("app.GameFlowFsmManager"):call("get_CurrentMainGameFlow")
@@ -116,7 +117,8 @@ function EnemyDrops:candidates(rng, boss)
 
     for _, item_id in ipairs(Data.generic_drop_items) do
         local allowed_dlc = not Data.dlc_stack_weapons[item_id]
-            or (self.context.config:get("dlc-campaign-weapons", false) and self.context.config:get("allow-dlc-items", false))
+            or (dlc_enabled and self.context.config:get("dlc-campaign-weapons", false)
+                and self.context.config:get("allow-dlc-items", false))
         local allowed_for_boss = not boss or Data.boss_drop_items[item_id]
         local allowed_for_chapter = allowed_ammo == nil or not Data.ammo[item_id] or allowed_ammo[item_id]
         if allowed_dlc and allowed_for_boss and allowed_for_chapter then
@@ -140,7 +142,7 @@ function EnemyDrops:candidates(rng, boss)
     if self:config("enemy-drop-valuable-repair-kit", "item-drop-valuable-repair-kit", false) then
         candidates[#candidates + 1] = { value = "RepairKit", weight = 3 }
     end
-    if self:config("enemy-drop-valuable-dlc-coin", "item-drop-valuable-dlc-coin", false) then
+    if dlc_enabled and self:config("enemy-drop-valuable-dlc-coin", "item-drop-valuable-dlc-coin", false) then
         for _, coin in ipairs(Data.dlc_coin_weights) do
             candidates[#candidates + 1] = {
                 value = coin.id,
@@ -148,7 +150,7 @@ function EnemyDrops:candidates(rng, boss)
             }
         end
     end
-    if self.context.config:get("allow-dlc-items", false)
+    if dlc_enabled and self.context.config:get("allow-dlc-items", false)
         and self:config("enemy-drop-valuable-birthday-skill", "item-drop-valuable-birthday-skill", false) then
         candidates[#candidates + 1] = {
             value = Data.birthday_skills[rng:int(1, #Data.birthday_skills)],

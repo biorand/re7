@@ -17,6 +17,9 @@ internal sealed class EnemyTemplateFactory(Randomizer randomizer) {
         ScaleOptions scaleOptions,
         Rng rng,
         IEnemyDefinition? definition = null) {
+        definition ??= EnemyDefinitions.Instance.FromId(enemyId)
+                       ?? throw new InvalidOperationException($"Unknown enemy definition for '{enemyId}'.");
+        EnsureAllowed(definition);
         if (!_generatorTemplateCache.TryGetValue(enemyId, out var baseTemplate)) {
             baseTemplate = randomizer.TemplateService
                 .GetEnemyTemplate(enemyId)
@@ -26,8 +29,6 @@ internal sealed class EnemyTemplateFactory(Randomizer randomizer) {
         }
 
         var template = CloneGameObject(baseTemplate, rng);
-        definition ??= EnemyDefinitions.Instance.FromId(enemyId)
-                       ?? throw new InvalidOperationException($"Unknown enemy definition for '{enemyId}'.");
         template = definition.IndividualizeTemplate(rng, template);
 
         if (updateTransform || randomizeScale) {
@@ -49,6 +50,8 @@ internal sealed class EnemyTemplateFactory(Randomizer randomizer) {
     }
 
     internal RszGameObject GetOrCreateSpawnInfoTemplate(string enemyId, Rng rng) {
+        if (EnemyDefinitions.Instance.FromId(enemyId) is { } definition)
+            EnsureAllowed(definition);
         if (!_spawnInfoTemplateCache.TryGetValue(enemyId, out var template)) {
             template = GetSpawnInfoTemplate(enemyId)
                 .WithName(enemyId);
@@ -59,6 +62,12 @@ internal sealed class EnemyTemplateFactory(Randomizer randomizer) {
 
         return CloneGameObject(template, rng)
             .WithName($"ESI_{enemyId}");
+    }
+
+    private void EnsureAllowed(IEnemyDefinition definition) {
+        if (!definition.IsAllowed(randomizer)) {
+            throw new InvalidOperationException($"DLC enemy '{definition.Name}' is disabled in base-game-only mode.");
+        }
     }
 
     private RszGameObject GetSpawnInfoTemplate(string enemyId) {

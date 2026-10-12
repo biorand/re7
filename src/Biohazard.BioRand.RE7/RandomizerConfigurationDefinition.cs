@@ -27,8 +27,8 @@ internal static class RandomizerConfigurationDefinition {
     private static string? GetValuableDropDescription(string drop)
         => drop switch{
             ItemDrops.Weapon => "Adds all supported weapon types to this drop pool.",
-            ItemDrops.DlcCoin => "Adds all five DLC coins to this drop pool.",
-            ItemDrops.BirthdaySkill => "Adds Jack's 55th Birthday passive skills. Requires Allow DLC Items.",
+            ItemDrops.DlcCoin => "Adds all five DLC coins to this drop pool. Ignored while Base Game Only is enabled.",
+            ItemDrops.BirthdaySkill => "Adds Jack's 55th Birthday passive skills. Requires Allow DLC Items and Base Game Only disabled.",
             ItemDrops.LockPick => "Adds lock picks.",
             ItemDrops.RepairKit => "Adds repair kits.",
             _ => null
@@ -152,6 +152,14 @@ internal static class RandomizerConfigurationDefinition {
         group = page.CreateGroup("Content Pools");
 
         group.Items.Add(new GroupItem(){
+            Id = DlcContent.BaseGameOnlyConfigKey,
+            Label = "Base Game Only (No DLC Required)",
+            Description = "Generate for an installation without DLC. Excludes DLC items, weapons, Birthday skills, purchased coins, and imported Nightmare Jack variants, including authored extra placements. Overrides conflicting content options. Disable to use the DLC catalog on an installation with all DLC installed.",
+            Type = "switch",
+            Default = true
+        });
+
+        group.Items.Add(new GroupItem(){
             Id = $"allow-bonus-items",
             Label = "Allow Unlockable Items",
             Description =
@@ -163,7 +171,7 @@ internal static class RandomizerConfigurationDefinition {
         group.Items.Add(new GroupItem(){
             Id = $"allow-dlc-items",
             Label = "Allow DLC Items",
-            Description = "Include supported DLC items and weapons in randomized item pools.",
+            Description = "Include supported DLC items and weapons in randomized item pools. Ignored while Base Game Only is enabled.",
             Type = "switch",
             Default = true
         });
@@ -172,7 +180,7 @@ internal static class RandomizerConfigurationDefinition {
             Id = DlcCampaignWeapons.ConfigKey,
             Label = "Experimental DLC Campaign Weapons",
             Description = "Include Tactical Knife, Samurai Edge, Thor's Hammer, Joe's M21, Spirit Blade, all three AMG gauntlets, Not a Hero grenades, and End of Zoe throwing knives, spears and Stake Bombs in the campaign. " +
-                "Requires Allow DLC Items and a baseline prepared with setup --dlc-weapons. Save/load and player transitions remain experimental.",
+                "Requires Base Game Only disabled, Allow DLC Items, and a baseline prepared with setup --dlc-weapons. Save/load and player transitions remain experimental.",
             Type = "switch",
             Default = false
         });
@@ -531,9 +539,10 @@ internal static class RandomizerConfigurationDefinition {
                 Label = enemy.Name,
                 Category = new GroupItemCategory(enemy.Category.ToConfigCategory()),
                 Type = "range",
-                Description = enemy.EnemyId == EnemyID.Em2000
+                Description = (enemy.EnemyId == EnemyID.Em2000
                     ? "Relative selection weight. Set to 0 to exclude it. Only applies to extra enemy placements."
-                    : "Relative selection weight. Set to 0 to exclude this enemy from randomization.",
+                    : "Relative selection weight. Set to 0 to exclude this enemy from randomization.")
+                    + (enemy.Dlc != null ? " Requires Base Game Only disabled (Nightmare DLC variant)." : ""),
                 Min = 0,
                 Max = 1,
                 Step = 0.01,
@@ -630,6 +639,7 @@ internal static class RandomizerConfigurationDefinition {
                 Id = $"enemy-drop-ratio-{ItemDrops.GetConfigId(drop)}",
                 Label = ItemDefinitions.FromId(drop)!.Name,
                 Description = "Relative drop weight. Set to 0 to exclude this item from enemy drops."
+                    + (DlcContent.IsDlcItem(drop) ? " Ignored while Base Game Only is enabled." : "")
                     + (DlcCampaignWeapons.Contains(drop) ? " Requires both DLC campaign weapons and Allow DLC Items." : ""),
                 Category = new GroupItemCategory(){
                     Label = category,
@@ -866,6 +876,7 @@ internal static class RandomizerConfigurationDefinition {
                 Id = $"item-drop-ratio-{ItemDrops.GetConfigId(drop)}",
                 Label = ItemDefinitions.FromId(drop)!.Name,
                 Description = "Relative drop weight. Set to 0 to exclude this item from randomized item drops."
+                    + (DlcContent.IsDlcItem(drop) ? " Ignored while Base Game Only is enabled." : "")
                     + (DlcCampaignWeapons.Contains(drop) ? " Requires both DLC campaign weapons and Allow DLC Items." : ""),
                 Category = new GroupItemCategory(){
                     Label = category,
@@ -945,7 +956,7 @@ internal static class RandomizerConfigurationDefinition {
             Id = "random-starting-inventory-skills-ethan",
             Label = "Ethan: Random Starting Skill",
             Description =
-                "Give Ethan a random level-one passive skill from Jack's 55th Birthday. Requires RE Framework.",
+                "Give Ethan a random level-one passive skill from Jack's 55th Birthday. Requires RE Framework and Base Game Only disabled.",
             Type = "switch",
             Default = false
         });
@@ -954,7 +965,7 @@ internal static class RandomizerConfigurationDefinition {
             Id = "random-starting-inventory-skills-mia",
             Label = "Mia: Random Starting Skill",
             Description =
-                "Give Mia a random level-one passive skill from Jack's 55th Birthday. Requires RE Framework.",
+                "Give Mia a random level-one passive skill from Jack's 55th Birthday. Requires RE Framework and Base Game Only disabled.",
             Type = "switch",
             Default = false
         });

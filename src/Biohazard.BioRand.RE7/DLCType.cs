@@ -43,8 +43,8 @@ public static class DlcTypeExtensions {
             DlcType.TwentyOne),
         new(new Regex("((chapter|c)0?)?7_3", RegexOptions.IgnoreCase | RegexOptions.Compiled), DlcType.Nightmare),
         new(new Regex("((chapter|c)0?)?7_4", RegexOptions.IgnoreCase | RegexOptions.Compiled), DlcType.Daughters),
-        new(new Regex("(chapter|c|ch)8", RegexOptions.IgnoreCase | RegexOptions.Compiled), DlcType.NotAHero),
-        new(new Regex("(chapter|c|ch)9", RegexOptions.IgnoreCase | RegexOptions.Compiled), DlcType.EndOfZoe),
+        new(new Regex("(chapter|c|ch)0?8", RegexOptions.IgnoreCase | RegexOptions.Compiled), DlcType.NotAHero),
+        new(new Regex("(chapter|c|ch)0?9", RegexOptions.IgnoreCase | RegexOptions.Compiled), DlcType.EndOfZoe),
 
         new(new Regex("birthday", RegexOptions.IgnoreCase | RegexOptions.Compiled), DlcType.Jacks55thBirthday),
         new(new Regex("/(e|i)md", RegexOptions.IgnoreCase | RegexOptions.Compiled), DlcType.EthanMustDie),

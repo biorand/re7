@@ -24,6 +24,8 @@ internal class BirthdaySkillInventoryPatch(IPatchContext context) : IPatch {
     private readonly string _uiBirthdayMessagePath = "message/ui_birthday_mes.msg".MessageFile();
 
     public void Apply() {
+        if (!DlcContent.IsAllowed(context)) return;
+
         var birthdaySkills = context
             .DeserializeUserFile<app.ItemSettings>(_birthdaySkillSettingsPath)
             ._Settings

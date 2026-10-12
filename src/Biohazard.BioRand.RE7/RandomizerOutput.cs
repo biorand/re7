@@ -131,8 +131,16 @@ public sealed class RandomizerOutput {
 
     private Dictionary<string, byte[]> GetCommonZipEntries(string logPrefix = "") {
         var entries = new Dictionary<string, byte[]>();
-        var configBytes = Encoding.UTF8.GetBytes(Input.Configuration.ToJson());
+        var config = JsonNode.Parse(Input.Configuration.ToJson())?.AsObject() ?? [];
+        // Persist the effective default for legacy profiles as well, so sharing
+        // this seed's config keeps the same target installation requirements.
+        config[DlcContent.BaseGameOnlyConfigKey] = Input.Configuration.GetValueOrDefault(DlcContent.BaseGameOnlyConfigKey, true);
+        var configBytes = Encoding.UTF8.GetBytes(config.ToJsonString());
         entries.Add($"{logPrefix}config.json", configBytes);
+        entries.Add("requirements.txt", Encoding.UTF8.GetBytes(
+            "Requires Resident Evil 7 Steam RT/DX12.\n" + GetContentRequirement() + "\n" +
+            (IsWithREFramework ? "Requires REFramework for RE7 RT.\n" : "") +
+            "Remove the previous BioRand seed and start a new game.\n"));
 
         foreach (var logFile in LogFiles) {
             entries.Add($"{logPrefix}{logFile.Key}", Encoding.UTF8.GetBytes(logFile.Value));
@@ -170,6 +178,7 @@ public sealed class RandomizerOutput {
 
     private byte[] GetREFrameworkConfigBytes() {
         var config = JsonNode.Parse(Input.Configuration.ToJson())?.AsObject() ?? [];
+        config[DlcContent.BaseGameOnlyConfigKey] = Input.Configuration.GetValueOrDefault(DlcContent.BaseGameOnlyConfigKey, true);
         config["biorand-seed"] = Input.Seed;
         // Derived from the authorized sheet snapshot, never trusted from profile JSON.
         config["debug-recipes-enabled"] = DebugRecipesEnabled;
@@ -184,6 +193,7 @@ public sealed class RandomizerOutput {
             $"{Sanitize(Input.ProfileName)} by {Sanitize(Input.ProfileAuthor)} [{Input.Seed}]\n" +
             Input.ProfileDescription + "\n\n" +
             "Requires the Steam RT/DX12 version of RE7. Enable only one BioRand seed at a time. " +
+            GetContentRequirement() + " " +
             "Shared assets are included; do not also install the Patch ZIP." +
             (IsWithREFramework ? " Install REFramework for RE7 RT separately." : ""));
         var author = "BioRand 7 by IntelOrca, Descole & BioRand Team";
@@ -207,6 +217,11 @@ public sealed class RandomizerOutput {
         var content = string.Join('\n', lines);
         return Encoding.UTF8.GetBytes(content);
     }
+
+    private string GetContentRequirement()
+        => Input.Configuration.GetValueOrDefault(DlcContent.BaseGameOnlyConfigKey, true)
+            ? "Base Game Only: no DLC required. DLC content options are overridden."
+            : "DLC content enabled: use an installation with all DLC installed.";
 
     private static string SanitizeParagraph(string? s) {
         return (s ?? "").Trim().ReplaceLineEndings("\\n");

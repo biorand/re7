@@ -52,6 +52,8 @@ internal class TemplateService {
         => GetObject(EnemyFsmGeneratorTemplateName);
 
     public RszGameObject GetItemTemplate(string id) {
+        if (!DlcContent.IsItemAllowed(_randomizer, id))
+            throw new IntelOrca.Biohazard.BioRand.RandomizerUserException($"Item '{id}' is unavailable in Base Game Only mode.");
         if (!_dlcTemplates.Contains(id) && DlcCampaignWeapons.Contains(id)) {
             if (!DlcCampaignWeapons.IsEnabled(_randomizer.FileRepository))
                 throw new InvalidOperationException($"DLC campaign weapons are disabled: {id}");

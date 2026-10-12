@@ -8,7 +8,8 @@ function Weapons.new(context)
 end
 
 function Weapons:enabled()
-    return self.context.config:get("dlc-campaign-weapons", false)
+    return not self.context.config:get("base-game-only", true)
+        and self.context.config:get("dlc-campaign-weapons", false)
         and self.context.config:get("allow-dlc-items", false)
 end
 
@@ -60,8 +61,7 @@ function Weapons:process_item_box_request()
     local added, existing = 0, 0
     local context = self.context
     local ok, message = pcall(function()
-        if not context.config:get("dlc-campaign-weapons", false)
-            or not context.config:get("allow-dlc-items", false) then
+        if not self:enabled() then
             error("Campaign DLC weapons are disabled", 0)
         end
         local game = context.game
@@ -152,8 +152,7 @@ function Weapons:update()
     end
     self:process_item_box_request()
     local context = self.context
-    if self.finished or not context.config:get("dlc-campaign-weapons", false)
-        or not context.config:get("allow-dlc-items", false) then return end
+    if self.finished or not self:enabled() then return end
     local now = os.clock()
     if now < self.next_check then return end
     self.next_check = now + 1

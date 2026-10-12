@@ -361,6 +361,11 @@ internal class ExtraPlacementModifier : Modifier {
             return (scene, parentGameObject, false);
         }
 
+        if (!isRandom && !DlcContent.IsItemAllowed(randomizer, placement.Id)) {
+            logger.LogLine($"[SKIP EXTRA] {placement.Id}: unavailable in Base Game Only mode.");
+            return (scene, parentGameObject, false);
+        }
+
         return (scene, AddExtraItem(parentGameObject, randomizer, logger, placement, rng, isRandom, randomItemSettings),
             true);
     }
@@ -415,6 +420,8 @@ internal class ExtraPlacementModifier : Modifier {
         var extraPlacements = itemPlacementService.ItemPlacements
             .Where(placement => placement.Enabled && placement.IsExtra && !string.IsNullOrEmpty(placement.SceneFile)
                                 && !placement.Tags.Contains(KeyItemSupplyLocations.PlacementTag))
+            .Where(placement => DlcContent.IsAllowed(randomizer) ||
+                (placement.Dlc == null && DlcTypeExtensions.FromPakFileName(placement.SceneFile) == null))
             .ToList();
         var hasAlwaysOnItemBoxes = extraPlacements.Any(placement => placement.Tags.Contains(ItemBoxTag));
 
