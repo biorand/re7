@@ -133,6 +133,13 @@ return function()
     local passive_fields = { Item = item, PassiveSkill = passive_skill }
     local passive_item = object(passive_fields)
     local insert = hooks["app.PassiveSkillItem:onInsertInventory(app.Inventory)"]
+    assert(insert.before({ 0, passive_item, owner_inventory }) == nil)
+    assert(registered_skill == nil, "Missing compatibility setting must leave Birthday skills native")
+    settings["base-game-only"] = true
+    settings["allow-dlc-items"] = true
+    assert(insert.before({ 0, passive_item, owner_inventory }) == nil)
+    assert(registered_skill == nil, "DLC item option must not override base-game mode")
+    settings["base-game-only"] = false
     assert(insert.before({ 0, passive_item, owner_inventory }) == sdk.PreHookResult.SKIP_ORIGINAL)
     assert(registered_skill == passive_skill and passive_fields.PlayerOrder == player_order)
     registered_skill = nil

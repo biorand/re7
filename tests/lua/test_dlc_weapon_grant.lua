@@ -3,9 +3,10 @@ return function()
     local UI = require("BioRand7/ui")
     local ids = { "CKnife", "Handgun_Albert_C", "Shotgun_Albert", "NumaItem072", "CH9_WP002", "CH9_WP000", "CH9_WP001", "CH9_WP006",
         "Grenadebomb", "Thermatebomb", "Stangrenadebomb", "CH9_WP003", "CH9_WP004", "CH9_WP005" }
-    local flags = { ["dlc-campaign-weapons"] = true, ["allow-dlc-items"] = true }
+    local flags = { ["base-game-only"] = false, ["dlc-campaign-weapons"] = true, ["allow-dlc-items"] = true }
     local owned, boxed, paths, ready, missing = {}, {}, {}, {}, {}
     local calls, errors, infos = {}, {}, {}
+    local player_reads = 0
     local player_name, player_loaded, inventory_loaded, box_loaded, manager_loaded = "Pl0000", true, true, true, true
     local failure_id, throw = nil, false
     local player = { call = function(_, method)
@@ -41,9 +42,15 @@ return function()
         end }
     end }
     local context = {
-        config = { get = function(_, key) return flags[key] end },
+        config = { get = function(_, key, default)
+            if flags[key] == nil then return default end
+            return flags[key]
+        end },
         game = {
-            player = function() return player_loaded and player or nil end,
+            player = function()
+                player_reads = player_reads + 1
+                return player_loaded and player or nil
+            end,
             component = function(_, owner, name)
                 assert(owner == player and name == "app.Inventory")
                 return inventory_loaded and inventory or nil
@@ -97,6 +104,12 @@ return function()
     for _, key in ipairs({ "dlc-campaign-weapons", "allow-dlc-items" }) do
         flags[key] = false; rejected("disabled"); flags[key] = true
     end
+    local reads_before_disabled_grants = player_reads
+    flags["base-game-only"] = true; rejected("disabled")
+    flags["base-game-only"] = nil; rejected("disabled")
+    assert(player_reads == reads_before_disabled_grants,
+        "Base-game grants must stop before reading game objects, even with both DLC switches enabled")
+    flags["base-game-only"] = false
     player_loaded = false; rejected("Ethan"); player_loaded = true
     player_name = "Pl1000"; rejected("Ethan"); player_name = "Pl0000"
     inventory_loaded = false; rejected("not ready"); inventory_loaded = true

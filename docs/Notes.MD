@@ -80,6 +80,14 @@ birthday => Jacks55thBirthday
 
 ## DLC integration notes
 
+Base-game compatibility:
+
+- `base-game-only` defaults to true, including profiles missing the key. `DlcContent` gates imports based on the target seed configuration, independently of what the generation server's baseline contains. The legacy `allow-dlc-items` option only controls item pools within the DLC-enabled mode.
+- Birthday patches, starter skills, DLC coins, bird-cage rewards/payment items, experimental weapons, weapon parameter logging, authored items/recipes, and runtime drop pools must all respect this mode. Exact debugger recipe tables containing DLC items fail with an explanation instead of silently changing the authored table.
+- `JackStalker`/`Em3001` and `JackShears`/`Em8001` are imported Nightmare variants and are excluded from base-game replacement/extra pools, including explicit and SpawnGroup placements. Preserve vanilla campaign Jacks and shared Em3000/Em8000 parameter fixes.
+- The embedded Em3600/Em4000/Em4100/Em4200 templates retain optional Birthday score GUI/parameter and alternate-holder references. `BaseGameEnemyTemplate` removes those references from imported base-game copies while preserving controller structure and FSM identities. Em3600 also uses Birthday damage audio in the embedded donor; copy its native campaign sound array from `scenes/chapter/chapter3/enemy_em3600.scn.20`. DLC-enabled seeds keep the original templates.
+- `BaseGameCompatibilityTests` generates and packages seeds from a baseline with known DLC paths removed, and compares newly introduced serialized resource references against the source. This path-based audit is not an authoritative Steam depot ownership inventory. Clean-install runtime validation still needs a fresh campaign with no DLC mounted, covering room transitions, item pickups/crafting, bosses, and save/load. Never infer asset ownership solely from a generated class name.
+
 General lessons:
 
 - The C# TDB in `.analysis/re7_src` is the fastest source for class names, inheritance, fields, and enums. Use IDA for xrefs, decompilation, strings, and runtime control flow after narrowing the target.

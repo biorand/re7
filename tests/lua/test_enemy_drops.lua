@@ -28,6 +28,7 @@ return function()
     Vector3f = { new = vector }
 
     local configuration = {
+        ["base-game-only"] = false,
         ["enemy-drop-ammo-min"] = 0.1,
         ["enemy-drop-ammo-max"] = 0.1,
     }
@@ -120,6 +121,24 @@ return function()
         assert(drops:candidates({}, false)[1].value == id, "Normalized item-rate fallback must work")
         configuration["item-drop-ratio-" .. id:lower():gsub("_", "-")] = nil
     end
+    configuration["allow-dlc-items"], configuration["dlc-campaign-weapons"] = nil, nil
+
+    -- The target installation setting wins over stale or conflicting DLC options,
+    -- including valuable drops that historically bypassed allow-dlc-items.
+    configuration["allow-dlc-items"], configuration["dlc-campaign-weapons"] = true, true
+    configuration["enemy-drop-ratio-grenadebomb"] = 1
+    configuration["enemy-drop-valuable-dlc-coin"] = true
+    configuration["enemy-drop-valuable-birthday-skill"] = true
+    configuration["base-game-only"] = true
+    assert(#drops:candidates({}, false) == 0, "Base-game mode must reject every DLC drop family")
+    configuration["base-game-only"] = nil
+    assert(#drops:candidates({}, false) == 0, "Missing setting must safely default to base-game mode")
+    configuration["base-game-only"] = false
+    local dlc_candidates = drops:candidates({ int = function(_, minimum) return minimum end }, false)
+    assert(#dlc_candidates == 7, "DLC mode must retain the weapon, five coins and Birthday skill")
+    configuration["enemy-drop-ratio-grenadebomb"] = nil
+    configuration["enemy-drop-valuable-dlc-coin"] = nil
+    configuration["enemy-drop-valuable-birthday-skill"] = nil
     configuration["allow-dlc-items"], configuration["dlc-campaign-weapons"] = nil, nil
 
     local fixed_rng = { int = function(_, minimum, maximum)

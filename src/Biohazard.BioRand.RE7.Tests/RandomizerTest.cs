@@ -38,6 +38,9 @@ public static class RandomizerTest {
 
         configuration["debug-download-data"] = false;
 
+        // Most feature tests exercise the complete catalog. Compatibility tests
+        // explicitly enable the public, base-game-only default.
+        configuration[DlcContent.BaseGameOnlyConfigKey] = false;
         configuration["allow-bonus-items"] = false;
         configuration["allow-dlc-items"] = true;
 

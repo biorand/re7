@@ -12,7 +12,7 @@ BioRand 7 is a [cloud randomizer](https://beta-re7.biorand.net/) and mod-generat
 
 This repository contains the .NET randomizer library, command-line tools, data-generation utilities, tests, REFramework Lua scripts, and reverse-engineering notes that support it.
 
-BioRand 7 is a fan-made project and is not affiliated with or endorsed by Capcom. You need a legally owned copy of Resident Evil 7 including all DLCs to use game-derived inputs locally.
+BioRand 7 is a fan-made project and is not affiliated with or endorsed by Capcom. You need a legally owned copy of Resident Evil 7 to use game-derived inputs locally. DLC is optional when generating with **Base Game Only** enabled.
 
 ## Status
 
@@ -45,7 +45,13 @@ For current design notes and planned work, see:
 
 ## Requirements
 
-For players, use the Steam Windows RT/DX12 version of RE7 with its DLC installed. The older `dx11_non-rt` branch is unsupported. The SDK and Git requirements below apply to building the tools yourself.
+For players, use the Steam Windows RT/DX12 version of RE7. **Base Game Only (No DLC Required)** is enabled by default and targets installations without DLC. The older `dx11_non-rt` branch is unsupported. The SDK and Git requirements below apply to building the tools yourself.
+
+Base Game Only overrides DLC item and weapon pools, Birthday starting skills, DLC coins, and imported Nightmare Jack variants, even if an older profile or an authored extra-placement row requests them. Normal campaign bosses remain in place. Bird cages retain their original rewards when their replacement table has no eligible base-game entries. Enemy, item, inventory, recipe, and weapon-stat randomization remain available for base-game content; features that need REFramework still require it.
+
+To use the complete DLC catalog, disable Base Game Only and install all DLC on the target game. **Allow DLC Items** remains a separate item-pool preference; it does not replace the installation compatibility setting. Profiles without `base-game-only` default to `true`, so older profiles must explicitly set it to `false` to retain DLC imports. Each generated archive includes `requirements.txt` describing its content mode. Start a new game when changing modes; this does not convert saves or remove assets from a previously installed seed.
+
+Automated compatibility checks cover generation with known DLC source paths removed and audit imported resource references. A full campaign playtest on a clean installation with no DLC mounted is still pending.
 
 ## Installing a generated seed
 
@@ -66,7 +72,7 @@ Chapter shuffling is unavailable in public profiles until return routes are vali
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/)
 - Git with [Git LFS](https://git-lfs.com/)
-- A local Resident Evil 7 install with all DLCs for local setup/mod generation workflows
+- A local Resident Evil 7 install for local setup/generation. Base Game Only targets a baseline prepared from the base game; DLC imports and standalone DLC mod exports require the corresponding source assets.
 - Windows is recommended for game-related workflows
 
 Large embedded assets, including `src/Biohazard.BioRand.RE7/_Data/silver_birthday_patches.zip`, are stored with Git LFS. Install Git LFS before cloning when possible:

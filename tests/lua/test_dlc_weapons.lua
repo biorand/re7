@@ -1,6 +1,7 @@
 return function()
     local Weapons = require("BioRand7/dlc_weapons")
     local enabled, allow, available, ready, foreign, fail = false, true, false, false, false, false
+    local base_game_only = false
     local calls, loads, errors, now = 0, 0, 0, 0
     os.clock = function() return now end
     local manager = { call = function(_, method, id)
@@ -19,7 +20,15 @@ return function()
         end }
     end }
     local context = {
-        config = { get = function(_, key) if key == "dlc-campaign-weapons" then return enabled else return allow end end },
+        config = { get = function(_, key, default)
+            if key == "dlc-campaign-weapons" then return enabled end
+            if key == "allow-dlc-items" then return allow end
+            if key == "base-game-only" then
+                if base_game_only == nil then return default end
+                return base_game_only
+            end
+            return default
+        end },
         game = { singleton = function(_, name) assert(name == "app.ItemManager"); return manager end },
         log = { error = function() errors = errors + 1 end },
     }
@@ -28,6 +37,11 @@ return function()
     enabled, allow = true, false
     weapons:update(); assert(calls == 0)
     allow = true
+    base_game_only = true
+    weapons:update(); assert(calls == 0, "Base-game mode must override both DLC weapon switches")
+    base_game_only = nil
+    weapons:update(); assert(calls == 0, "Missing compatibility setting must default to base-game mode")
+    base_game_only = false
     weapons:update(); assert(calls == 14 and loads == 0)
     available, now = true, 1
     weapons:update(); assert(loads == 42)
