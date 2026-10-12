@@ -3,6 +3,7 @@ using IntelOrca.Biohazard.REE.Rsz;
 using Biohazard.BioRand.RE7.Items;
 using Biohazard.BioRand.RE7.Weapons;
 using Biohazard.BioRand.RE7.REEngine;
+using Biohazard.BioRand.RE7.Enemies;
 
 namespace Biohazard.BioRand.RE7.Services;
 
@@ -14,6 +15,7 @@ internal class TemplateService {
     private readonly Randomizer _randomizer;
     private readonly Dictionary<string, RszGameObject> _itemTemplates = new();
     private readonly HashSet<string> _dlcTemplates = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, RszGameObject> _baseEnemyTemplates = new(StringComparer.Ordinal);
 
     public TemplateService(Randomizer randomizer) {
         _randomizer = randomizer;
@@ -36,8 +38,16 @@ internal class TemplateService {
     public RszGameObject? TryGetObject(string name)
         => _scene.FindGameObject(name);
 
-    public RszGameObject GetEnemyTemplate(string enemyID)
-        => GetObject($"EnemyTemplate_{enemyID}");
+    public RszGameObject GetEnemyTemplate(string enemyID) {
+        var template = GetObject($"EnemyTemplate_{enemyID}");
+        if (DlcContent.IsAllowed(_randomizer))
+            return template;
+        if (!_baseEnemyTemplates.TryGetValue(enemyID, out var baseTemplate)) {
+            baseTemplate = BaseGameEnemyTemplate.Adapt(_randomizer.FileRepository, enemyID, template);
+            _baseEnemyTemplates.Add(enemyID, baseTemplate);
+        }
+        return baseTemplate;
+    }
 
     public RszGameObject GetEnemySpawnInfo(string enemyID)
         => GetObject($"EnemySpawnInfo_{enemyID}");
