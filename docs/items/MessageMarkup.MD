@@ -1,16 +1,16 @@
 # RE7 Message Markup
 
-RE7 `.msg.17` are UTF-16 message strings with RE Engine `via.gui` message tags embedded in angle brackets. RE7 also runs an application-level replacement pass for some game-specific tags, most visibly input icons.
+RE7 `.msg.17` files store UTF-16 message strings with RE Engine `via.gui` message tags embedded in angle brackets. RE7 also runs an application-level replacement pass for some game-specific tags, most visibly input icons.
 
 This document describes the markup that appears in the extracted vanilla RE7 message corpus and the tag types exposed by the engine enum but not observed in vanilla RE7 strings.
 
-## Safe Authoring Subset
+## Observed Authoring Subset
 
-Use this subset for BioRand-authored inventory, item, tutorial, and menu text unless a specific UI has been runtime-tested with broader tags:
+Start with these observed forms for BioRand-authored text. Their presence in vanilla messages does not establish support in every UI; use `PAGE`, `TIME`, and `REF` only in appropriate message contexts as described below.
 
 ```text
 plain Unicode text
-\r\n line breaks
+line breaks (actual CRLF characters)
 <COLOR RRGGBB>Colored texts</COLOR>
 <SIZE n>Custom font size</SIZE>
 <CENTER>Centered text</CENTER>
@@ -25,7 +25,7 @@ Practical rules:
 - Prefer uppercase tag names. Vanilla RE7 overwhelmingly uses uppercase tags.
 - Prefer `<COLOR RRGGBB>` without `#`.
 - Always close range-style tags such as `COLOR`, `SIZE`, and `CENTER`.
-- Do not use engine-supported but unobserved tags in new randomizer text without runtime testing in the target UI!
+- Do not use tags inferred only from engine enum names in new randomizer text without runtime testing in the target UI.
 - Treat unknown angle-bracket text as risky in UI strings. Some subtitle/editorial text uses literal angle brackets, but recognized tag names can change rendering.
 
 ## Observed RE7 Tags
@@ -247,44 +247,44 @@ CH8_em9452_2102_0400
 
 Use `REF` only when the referenced message entry is guaranteed to exist in the same loaded message context.
 
-## Engine-Supported MessageTag Types
+## Engine MessageTag Enum
 
-`Enums.via.gui.MessageTag.Type` exposes these tag types. "Observed" means present in the extracted RE7 `.msg.17` corpus. "Engine-supported only" means the enum exists, but no vanilla RE7 message string in the scanned corpus used the corresponding angle tag.
+`Enums.via.gui.MessageTag.Type` exposes these tag types. "Observed" means present in the extracted RE7 `.msg.17` corpus. "Unobserved enum" means the enum value exists, but no vanilla RE7 message string in the scanned corpus used the corresponding angle tag. Enum presence alone does not prove the suggested spelling, argument syntax, or support in an RE7 UI.
 
 | Enum value | Likely text tag | Status in RE7 corpus | Notes |
 | - | - | - | - |
 | `Unknown` | N/A | Internal | Fallback enum value. |
 | `Page` | `<PAGE>` | Observed | Exact page marker. |
-| `Line` | `<LINE>` | Engine-supported only | Not observed in scanned RE7 strings. |
+| `Line` | `<LINE>` | Unobserved enum | Not observed in scanned RE7 strings. |
 | `Size` | `<SIZE ...>` | Observed | Font size override. |
-| `Font` | `<FONT ...>` | Engine-supported only | Not observed in scanned RE7 strings. |
+| `Font` | `<FONT ...>` | Unobserved enum | Not observed in scanned RE7 strings. |
 | `Color` | `<COLOR ...>` | Observed | RGB text color override. |
-| `Char` | `<CHAR ...>` | Engine-supported only | Not observed in scanned RE7 strings. |
-| `Space` | `<SPACE ...>` | Engine-supported only | Not observed in scanned RE7 strings. |
-| `Wordwrap` | `<WORDWRAP ...>` | Engine-supported only | Not observed in scanned RE7 strings. |
+| `Char` | `<CHAR ...>` | Unobserved enum | Not observed in scanned RE7 strings. |
+| `Space` | `<SPACE ...>` | Unobserved enum | Not observed in scanned RE7 strings. |
+| `Wordwrap` | `<WORDWRAP ...>` | Unobserved enum | Not observed in scanned RE7 strings. |
 | `Center` | `<CENTER>` | Observed | Center alignment. |
-| `Left` | `<LEFT>` | Engine-supported only | Not observed in scanned RE7 strings. |
-| `Right` | `<RIGHT>` | Engine-supported only | Not observed in scanned RE7 strings. |
-| `Top` | `<TOP>` | Engine-supported only | Not observed in scanned RE7 strings. |
-| `Bottom` | `<BOTTOM>` | Engine-supported only | Not observed in scanned RE7 strings. |
+| `Left` | `<LEFT>` | Unobserved enum | Not observed in scanned RE7 strings. |
+| `Right` | `<RIGHT>` | Unobserved enum | Not observed in scanned RE7 strings. |
+| `Top` | `<TOP>` | Unobserved enum | Not observed in scanned RE7 strings. |
+| `Bottom` | `<BOTTOM>` | Unobserved enum | Not observed in scanned RE7 strings. |
 | `Time` | `<TIME ...>` | Observed | Timing ranges. |
-| `Ruby` | `<RUBY ...>` | Engine-supported only | Ruby/furigana-related; not observed in scanned RE7 strings. |
-| `RubyB` | `<RUBYB ...>` | Engine-supported only | Ruby-related; not observed in scanned RE7 strings. |
-| `RubyRB` | `<RUBYRB ...>` | Engine-supported only | Ruby-related; not observed in scanned RE7 strings. |
-| `RubyRT` | `<RUBYRT ...>` | Engine-supported only | Ruby-related; not observed in scanned RE7 strings. |
-| `Event` | `<EVENT ...>` | Engine-supported only | Not observed in scanned RE7 strings. |
-| `TCU` | `<TCU ...>` | Engine-supported only | Not observed in scanned RE7 strings. |
-| `Draw` | `<DRAW ...>` | Engine-supported only | Rendering control; not observed in scanned RE7 strings. |
-| `GlowDraw` | `<GLOWDRAW ...>` | Engine-supported only | Rendering control; not observed in scanned RE7 strings. |
-| `ShadowDraw` | `<SHADOWDRAW ...>` | Engine-supported only | Rendering control; not observed in scanned RE7 strings. |
-| `Sprite` | `<SPRITE ...>` | Engine-supported only | Sprite insertion; not observed in scanned RE7 strings. |
-| `Baseline` | `<BASELINE ...>` | Engine-supported only | Text baseline control; not observed in scanned RE7 strings. |
-| `Glow` | `<GLOW ...>` | Engine-supported only | Glow styling; not observed in scanned RE7 strings. |
-| `Shadow` | `<SHADOW ...>` | Engine-supported only | Shadow styling; not observed in scanned RE7 strings. |
-| `Italic` | `<ITALIC>` | Engine-supported only | Not observed in scanned RE7 strings. |
-| `Bold` | `<BOLD>` | Engine-supported only | Not observed in scanned RE7 strings. |
+| `Ruby` | `<RUBY ...>` | Unobserved enum | Ruby/furigana-related; not observed in scanned RE7 strings. |
+| `RubyB` | `<RUBYB ...>` | Unobserved enum | Ruby-related; not observed in scanned RE7 strings. |
+| `RubyRB` | `<RUBYRB ...>` | Unobserved enum | Ruby-related; not observed in scanned RE7 strings. |
+| `RubyRT` | `<RUBYRT ...>` | Unobserved enum | Ruby-related; not observed in scanned RE7 strings. |
+| `Event` | `<EVENT ...>` | Unobserved enum | Not observed in scanned RE7 strings. |
+| `TCU` | `<TCU ...>` | Unobserved enum | Not observed in scanned RE7 strings. |
+| `Draw` | `<DRAW ...>` | Unobserved enum | Rendering control; not observed in scanned RE7 strings. |
+| `GlowDraw` | `<GLOWDRAW ...>` | Unobserved enum | Rendering control; not observed in scanned RE7 strings. |
+| `ShadowDraw` | `<SHADOWDRAW ...>` | Unobserved enum | Rendering control; not observed in scanned RE7 strings. |
+| `Sprite` | `<SPRITE ...>` | Unobserved enum | Sprite insertion; not observed in scanned RE7 strings. |
+| `Baseline` | `<BASELINE ...>` | Unobserved enum | Text baseline control; not observed in scanned RE7 strings. |
+| `Glow` | `<GLOW ...>` | Unobserved enum | Glow styling; not observed in scanned RE7 strings. |
+| `Shadow` | `<SHADOW ...>` | Unobserved enum | Shadow styling; not observed in scanned RE7 strings. |
+| `Italic` | `<ITALIC>` | Unobserved enum | Not observed in scanned RE7 strings. |
+| `Bold` | `<BOLD>` | Unobserved enum | Not observed in scanned RE7 strings. |
 
-Do not infer the full argument grammar for engine-supported-only tags from the enum name alone. `via.gui.GUIUtility::ParseMessageTagArgs` can parse named and quoted arguments, but vanilla RE7 strings mostly use simple positional arguments such as `<COLOR FFFF00>` and `<SIZE 18>`.
+Do not infer the full argument grammar for unobserved tags from the enum name alone. `via.gui.GUIUtility::ParseMessageTagArgs` can parse named and quoted arguments, but vanilla RE7 strings mostly use simple positional arguments such as `<COLOR FFFF00>` and `<SIZE 18>`.
 
 ## MessageTag Attribute Flags
 
@@ -308,14 +308,15 @@ BioRand CSV fields that contain message markup should preserve the raw message s
 
 - Quote fields that contain commas, quotes, or line breaks.
 - Double embedded CSV quotes: `"` becomes `""`.
-- Preserve actual CRLF or escaped `\r\n` according to the loader/writer path being used.
+- Use actual line breaks inside quoted CSV fields. `Csv.Deserialize` and `MessageModifier` do not expand literal `\r\n` or `\n` escape sequences. C# string literals and JSON have their own escape processing before a message reaches the writer.
 - Do not HTML-escape angle brackets. The game expects literal `<` and `>`.
 - Keep message tags inside the same quoted CSV field.
 
-Example CSV field:
+Example CSV field with an actual line break:
 
 ```csv
-"Raises attack power.\r\n<COLOR FFFF00>Stacks with other skills.</COLOR>"
+"Raises attack power.
+<COLOR FFFF00>Stacks with other skills.</COLOR>"
 ```
 
 When serialized back to `.msg.17`, the REE MSG writer stores the string as UTF-16 string data and encrypts the string block. The tag text itself is not transformed by the serializer; rendering behavior is decided later by RE Engine GUI/message code.

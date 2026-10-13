@@ -15,20 +15,23 @@ Large feature work is welcome too, but please open an issue first so the design 
 ## Development Setup
 
 ```powershell
-git clone --recursive https://github.com/biorand/re7.git
+git lfs install
+git clone https://github.com/biorand/re7.git
 cd re7
+git lfs pull
 dotnet restore .\biorand-re7.sln
 dotnet build .\biorand-re7.sln --no-restore
+```
+
+Use .NET 10 and Git LFS. Do not retarget projects to an older framework to make a local machine work. The repository has no registered submodules. RE Engine tooling is restored from NuGet unless an optional local checkout exists at `src/reeutils/`.
+
+For the full test suite, provide a baseline PAK through `BIORAND_RE7_TEST_PAK` or `%USERPROFILE%\.biorand\biorand-re7.pak`. The PAK is not tracked in the repository. Then run:
+
+```powershell
 dotnet test .\biorand-re7.sln --no-build --verbosity normal
 ```
 
-If you cloned without submodules:
-
-```powershell
-git submodule update --init --recursive
-```
-
-Use .NET 10. Do not retarget projects to an older framework to make a local machine work.
+Without a baseline, run `dotnet test .\biorand-re7.sln --no-build --filter "Category!=RequiresPak"` for the tests that do not need game data.
 
 ## Pull Request Expectations
 
@@ -79,6 +82,8 @@ dotnet test .\src\Biohazard.BioRand.RE7.Tests\Biohazard.BioRand.RE7.Tests.csproj
 ```
 
 Run the full solution test command before opening larger PRs.
+
+For REFramework Lua changes, also run `lua tests/lua/run.lua` with Lua 5.4. These tests require neither RE7 nor a baseline PAK; see [REFramework Lua validation](docs/reframework-lua.md).
 
 To measure the suite, build first, then record per-test durations without build time:
 

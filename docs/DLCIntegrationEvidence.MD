@@ -14,6 +14,8 @@ This appendix records concrete IDA MCP evidence used by [DLCIntegrationPlan.MD](
 
 No raw virtual address in this document is stable across executable builds.
 
+The runtime observations refer to the earlier DLC prototype and local `.analysis/dlc-enemy-integration-findings.md` notes, which are not included in a fresh checkout. They do not certify campaign support on `master`. The addresses and signatures below remain evidence for the analyzed executable, not current production hooks.
+
 ## Analyzed executable
 
 | Field | Value |

@@ -23,12 +23,13 @@
     EnemySpawnInfo components into SpawnInfos and ForceSpawnInfos.
   - Normal spawn path: spawnImplement50605 finds a matching pooled unit, writes that unit’s GameObject into info->EnemyInstance, then calls
     app.EnemySpawnInfo::spawnInstance90109 at 0x1414AB3D0.
-  - Force-spawn path is mixed into spawnImplement50605: if info->IsForceSpawn is set, it searches force-spawn candidates, can skip some correction/
+  - Force-spawn path is mixed into spawnImplement50605. Immediate setupInstance90108 is limited to the branch where
+    IsForceSpawn and CanSpawnAndSetupForForceSpawn are both true; normal pooled spawns defer setup to the generator update.
   - requestOrder90106 at 0x1400C94F0 forwards an order to the spawned enemy if an EnemyOrder exists.
   - reserveAppearAndThinkStateSet90116 at 0x1400CEA90 stores delayed AI appear/think sets for application after spawn.
   - spawnInstance90109 marks the request as spawned, clears respawn wait, binds controllers off the live EnemyInstance (EnemyDamageController,
     EnemyActionController, EnemyStatus, EnemyOrder, MovementController, etc.), activates/configures the object, and applies movement/filter/map
-    policy says cancellation counts as completion.
+    handling. It then sets RequestedOperation to Setup and isCompletedOperation to false; the later setupInstance90108 call completes the operation.
 
   The main runtime model looks like this:
 
@@ -36,11 +37,13 @@
   2. A spawn request comes in through EnemyGeneratorManager::requestSpawn.
   3. The manager tries each EnemyGenerator.
   4. A generator matches the request to a pooled spawn slot by GUID/alias.
-  5. It binds the pooled GameObject into EnemySpawnInfo, calls spawnInstance, and optionally setupInstance.
+  5. It binds the pooled GameObject into EnemySpawnInfo and calls spawnInstance. Normal pooled spawns complete setupInstance through the generator update.
   6. If the request is force-spawned or time-limited, extra handling in spawnImplement decides whether to complete, defer, or cancel the request.
 
   The important conclusion is that RE7 is not primarily “creating enemies from scratch” on each request here. The code I found is mostly a pooled-
   instance activation system driven by EnemySpawnInfo records and EnemyGenerator selection logic.
+
+  See [the two-stage spawn evidence](../DLCIntegrationEvidence.MD#normal-pooled-spawn-is-two-stage) for the verified spawn/setup flow and addresses.
 
 ## DLC enemy component shapes
 
@@ -181,9 +184,10 @@ matching, and `*` / `?` wildcards. Exclude always wins. Use `MoldedQuick`, not
 
 Blank Id with a nonblank Include is an explicit authored pool, independent of
 profile ratios and balance mode, just like the previous fixed/pipe-separated Id
-choices. Only definitions with extra-enemy generator support are eligible. An
-explicit Include can select normal/blade Molded, which the existing automatic
-extra-enemy pool omits because of idle-animation issues.
+choices. Only definitions with supported extra-placement paths are eligible,
+including static `MiaChainsaw` and `EvelineElderly` actors. An explicit Include can
+select normal/blade Molded, which the existing automatic extra-enemy pool omits
+because of idle-animation issues.
 
 `Id = random` keeps profile ratios, balance mode, and existing extra-enemy safety
 restrictions; Include/Exclude narrows that pool. When an area's variety selection

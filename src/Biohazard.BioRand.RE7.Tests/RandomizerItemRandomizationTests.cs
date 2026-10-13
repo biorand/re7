@@ -319,6 +319,66 @@ public class RandomizerItemRandomizationTests {
     }
 
     [Theory]
+    [InlineData(ItemDrops.BirthdaySkill, false)]
+    [InlineData(ItemDrops.BirthdaySkill, true)]
+    [InlineData(ItemDrops.Weapon, false)]
+    [InlineData(ItemDrops.Weapon, true)]
+    public void RandomItems_GuestHouseAtticHandgun_UsesRegularPickupAndPreservesDialogueInteraction(
+        string valuableDrop, bool preserveItemModels) {
+        const string scenePath = "natives/stm/environment/scene/chapter1/c01_3f.scn.20";
+        var pickupGuid = new Guid("b09f6174-47f2-4851-acc3-3106d0902bfa");
+        var interactionGuid = new Guid("abb411f5-de67-0b95-0a58-a794254c3417");
+        // Isolate the reviewed event pickup so it receives the chosen valuable drop.
+        var csv = "Id,Enabled,Chapter,Guid,SceneFile\n" +
+                  $"Handgun_M19,TRUE,1,{pickupGuid},{scenePath}\n";
+        using var result = RandomizerTest.RunState(config => {
+            config["random-items"] = true;
+            config["replace-weapons"] = true;
+            config["allow-dlc-items"] = true;
+            config[$"item-drop-valuable-{valuableDrop}"] = true;
+            config["preserve-item-models"] = preserveItemModels;
+            ConfigureSingleDrop(config, ForcedDropId);
+        }, prepareRandomizer: randomizer =>
+            randomizer.DynamicData.SetData(DynamicDataName.ItemPlacements, Encoding.UTF8.GetBytes(csv)));
+
+        var beforeScene = result.ReadBeforeScene(scenePath);
+        var afterScene = result.ReadAfterScene(scenePath);
+        var before = beforeScene.FindGameObject(pickupGuid)!;
+        var after = afterScene.FindGameObject(pickupGuid)!;
+        var item = after.FindComponent<app.Item>()!;
+        var template = result.Randomizer.TemplateService.GetItemTemplate(item.ItemDataID);
+
+        Assert.True(HasFsmInHierarchy(beforeScene, pickupGuid));
+        Assert.Equal(pickupGuid, after.Guid);
+        Assert.Equal(template.Name, after.Name);
+        Assert.Equal(template.Components.Select(component => component.Type.Name),
+            after.Components.Select(component => component.Type.Name));
+        AssertTemplateChildShape(template, after);
+        Assert.Equal(before.FindComponent<GeneratedViaTransform>()!.Position,
+            after.FindComponent<GeneratedViaTransform>()!.Position);
+        Assert.NotEqual(before.FindComponent<app.Item>()!.SaveGUID, item.SaveGUID);
+        AssertVisualResourcesMatch(preserveItemModels ? before : template, after);
+
+        var interaction = Assert.Single(after.Children, child =>
+            child.FindComponent("app.InteractDetailSearch") != null ||
+            child.FindComponent("app.InteractWeapon") != null);
+        Assert.Equal(interactionGuid, interaction.Guid);
+        Assert.Single(afterScene.GetGameObjects(), gameObject => gameObject.Guid == interactionGuid);
+        Assert.DoesNotContain(GetDescendantGuids(before).Intersect(GetDescendantGuids(after)),
+            guid => guid != interactionGuid);
+        AssertNoSharedDescendantGuids(template, after);
+        AssertNoSharedSaveGuids(template, after);
+
+        if (valuableDrop == ItemDrops.BirthdaySkill) {
+            Assert.True(ItemDrops.IsBirthdaySkill(item.ItemDataID));
+            AssertPickupInteractionsAreReadyForFreshPlacement(after, item.ItemDataID);
+        } else {
+            Assert.True(ItemDefinitionRepository.Default.FromId(item.ItemDataID)!.IsWeapon);
+            AssertWeaponPickupInteractionGameObjectsAreReady(after);
+        }
+    }
+
+    [Theory]
     [InlineData(false)]
     [InlineData(true)]
     public void RandomItems_DlcCoinValuableDrops_PreserveEachRewardAndUsablePickup(bool preserveItemModels) {

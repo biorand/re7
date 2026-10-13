@@ -12,7 +12,7 @@ Inventory:
 
 Recipes:
 
-* Only potential softlock: `SerumMaterialA + 1x SerumMaterialB -> 1x DybbukMedicine`
+* Preserve the progression-critical serum recipe: `1x SerumMaterialA + 1x SerumMaterialB -> 1x DybbukMedicine`
 * Always enabled:
   * Softlock prevention
   * New recipes are visible in the crafting menu
@@ -52,7 +52,7 @@ Status: **Completed ✅**
 * Goal: *Enhance enemy variety, especially the Molded*
 * Enemy Spawn Controllers are tricky
   * Can't just copy enemies from .scn file A to .scn file B
-  * Bosses are particulary finicky
+  * Bosses are particularly finicky
 * Certain bosses might not be spawnable in random locations:
   * Jack 3 requires fixed boat house waypoints, must be investigated
   * Same for the Evie final boss fight
@@ -72,7 +72,7 @@ Status: **Completed ✅**
 * Code refactoring
 
 *Estimated completion: June*  
-Status: **Not completed, postponed **
+Status: **Not completed, postponed**
 
 ==================== BETA TESTING PHASE 2 ====================
 
@@ -87,7 +87,7 @@ Status: **Not completed, postponed **
 * Not a Hero and End of Zoe must follow the staged compatibility and certification process in [DLCIntegrationPlan.MD](DLCIntegrationPlan.MD)
 
 *Estimated completion: August*  
-Status: **Not completed, postponed **
+Status: **Not completed, postponed**
 
 ## 6. Chapter shuffling
 
@@ -97,6 +97,6 @@ Status: **Not completed, postponed **
 * Have to manipulate flags (userdata/globalvariables.uvar.2)
 
 *Estimated completion: September*  
-Status: **Not completed, postponed **
+Status: **Not completed, postponed**
 
 ### Initial public access: **October**

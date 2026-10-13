@@ -12,12 +12,15 @@ public static class RszExtensions {
     public static RszGameObject CloneWithNewGuids(
         this RszGameObject rootGameObject,
         Rng rng,
-        Guid? rootGuid = null) {
+        Guid? rootGuid = null,
+        IReadOnlyDictionary<Guid, Guid>? childGuidOverrides = null) {
         var guidMap = new Dictionary<Guid, Guid>();
         var isRoot = true;
         var root = rootGameObject.VisitGameObjects(gameObject => {
             var newGuid = rootGuid.HasValue && isRoot
                 ? rootGuid.Value
+                : !isRoot && childGuidOverrides != null && childGuidOverrides.TryGetValue(gameObject.Guid, out var childGuid)
+                ? childGuid
                 : rng.NextGuid();
             isRoot = false;
             guidMap[gameObject.Guid] = newGuid;

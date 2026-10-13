@@ -14,8 +14,8 @@ Important projects and directories:
 - `src/biorand-re7/` - Spectre.Console CLI for setup, generation, updates, mods, and remote agent mode.
 - `src/Biohazard.BioRand.RE7.DataGen/` - data/code generation tools for CSV/JSON/binary outputs and RSZ C# types.
 - `src/Biohazard.BioRand.RE7/_Data/reframework/autorun/` - modular REFramework Lua autorun scripts embedded and deployed by the core project.
-- `src/Biohazard.BioRand.RE7.Tests/` - xUnit behavior/regression tests over the embedded baseline pak.
-- `src/reeutils/` - git submodule for RE Engine tooling. Do not edit it casually; call out any intentional submodule changes.
+- `src/Biohazard.BioRand.RE7.Tests/` - xUnit behavior/regression tests, including tests that require a local baseline PAK.
+- `src/reeutils/` - optional local RE Engine tooling checkout. The core project uses it when present and otherwise restores `IntelOrca.Biohazard.REE` from NuGet. Do not edit a local tooling checkout casually; call out intentional dependency changes.
 - `docs/` - active reverse-engineering notes and roadmap. Read `docs/Notes.MD` before changing item, enemy, inventory, recipe, chapter, or DLC logic.
 - `.analysis/re7_src/` - locally generated REFramework.NET C# type database. Prefer it for DLC class names, inheritance, fields, and enums before spending time in IDA.
 - Generated C# properties can wrap TDB fields. Before translating a property to a Lua `get_`/`set_` call, verify the actual member in the raw TDB dump or live schema. Use `get_field`/`set_field` for fields; see `docs/reframework-lua.md`.
@@ -25,7 +25,7 @@ Important projects and directories:
 ## Before Editing
 
 - Check `git status --short` and preserve user changes.
-- If dependencies look missing, run `git submodule update --init --recursive`.
+- Restore missing package dependencies with `dotnet restore .\biorand-re7.sln`. This branch has no registered Git submodules; check the optional `src/reeutils/` checkout only when a local project reference is intended.
 - Prefer focused edits. This code touches game binaries and softlock-prone state; avoid broad refactors unless the task asks for them.
 - Keep generated/game-data churn deliberate. Large diffs in `_Data`, `GeneratedEnums.cs`, `GeneratedTypes.cs`, or binary assets need a clear reason.
 - For DLC work, check `docs/Notes.MD`, `docs/enemies/enemy_spawning.md`, `docs/enemies/spawnInfoOptions.md`, and the relevant `.analysis/*-findings.md` note before editing.
@@ -47,7 +47,7 @@ For a focused test pass:
 dotnet test .\src\Biohazard.BioRand.RE7.Tests\Biohazard.BioRand.RE7.Tests.csproj --verbosity normal
 ```
 
-CI currently checks out submodules, installs .NET 10.0, then runs restore, build, and test. If .NET 10 is unavailable locally, say so rather than downgrading target frameworks.
+CI fetches Git LFS assets, installs .NET 10.0, then runs restore, build, and test in Debug and Release. Full validation requires the baseline PAK; pull requests without it run `--filter "Category!=RequiresPak"`. If .NET 10 is unavailable locally, say so rather than downgrading target frameworks.
 
 Run `lua tests/lua/run.lua` after changing REFramework Lua behavior. CI uses Lua 5.4; these tests do not require RE7 or a baseline PAK.
 
@@ -108,7 +108,7 @@ Use the existing xUnit helpers:
 - `RandomizerTestPaths` centralizes common pak paths.
 - `RandomizerTestHelpers` contains readers for scenes, chapter jumps, bird cages, and attack userdata.
 
-Tests should not require a local RE7 install or Google Sheets. The test harness copies the embedded `biorand-re7.pak` to `%USERPROFILE%\.biorand\biorand-re7.pak`.
+Tests should not require a local RE7 install or Google Sheets. PAK-backed tests first use `BIORAND_RE7_TEST_PAK`, then `%USERPROFILE%\.biorand\biorand-re7.pak`. If neither is supplied, the harness copies an embedded `biorand-re7.pak` there when one is available; the baseline PAK is not tracked in this repository. Without a baseline, use `--filter "Category!=RequiresPak"` for the tests that do not need game data.
 
 When game behavior cannot be fully proven by unit tests, add the closest regression test and document the remaining manual validation risk.
 
@@ -116,7 +116,7 @@ When game behavior cannot be fully proven by unit tests, add the closest regress
 
 Softlock prevention beats chaos.
 
-- Recipes must use valid `app.ItemID` values. The combine dictionary must reference valid recipe DataIDs. Invalid recipe data can stop the game from loading.
+- Recipes must use valid `app.ItemID` values. The combine dictionary's `ItemDataID` entries must reference recipe `ResultItemID` values, not recipe `DataID` labels. Invalid recipe data can stop the game from loading.
 - The vanilla combine menu has strict limits; extra visible recipes rely on REFramework behavior.
 - Enemy FSM UIDs are not arbitrary IDs; they can be hard-coded state IDs. Preserve valid UIDs unless the code deliberately remaps them.
 - Roaming enemies, bosses, elevators, waypoints, and navigation surfaces are especially fragile. Check `docs/Notes.MD` before touching enemy placement logic.
