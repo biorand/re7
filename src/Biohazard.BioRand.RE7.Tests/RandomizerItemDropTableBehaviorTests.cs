@@ -15,7 +15,7 @@ public class RandomizerItemDropTableBehaviorTests {
     [InlineData("SyntheticDetergent", 0.0)]
     public void ItemDropTable_CraftingMaterials_RespectConfiguredWeight(string itemId, double ratio) {
         using var result = RandomizerTest.RunState(config => {
-            config[$"item-drop-ratio-{itemId.ToLowerInvariant()}"] = ratio;
+            config[$"item-drop-ratio-{ItemDrops.GetConfigId(itemId)}"] = ratio;
         });
         var table = result.ReadAfterUserFile<app.ReliefItemTable>(RandomizerTestPaths.Chapter4DropTablePath);
 
@@ -122,7 +122,7 @@ public class RandomizerItemDropTableBehaviorTests {
     public void ItemDropTable_UnsupportedRuntimePickupItems_AreExcluded() {
         using var result = RandomizerTest.RunState(config => {
             foreach (var drop in ItemDrops.GenericDrops) {
-                config[$"item-drop-ratio-{drop.ToLowerInvariant()}"] = 0.0;
+                config[$"item-drop-ratio-{ItemDrops.GetConfigId(drop)}"] = 0.0;
             }
 
             config["item-drop-ratio-stimulant"] = 1.0;

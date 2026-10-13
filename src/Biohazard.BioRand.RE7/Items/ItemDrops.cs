@@ -27,6 +27,12 @@ internal class ItemDrops {
             ["ChemicalS"] = 0.2,
             ["Gunpowder"] = 0.35,
             ["LiquidBomb"] = 0.05,
+            ["Grenadebomb"] = 0.03,
+            ["Thermatebomb"] = 0.03,
+            ["Stangrenadebomb"] = 0.03,
+            ["CH9_WP003"] = 0.03,
+            ["CH9_WP004"] = 0.03,
+            ["CH9_WP005"] = 0.03,
             ["Coin"] = 0.1,
             ["Alcohol"] = 0.05,
             ["Flower"] = 0.05,
@@ -62,7 +68,13 @@ internal class ItemDrops {
         "Flower",
         "AlloyClay",
         "Magnesium",
-        "SyntheticDetergent"
+        "SyntheticDetergent",
+        "Grenadebomb",
+        "Thermatebomb",
+        "Stangrenadebomb",
+        "CH9_WP003",
+        "CH9_WP004",
+        "CH9_WP005"
     ];
 
     public static ImmutableHashSet<string> UnsupportedRuntimeDropIds { get; } =[
@@ -130,6 +142,8 @@ internal class ItemDrops {
     public static double GetDefaultGenericDropRatio(string id)
         => _defaultGenericDropRatios.GetValueOrDefault(id, 0.5);
 
+    public static string GetConfigId(string id) => id.ToLowerInvariant().Replace('_', '-');
+
     // Categories
     public const string None = "None";
     public const string CategoryAmmo = "Ammo";
@@ -166,7 +180,8 @@ internal class ItemDrops {
 
     public static string GetCategory(string id) => id switch{
         "NoName" => CategoryNone,
-        "LiquidBomb" => CategoryExplosive,
+        "CH9_WP003" or "CH9_WP004" => CategoryAmmo,
+        "LiquidBomb" or "Grenadebomb" or "Thermatebomb" or "Stangrenadebomb" or "CH9_WP005" => CategoryExplosive,
         "HandgunBullet" => CategoryAmmo,
         "HandgunBulletL" => CategoryAmmo,
         "ShotgunBullet" => CategoryAmmo,

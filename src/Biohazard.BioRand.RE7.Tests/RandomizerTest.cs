@@ -38,6 +38,9 @@ public static class RandomizerTest {
 
         configuration["debug-download-data"] = false;
 
+        // Most feature tests exercise the complete catalog. Compatibility tests
+        // explicitly enable the public, base-game-only default.
+        configuration[DlcContent.BaseGameOnlyConfigKey] = false;
         configuration["allow-bonus-items"] = false;
         configuration["allow-dlc-items"] = true;
 
@@ -67,7 +70,7 @@ public static class RandomizerTest {
         configuration["additional-items"] = false;
         configuration["additional-wooden-crates"] = false;
         foreach (var drop in ItemDrops.GenericDrops) {
-            configuration[$"item-drop-ratio-{drop.ToLowerInvariant()}"] = ItemDrops.GetDefaultGenericDropRatio(drop);
+            configuration[$"item-drop-ratio-{ItemDrops.GetConfigId(drop)}"] = ItemDrops.GetDefaultGenericDropRatio(drop);
         }
 
         foreach (var drop in ItemDrops.HighValueDrops) {

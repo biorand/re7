@@ -80,6 +80,14 @@ birthday => Jacks55thBirthday
 
 ## DLC integration notes
 
+Base-game compatibility:
+
+- `base-game-only` defaults to true, including profiles missing the key. `DlcContent` gates imports based on the target seed configuration, independently of what the generation server's baseline contains. The legacy `allow-dlc-items` option only controls item pools within the DLC-enabled mode.
+- Birthday patches, starter skills, DLC coins, bird-cage rewards/payment items, experimental weapons, weapon parameter logging, authored items/recipes, and runtime drop pools must all respect this mode. Exact debugger recipe tables containing DLC items fail with an explanation instead of silently changing the authored table.
+- `JackStalker`/`Em3001` and `JackShears`/`Em8001` are imported Nightmare variants and are excluded from base-game replacement/extra pools, including explicit and SpawnGroup placements. Preserve vanilla campaign Jacks and shared Em3000/Em8000 parameter fixes.
+- The embedded Em3600/Em4000/Em4100/Em4200 templates retain optional Birthday score GUI/parameter and alternate-holder references. `BaseGameEnemyTemplate` removes those references from imported base-game copies while preserving controller structure and FSM identities. Em3600 also uses Birthday damage audio in the embedded donor; copy its native campaign sound array from `scenes/chapter/chapter3/enemy_em3600.scn.20`. DLC-enabled seeds keep the original templates.
+- `BaseGameCompatibilityTests` generates and packages seeds from a baseline with known DLC paths removed, and compares newly introduced serialized resource references against the source. This path-based audit is not an authoritative Steam depot ownership inventory. Clean-install runtime validation still needs a fresh campaign with no DLC mounted, covering room transitions, item pickups/crafting, bosses, and save/load. Never infer asset ownership solely from a generated class name.
+
 General lessons:
 
 - The C# TDB in `.analysis/re7_src` is the fastest source for class names, inheritance, fields, and enums. Use IDA for xrefs, decompilation, strings, and runtime control flow after narrowing the target.
@@ -128,7 +136,9 @@ Full function addresses, control-flow evidence, signatures, and implementation c
 
 Not a Hero and End of Zoe items:
 
-- The [DLC weapon investigation](weapons/dlc_weapons.md) records all 14 identities and the four-candidate campaign adapter. `dlc-campaign-weapons` is experimental and defaults off; both it and `allow-dlc-items` are required. Setup needs `--dlc-weapons` and a clean installed-asset baseline. Samurai Edge normal firing and empty-magazine reload were observed, but full pickup/storage/save/player-transition certification remains open. AMG-Dual and other player-system ports stay excluded.
+- The [DLC weapon investigation](weapons/dlc_weapons.md) records all 14 experimental campaign candidates, including Spirit Blade, all three AMG gauntlets, CH8 grenades, CH9 throwing knife/spear and Stake Bomb. `dlc-campaign-weapons` defaults off; both it and `allow-dlc-items` are required. Setup needs `--dlc-weapons` and a clean installed-asset baseline with all 320 manifest dependencies. Native attacks and campaign enemy damage were observed; the weapon notes distinguish individual pickup/storage/cold-save checks from unproven full-playthrough and player-transition compatibility.
+- Stake Bomb remains a native `WeaponItem`, not a throwable/melee port. `PlayerItem` handles placement, stock and recovery with `CH9Weapon1900`/`CH9WeaponLiquidBombAppend`; the scoped Item motion adapter shares the existing CH9 pool. Missing `CH9TutorialManager` callbacks can abort recovery or leave an invisible active bomb after damage. Guard only owned campaign shells, preserving base explosion audio and native recycling. The five-slot pool can recycle its oldest entry; zero unused slots do not mean placement must be blocked. See the weapon notes for cold production save/load evidence and remaining physical-input coverage.
+- Gauntlet attacks use isolated weapon RCOLs with the active player's hidden skeleton and native hit-track timing, not Joe's complete player stack. Resolve hands from `PlayerMeshController.RArmMesh`/`LArmMesh` fields with ancestry checks; do not search globally for Ethan hand names. REFramework quaternions use `w,x,y,z`; use `Quaternion.identity()` for attachment. Fresh exports must include every DLC Lua dependency in `RandomizerOutput.REFrameworkScriptPaths`, not merely embed it in the assembly; require-closure packaging tests cover this boundary.
 - DLC campaign pickups must replace cached raw DLC templates and rebind native weapon components, not just meshes and ItemDataIDs. Preserved FSM pickups need the same local identity repair without changing their GUIDs/state UIDs. Joe's M21 (`NumaItem072`) is a separate ItemDataID alias of WeaponID 13; keep `Shotgun_DB` canonical in reverse lookups and share its stats/ammunition.
 
 - `app.ItemManager::createItemInstance319138` (`0x142146680`) returns null when `ItemData` or `ItemPrefab` is missing, otherwise instantiates the prefab at the owner transform and parents it to the owner.

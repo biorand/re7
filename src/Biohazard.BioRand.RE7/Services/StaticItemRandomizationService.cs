@@ -1,3 +1,5 @@
+using Biohazard.BioRand.RE7.Items;
+
 namespace Biohazard.BioRand.RE7.Services;
 
 internal class StaticItemRandomizationService {
@@ -11,7 +13,7 @@ internal class StaticItemRandomizationService {
         RandomItemSettings = new RandomItemSettings(){
             MinAmmoQuantity = randomizer.GetConfigOption("item-drop-ammo-min", 0.1),
             MaxAmmoQuantity = randomizer.GetConfigOption("item-drop-ammo-max", 1.0),
-            ItemRatioKeyFunc = id => randomizer.GetConfigOption<double>($"item-drop-ratio-{id.ToLowerInvariant()}")
+            ItemRatioKeyFunc = id => randomizer.GetConfigOption<double>($"item-drop-ratio-{ItemDrops.GetConfigId(id)}")
         };
     }
 }

@@ -77,8 +77,9 @@ internal class WeaponModifier : Modifier {
     private readonly WeaponDefinitionRepository _weaponDefinitions = WeaponDefinitionRepository.Default;
     private readonly ItemDefinitionRepository _itemDefinitions = ItemDefinitionRepository.Default;
     private bool IsAvailable(WeaponDefinition definition)
-        => !DlcCampaignWeapons.Contains(definition.WeaponId.ToString())
-           || DlcCampaignWeapons.IsEnabled(_randomizer.FileRepository);
+        => (DlcContent.IsAllowed(_randomizer) || _itemDefinitions.FromWeaponId(definition.WeaponId)?.Dlc == null)
+           && (!DlcCampaignWeapons.Contains(definition.WeaponId.ToString())
+               || DlcCampaignWeapons.IsEnabled(_randomizer.FileRepository));
 
     public override void LogState(RandomizerLogger logger) {
         var randomizer = _randomizer;

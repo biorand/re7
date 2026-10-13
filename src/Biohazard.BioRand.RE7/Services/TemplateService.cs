@@ -3,6 +3,7 @@ using IntelOrca.Biohazard.REE.Rsz;
 using Biohazard.BioRand.RE7.Items;
 using Biohazard.BioRand.RE7.Weapons;
 using Biohazard.BioRand.RE7.REEngine;
+using Biohazard.BioRand.RE7.Enemies;
 
 namespace Biohazard.BioRand.RE7.Services;
 
@@ -14,6 +15,7 @@ internal class TemplateService {
     private readonly Randomizer _randomizer;
     private readonly Dictionary<string, RszGameObject> _itemTemplates = new();
     private readonly HashSet<string> _dlcTemplates = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, RszGameObject> _baseEnemyTemplates = new(StringComparer.Ordinal);
 
     public TemplateService(Randomizer randomizer) {
         _randomizer = randomizer;
@@ -36,8 +38,16 @@ internal class TemplateService {
     public RszGameObject? TryGetObject(string name)
         => _scene.FindGameObject(name);
 
-    public RszGameObject GetEnemyTemplate(string enemyID)
-        => GetObject($"EnemyTemplate_{enemyID}");
+    public RszGameObject GetEnemyTemplate(string enemyID) {
+        var template = GetObject($"EnemyTemplate_{enemyID}");
+        if (DlcContent.IsAllowed(_randomizer))
+            return template;
+        if (!_baseEnemyTemplates.TryGetValue(enemyID, out var baseTemplate)) {
+            baseTemplate = BaseGameEnemyTemplate.Adapt(_randomizer.FileRepository, enemyID, template);
+            _baseEnemyTemplates.Add(enemyID, baseTemplate);
+        }
+        return baseTemplate;
+    }
 
     public RszGameObject GetEnemySpawnInfo(string enemyID)
         => GetObject($"EnemySpawnInfo_{enemyID}");
@@ -52,11 +62,14 @@ internal class TemplateService {
         => GetObject(EnemyFsmGeneratorTemplateName);
 
     public RszGameObject GetItemTemplate(string id) {
+        if (!DlcContent.IsItemAllowed(_randomizer, id))
+            throw new IntelOrca.Biohazard.BioRand.RandomizerUserException($"Item '{id}' is unavailable in Base Game Only mode.");
         if (!_dlcTemplates.Contains(id) && DlcCampaignWeapons.Contains(id)) {
             if (!DlcCampaignWeapons.IsEnabled(_randomizer.FileRepository))
                 throw new InvalidOperationException($"DLC campaign weapons are disabled: {id}");
             var baseId = id switch {
-                "CKnife" => "MiaKnife",
+                "CKnife" or "CH9_WP002" or "CH9_WP000" or "CH9_WP001" or "CH9_WP006" => "MiaKnife",
+                "Grenadebomb" or "Thermatebomb" or "Stangrenadebomb" or "CH9_WP003" or "CH9_WP004" or "CH9_WP005" => "LiquidBomb",
                 "Handgun_Albert_C" => "Handgun_M19",
                 "Shotgun_Albert" => "MachineGun",
                 _ => "Shotgun_DB",
@@ -93,7 +106,7 @@ internal class TemplateService {
             return obj.Type.Name switch {
                 "app.Item" => obj.Set("ItemDataID", id),
                 "app.fsm.ItemAddTest" => obj.Set("_ItemDataID", id),
-                "app.WeaponGun" or "app.Weapon" => nativeWeapon,
+                "app.WeaponGun" or "app.Weapon" or "app.CH8WeaponThrowable" or "app.CH9Weapon1500" or "app.CH9Weapon1800" or "app.CH9Weapon1900" => nativeWeapon,
                 "via.render.Mesh" => obj.Set("Mesh", new RszResourceNode(definition.Mesh))
                     .Set("Material", new RszResourceNode(definition.Material)),
                 _ => obj,
@@ -105,7 +118,7 @@ internal class TemplateService {
         if (!DlcCampaignWeapons.Contains(id)) return pickup;
         var weapon = ReadDlcWeaponComponent(id);
         return pickup.Visit(node => node is RszObjectNode obj ? obj.Type.Name switch {
-            "app.Weapon" or "app.WeaponGun" => weapon,
+            "app.Weapon" or "app.WeaponGun" or "app.CH8WeaponThrowable" or "app.CH9Weapon1500" or "app.CH9Weapon1800" or "app.CH9Weapon1900" => weapon,
             "app.fsm.ItemAddTest" when obj.Get<string>("_ItemDataID") == originalId => obj.Set("_ItemDataID", id),
             _ => obj,
         } : node);
@@ -116,6 +129,6 @@ internal class TemplateService {
         var inventory = _randomizer.FileRepository.GetPfbFile(source.CampaignPrefab.Of() + ".17")
             .ReadScene(_randomizer.FileRepository.TypeRepository);
         return inventory.GetGameObjects().SelectMany(g => g.Components)
-            .Single(c => c.Type.Name is "app.Weapon" or "app.WeaponGun");
+            .Single(c => c.Type.Name is "app.Weapon" or "app.WeaponGun" or "app.CH8WeaponThrowable" or "app.CH9Weapon1500" or "app.CH9Weapon1800" or "app.CH9Weapon1900");
     }
 }

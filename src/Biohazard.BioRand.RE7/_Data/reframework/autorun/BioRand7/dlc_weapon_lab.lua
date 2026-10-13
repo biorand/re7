@@ -7,6 +7,16 @@ Lab.candidates = {
     { id = "Handgun_Albert_C", name = "Samurai Edge - AW Model-01" },
     { id = "Shotgun_Albert", name = "Thor's Hammer - AW Model-02" },
     { id = "NumaItem072", name = "Joe's M21" },
+    { id = "CH9_WP002", name = "Spirit Blade (player adapter research)" },
+    { id = "CH9_WP006", name = "AMG-Dual (player adapter research)" },
+    { id = "CH9_WP000", name = "AMG-78a (player adapter research)" },
+    { id = "CH9_WP001", name = "AMG-78 (player adapter research)" },
+    { id = "Grenadebomb", name = "Grenade (player adapter research)" },
+    { id = "Thermatebomb", name = "Incendiary Grenade (player adapter research)" },
+    { id = "Stangrenadebomb", name = "Neuro-stun Grenade (player adapter research)" },
+    { id = "CH9_WP003", name = "Throwing Knife (player adapter research)" },
+    { id = "CH9_WP004", name = "Throwing Spear (player adapter research)" },
+    { id = "CH9_WP005", name = "Stake Bomb (player adapter research)" },
 }
 
 local function candidate(id)
@@ -18,12 +28,42 @@ function Lab.new(game)
 end
 
 function Lab:reset()
+    if self.player_adapter then self.player_adapter:reset() end
+    if self.gauntlet then self.gauntlet:reset() end
+    if self.grenade then self.grenade:reset() end
+    if self.ch9 then self.ch9:reset(); self.ch9.error = nil end
+    if self.ch9_item then self.ch9_item:reset(); self.ch9_item.error = nil end
     self.armed, self.pending, self.report, self.box_identity = false, nil, nil, nil
     self.added = {}
     self.status = "Session changed; test receipts cleared"
 end
 
 function Lab:install()
+    if not self.player_adapter then
+        self.player_adapter = require("BioRand7/dlc_weapon_player").new(self.game,
+            function() return self.armed end, "BioRand/DlcWeaponLab")
+        self.player_adapter:install()
+    end
+    if not self.gauntlet then
+        self.gauntlet = require("BioRand7/dlc_gauntlet").new(self.game,
+            function() return self.armed end, "BioRand/DlcWeaponLab")
+        self.gauntlet:install()
+    end
+    if not self.grenade then
+        self.grenade = require("BioRand7/dlc_grenade").new(self.game,
+            function() return self.armed end, "BioRand/DlcWeaponLab")
+        self.grenade:install()
+    end
+    if not self.ch9 then
+        self.ch9 = require("BioRand7/dlc_ch9_throwable").new(self.game,
+            function() return self.armed end, "BioRand/DlcWeaponLab")
+        self.ch9:install()
+    end
+    if not self.ch9_item then
+        self.ch9_item = require("BioRand7/dlc_ch9_item").new(self.game,
+            function() return self.armed and not self.ch9.error end, "BioRand/DlcWeaponLab", self.ch9.pool)
+        self.ch9_item:install()
+    end
     self.game:hook("app.SaveDataManager", "newGameInit()", function() self:reset() end)
     self.game:hook("app.SaveDataManager", "loadLevelUsingLoadData()", function() self:reset() end)
 end
@@ -123,6 +163,56 @@ function Lab:execute(request)
 end
 
 function Lab:update()
+    if self.ch9 then
+        local ok, message = pcall(function() self.ch9:update() end)
+        if not ok then
+            self.armed = false
+            if not self.ch9.error then self.ch9.error = tostring(message); self.ch9:reset() end
+            self.status = tostring(message)
+            return
+        end
+    end
+    if self.ch9_item and not self.ch9_item.error then
+        local ok, message = pcall(function() self.ch9_item:update() end)
+        if not ok then
+            self.armed = false
+            self.ch9_item.error = tostring(message)
+            self.ch9_item:reset()
+            self.status = tostring(message)
+            return
+        end
+    end
+    if self.grenade then
+        local ok, message = pcall(function() self.grenade:update() end)
+        if not ok then
+            self.armed = false
+            if not self.grenade.error then
+                self.grenade.error = tostring(message)
+                self.grenade:reset()
+            end
+            self.status = tostring(message)
+            return
+        end
+    end
+    if self.gauntlet and not self.gauntlet.error then
+        local ok, message = pcall(function() self.gauntlet:update() end)
+        if not ok then
+            self.armed = false
+            self.gauntlet.error = tostring(message)
+            pcall(function() self.gauntlet:reset() end)
+            self.status = tostring(message)
+            return
+        end
+    end
+    if self.player_adapter then
+        local ok, message = pcall(function() self.player_adapter:update() end)
+        if not ok then
+            self.armed = false
+            self.player_adapter:reset()
+            self.status = tostring(message)
+            return
+        end
+    end
     local request = self.pending
     self.pending = nil
     if not request or not self.armed then return end

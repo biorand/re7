@@ -151,6 +151,14 @@ internal class RecipeModifier : Modifier {
         var recipes = files.DeserializeUserFile<ItemCombineData>(ItemCombineDataPath);
         var dictionary = files.DeserializeUserFile<DictionaryCombineData>(DictionaryCombineDataPath);
         table.ValidateItems(recipes._Datas);
+        var unavailableItems = table.Entries
+            .SelectMany(entry => new[] { entry.Recipe.SrcItemID1, entry.Recipe.SrcItemID2, entry.Recipe.ResultItemID })
+            .Where(id => !DlcContent.IsItemAllowed(_randomizer, id))
+            .Distinct(StringComparer.Ordinal)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        if (unavailableItems.Length != 0)
+            throw new IntelOrca.Biohazard.BioRand.RandomizerUserException($"Debug Recipes contains DLC items unavailable in Base Game Only mode: {string.Join(", ", unavailableItems)}.");
 
         recipes._Datas = table.Entries.Select(x => x.Recipe).ToList();
         dictionary._Datas = table.VisibleResultIds.Select(id => new DictionaryCombineData.Data { ItemDataID = id }).ToList();
@@ -199,7 +207,7 @@ internal class RecipeModifier : Modifier {
         };
     }
 
-    private static bool IsValidRecipe(RecipeModel recipe, RandomizerLogger logger) {
+    private bool IsValidRecipe(RecipeModel recipe, RandomizerLogger logger) {
         var valid = recipe.Count1_Min > 0
                     && recipe.Count1_Max > 0
                     && recipe.Count1_Min <= recipe.Count1_Max
@@ -215,6 +223,10 @@ internal class RecipeModifier : Modifier {
 
         if (!valid) {
             logger.LogLine("Skipping bad CSV recipe! Please report this. Recipe: " + recipe);
+        } else if (new[] { recipe.Item1, recipe.Item2, recipe.OutputItem }
+                   .Any(name => !DlcContent.IsItemAllowed(_randomizer, _itemDefinitions.NameToId(name)))) {
+            logger.LogLine("Skipping DLC recipe in Base Game Only mode: " + recipe);
+            return false;
         }
 
         return valid;

@@ -9,6 +9,8 @@ internal class JackStalker : IEnemyDefinition {
 
     public EnemyID EnemyId => EnemyID.Em3001;
 
+    public DlcType? Dlc => DlcType.Nightmare;
+
     public EnemyCategory Category => EnemyCategory.Jack;
 
     public string Name => "Jack Baker (Stalker)";

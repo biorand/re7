@@ -116,10 +116,11 @@ internal sealed class SpawnGroupModifier(Randomizer randomizer) : Modifier {
         return (actor, save.Get<Guid>("SaveGUID"));
     }
 
-    private static bool SupportsGeneratorAlias(string alias) {
+    private bool SupportsGeneratorAlias(string alias) {
         // Hive variants share the registered Em5510 component/option stack.
         if (alias is "Em5511" or "Em5512") alias = "Em5510";
-        return EnemyDefinitions.Instance.FromId(alias)?.SpawnOptionType != null;
+        var definition = EnemyDefinitions.Instance.FromId(alias);
+        return definition?.SpawnOptionType != null && definition.IsAllowed(randomizer);
     }
 
 }

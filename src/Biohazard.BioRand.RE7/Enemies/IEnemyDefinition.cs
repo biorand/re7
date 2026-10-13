@@ -21,6 +21,10 @@ public interface IEnemyDefinition {
     public string SpeedConfigId => Id;
     public bool SupportsSpeedRandomization => false;
     public bool SupportsRandomEnemyPlacement => true;
+    public DlcType? Dlc => null;
+
+    internal bool IsAllowed(Randomizer randomizer)
+        => Dlc == null || DlcContent.IsAllowed(randomizer);
 
     public string DirectivesHolderPath { get; }
     public string ResistParamsHolderPath { get; }

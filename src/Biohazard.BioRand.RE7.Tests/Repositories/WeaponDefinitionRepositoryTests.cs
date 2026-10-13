@@ -26,7 +26,16 @@ public class WeaponDefinitionRepositoryTests {
     public void All_Weapons_Must_Have_Sane_Damage_Stats() {
         var invalid = repository
             .WeaponDefinitions
-            .Where(w => w.Damage.Values.Any(d => d.Damage <= 0 && d.Stun <= 0))
+            .Where(w => w.Damage.Any(entry => {
+                var stats = entry.Value;
+                if (stats.Damage < 0 || stats.Stun < 0) return true;
+                // These source shell impact requests detect contact without applying damage.
+                var contactOnly = (w.WeaponId is Enums.app.WeaponID.Thermatebomb or Enums.app.WeaponID.Stangrenadebomb
+                    && entry.Key == "Attack.rcol/Impact")
+                    || (w.WeaponId is Enums.app.WeaponID.CH9_WP003 or Enums.app.WeaponID.CH9_WP004
+                    && entry.Key == "Attack.rcol/AttackToWeapon");
+                return stats.Damage == 0 && stats.Stun == 0 && !contactOnly;
+            }))
             .ToList();
 
         Assert.True(invalid.Count == 0,

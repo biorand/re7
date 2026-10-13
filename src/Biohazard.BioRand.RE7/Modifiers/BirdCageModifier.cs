@@ -146,6 +146,8 @@ internal class BirdCageModifier : Modifier {
                   throw new Exception("Unable to get bird cage data");
         var replacements = Csv.Deserialize<BirdCageReplacement>(csv)
             .Where(b => b.Enabled)
+            .Where(b => DlcContent.IsItemAllowed(randomizer, b.ItemId)
+                && b.InputItemIds.All(id => DlcContent.IsItemAllowed(randomizer, id)))
             .Where(b => !DlcCampaignWeapons.Contains(b.ItemId)
                 || DlcCampaignWeapons.IsEnabled(randomizer.FileRepository))
             .ToImmutableList();

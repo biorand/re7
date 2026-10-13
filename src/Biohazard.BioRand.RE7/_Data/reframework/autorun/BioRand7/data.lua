@@ -5,6 +5,11 @@ Data.generic_drop_items = {
     "MachineGunBullet", "MagnumBullet", "BurnerBullet", "FlameBulletS", "AcidBulletS", "RemedyM",
     "RemedyL", "EyeDrops", "Herb", "ChemicalM", "ChemicalL", "ChemicalS", "Gunpowder", "Coin", "Alcohol", "Flower",
     "AlloyClay", "Magnesium", "SyntheticDetergent",
+    "Grenadebomb", "Thermatebomb", "Stangrenadebomb", "CH9_WP003", "CH9_WP004", "CH9_WP005",
+}
+
+Data.dlc_stack_weapons = {
+    Grenadebomb = true, Thermatebomb = true, Stangrenadebomb = true, CH9_WP003 = true, CH9_WP004 = true, CH9_WP005 = true,
 }
 
 Data.ammo = {
@@ -18,6 +23,7 @@ Data.stack_limits = {
     CylinderKey = 20, EyeDrops = 5, Gunpowder = 10, Herb = 5, LiquidBomb = 20, RemedyL = 3,
     RemedyM = 3, Alcohol = 5, Flower = 5,
     AlloyClay = 10, Magnesium = 10, SyntheticDetergent = 5,
+    Grenadebomb = 6, Thermatebomb = 6, Stangrenadebomb = 6, CH9_WP003 = 6, CH9_WP004 = 6, CH9_WP005 = 6,
 }
 
 local handgun = { HandgunBullet = true, HandgunBulletL = true }

@@ -288,8 +288,10 @@ internal class StartingInventoryModifier : Modifier {
         var giveAdditionalGunEthan = randomizer.GetConfigOption<bool>("random-starting-inventory-additional-gun-ethan");
         var giveAdditionalGunMia = randomizer.GetConfigOption<bool>("random-starting-inventory-additional-gun-mia");
         var randomizeVhs = randomizer.GetConfigOption<bool>("random-starting-inventory-vhs");
-        var giveRandomSkillEthan = randomizer.GetConfigOption<bool>("random-starting-inventory-skills-ethan");
-        var giveRandomSkillMia = randomizer.GetConfigOption<bool>("random-starting-inventory-skills-mia");
+        var giveRandomSkillEthan = DlcContent.IsAllowed(randomizer)
+            && randomizer.GetConfigOption<bool>("random-starting-inventory-skills-ethan");
+        var giveRandomSkillMia = DlcContent.IsAllowed(randomizer)
+            && randomizer.GetConfigOption<bool>("random-starting-inventory-skills-mia");
 
         if (!randomizeEthansInventory && !randomizeMiasInventory && !giveRandomSkillEthan && !giveRandomSkillMia &&
             !giveAdditionalGunEthan && !giveAdditionalGunMia) {
@@ -411,6 +413,7 @@ internal class StartingInventoryModifier : Modifier {
 
         return Csv.Deserialize<DebugStartItem>(randomizer.DynamicData.GetData(DynamicDataName.DebugStartItems)!)
             .Where(x => x.Quantity > 0)
+            .Where(x => DlcContent.IsItemAllowed(randomizer, x.ItemId))
             .Select(x => new StartingInventoryItem(){ ItemDataID = x.ItemId, Num = x.Quantity })
             .ToArray();
     }

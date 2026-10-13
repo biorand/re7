@@ -16,6 +16,9 @@ internal sealed class SpawnGroupService {
         Manifest = new(2, randomizer.Seed, []);
         foreach (var row in Csv.Deserialize<PlacementRow>(randomizer.DynamicData.GetData(DynamicDataName.Enemies)!)) {
             if (string.IsNullOrWhiteSpace(row.SpawnGroup)) continue;
+            if (!DlcContent.IsAllowed(randomizer) && (!string.IsNullOrWhiteSpace(row.Dlc) ||
+                DlcTypeExtensions.FromPakFileName(row.SceneFile) != null))
+                continue;
             var rule = randomizer.EnemyPlacementService.GetRule(row.SceneFile, row.Guid);
             if (rule.Preserve || rule.Cull) continue;
             if (!string.IsNullOrWhiteSpace(row.Dlc))

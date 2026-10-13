@@ -6,6 +6,20 @@ namespace Biohazard.BioRand.RE7.Tests;
 
 [Trait("Category", "RequiresPak")]
 public class RandomizerDebugRecipeBehaviorTests {
+    [Fact]
+    public void BaseGameOnly_RejectsDlcItemsInAnExactDebugTable() {
+        var csv = DebugRecipeTableTests.Csv(
+            "true,true,debug_dlc,Herb,1,ChemicalS,1,GoodLuckCoinA_Buy,1,1,,false,false,DLC");
+        var error = Assert.Throws<IntelOrca.Biohazard.BioRand.RandomizerUserException>(() => {
+            using var result = RandomizerTest.RunState(config => {
+                config[DlcContent.BaseGameOnlyConfigKey] = true;
+                config["tags"] = "re7:debugger";
+            }, prepareRandomizer: r => r.DynamicData.SetData(DynamicDataName.DebugRecipes, csv));
+        });
+        Assert.Contains("Base Game Only", error.Message);
+        Assert.Contains("GoodLuckCoinA_Buy", error.Message);
+    }
+
     [Theory]
     [InlineData(false, "Balanced", 1234)]
     [InlineData(true, "No crafting", 9876)]

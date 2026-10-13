@@ -118,7 +118,7 @@ public class ConfigurationIdUsageTest {
 
     private static void AddDropIds(HashSet<string> ids, string configPrefix, IEnumerable<string> genericDrops) {
         foreach (var drop in genericDrops) {
-            ids.Add($"{configPrefix}-ratio-{drop.ToLowerInvariant()}");
+            ids.Add($"{configPrefix}-ratio-{ItemDrops.GetConfigId(drop)}");
         }
 
         foreach (var drop in ItemDrops.HighValueDrops) {

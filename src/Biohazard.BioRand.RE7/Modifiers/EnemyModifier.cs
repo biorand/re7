@@ -351,6 +351,9 @@ internal class EnemyModifier : Modifier {
     private ImmutableArray<EnemyTableEntry> CreateEnemyPool(Randomizer randomizer, bool includeBosses = true) {
         var enemyPool = ImmutableArray.CreateBuilder<EnemyTableEntry>();
         foreach (var enemy in EnemyDefinitions.Instance.Randomizable) {
+            if (!enemy.IsAllowed(randomizer))
+                continue;
+
             if (!includeBosses && enemy.IsBoss)
                 continue;
 
@@ -369,6 +372,9 @@ internal class EnemyModifier : Modifier {
     private ImmutableArray<EnemyTableEntry> CreateExtraEnemyPool(Randomizer randomizer) {
         var enemyPool = ImmutableArray.CreateBuilder<EnemyTableEntry>();
         foreach (var enemy in EnemyDefinitions.Instance.Randomizable) {
+            if (!enemy.IsAllowed(randomizer))
+                continue;
+
             if (enemy.EnemyId is EnemyID.Em4000) // TODO: Fix stale Molded in idle animations
                 continue;
 
@@ -468,7 +474,8 @@ internal class EnemyModifier : Modifier {
         var enabledExtraEnemies = Csv
             .Deserialize<ExtraEnemyPlacement>(randomizer.DynamicData.GetData(DynamicDataName.ExtraEnemies)!)
             .Where(extraEnemy =>
-                extraEnemy.Enabled && ScriptedSceneSafety.AllowsEnemyMutation(extraEnemy.SceneFile))
+                extraEnemy.Enabled && ScriptedSceneSafety.AllowsEnemyMutation(extraEnemy.SceneFile) &&
+                (DlcContent.IsAllowed(randomizer) || DlcTypeExtensions.FromPakFileName(extraEnemy.SceneFile) == null))
             .ToList();
         var subsetCount = ExtraEnemyPlanner.GetSubsetCount(enabledExtraEnemies.Count, extraEnemyPct);
         if (subsetCount == 0)
@@ -544,9 +551,10 @@ internal class EnemyModifier : Modifier {
                         ? packSelector!.Next()
                         : GetPackSelector(filteredPackSelectors, compatiblePool, options.MaxPackSize, rng).Next();
                 } else {
-                    var candidates = ExtraEnemyPlanner.GetExplicitCandidates(extraEnemy, rule);
+                    var candidates = ExtraEnemyPlanner.GetExplicitCandidates(extraEnemy, rule)
+                        .Where(enemy => enemy.IsAllowed(randomizer)).ToImmutableArray();
                     if (candidates.IsDefaultOrEmpty) {
-                        logger.LogLine($"Skipping extra enemy at {extraEnemy.PosX}/{extraEnemy.PosY}/{extraEnemy.PosZ}: no candidates after Include/Exclude.");
+                        logger.LogLine($"Skipping extra enemy at {extraEnemy.PosX}/{extraEnemy.PosY}/{extraEnemy.PosZ}: no candidates after content permissions and Include/Exclude.");
                         continue;
                     }
                     definition = candidates.Length == 1 ? candidates[0] : rng.Next(candidates);

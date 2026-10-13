@@ -12,7 +12,7 @@ re.on_script_reset(function() lab:reset() end)
 re.on_draw_ui(function()
     if not imgui.tree_node("BioRand DLC Weapon Lab") then return end
     imgui.text("EXPERIMENTAL. Do not save a production playthrough.")
-    imgui.text("AMG/throwable/Spirit Blade adapters are not available.")
+    imgui.text("Spirit Blade and AMG-Dual are experimental. Other AMG and throwable adapters are unavailable.")
     local changed
     changed, lab.armed = imgui.checkbox("Enable test commands", lab.armed)
     changed, selected = imgui.combo("Weapon", selected, labels)

@@ -33,6 +33,8 @@ internal class EnemyDirectiveModifier : Modifier {
 
     public override void Apply(RandomizerLogger logger) {
         var randomizer = _randomizer;
+        // Nightmare Jack variants share campaign Em3000/Em8000 parameters.
+        // Keep those campaign fixes; specialized modifiers gate DLC-only files.
         foreach (var enemy in EnemyDefinitions.Instance.All.OrderBy(em => em.EnemyId)) {
             var matchingModifiers = _enemySpecificDirectiveModifiers
                 .Where(modifier => modifier.Supports(enemy))

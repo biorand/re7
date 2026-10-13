@@ -1,3 +1,4 @@
+using Biohazard.BioRand.RE7.Enemies;
 using Biohazard.BioRand.RE7.Services;
 using IntelOrca.Biohazard.REE.Rsz;
 using System.Collections.Immutable;
@@ -141,6 +142,7 @@ internal class EnemyMultiplierModifier : Modifier {
         } else if (slots.Length != 0) {
             var duplicableSlots = slots.Where(slot =>
                 !placements.GetRule(scenePath, slot.SpawnInfoGuid).NoDuplicates &&
+                (EnemyDefinitions.Instance.FromId(slot.UnitAlias)?.IsAllowed(randomizer) ?? true) &&
                 !EnemySpawnInfoRules.IsSwarmOrHiveAlias(slot.UnitAlias)).ToImmutableArray();
             if (!duplicableSlots.IsDefaultOrEmpty) {
                 scene = AddSpawnSlots(scene, randomizer, duplicableSlots, targetCount - currentEnemyCount, logger, rng);

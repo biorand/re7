@@ -13,10 +13,13 @@ internal sealed class EnemyPlacementService {
     public HashSet<string> AggroScenePaths { get; } = new(StringComparer.OrdinalIgnoreCase);
 
     public EnemyPlacementService(Randomizer randomizer)
-        : this(randomizer.DynamicData.GetData(DynamicDataName.Enemies)!) { }
+        : this(randomizer.DynamicData.GetData(DynamicDataName.Enemies)!, DlcContent.IsAllowed(randomizer)) { }
 
-    internal EnemyPlacementService(byte[] data) {
+    internal EnemyPlacementService(byte[] data, bool includeDlc = true) {
         foreach (var row in Csv.Deserialize<PlacementRow>(data)) {
+            if (!includeDlc && (!string.IsNullOrWhiteSpace(row.Dlc) ||
+                DlcTypeExtensions.FromPakFileName(row.SceneFile) != null))
+                continue;
             if (row.Guid == Guid.Empty || string.IsNullOrWhiteSpace(row.SceneFile))
                 continue;
             EnemyPlacementRule rule;
@@ -63,5 +66,6 @@ internal sealed class EnemyPlacementService {
         public string Tags { get; set; } = "";
         public string Include { get; set; } = "";
         public string Exclude { get; set; } = "";
+        public string Dlc { get; set; } = "";
     }
 }

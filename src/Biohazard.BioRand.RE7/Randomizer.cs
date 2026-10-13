@@ -69,8 +69,9 @@ internal class Randomizer : IDisposable {
            || GetConfigOption<double>("extra-enemy-amount") > 0
            || (GetConfigOption<bool>("random-items") && GetConfigOption<bool>("replace-weapons"))
            || GetConfigOption<bool>("random-enemy-drops")
-           || GetConfigOption<bool>("allow-dlc-items")
-           || _optionsThatRequireREFramework.Any(option => GetConfigOption<bool>(option))
+           || (DlcContent.IsAllowed(this) && GetConfigOption<bool>("allow-dlc-items"))
+           || _optionsThatRequireREFramework.Any(option => GetConfigOption<bool>(option)
+               && (DlcContent.IsAllowed(this) || option is not ("random-starting-inventory-skills-ethan" or "random-starting-inventory-skills-mia")))
            || GetConfigOption<string>("random-starting-inventory-size-ethan") != "12"
            || GetConfigOption<string>("random-starting-inventory-size-mia") != "12";
 

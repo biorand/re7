@@ -21,6 +21,19 @@ Examples verified during the conversion review:
 
 Use explicit, verified accesses rather than runtime field/method guessing. Nil checks for missing players, components, and unloaded scenes remain necessary. A Lua expression like `value == nil and nil or value:call(...)` is not a safe null-conditional operation: its `or` branch still executes.
 
+Native `System.Single` arguments need Lua floating-point values, not integer-valued
+Lua integers. During the Spirit Blade test, `setHealth(500, maxHealth)` read back
+as zero health; `setHealth(500.0, maxHealth)` correctly produced 500. Use `100.0`
+for fixed recovery values and `value + 0.0` for integer values decoded from JSON.
+Offline native-call mocks should assert `math.type(value) == "float"` where this
+distinction matters; accepting either numeric subtype can hide a live interop bug.
+
+For a by-value `via.Ray`, use `ValueType.new(sdk.find_type_definition("via.Ray"))`
+and set its `from`/`dir` fields. A boxed `sdk.create_instance("via.Ray", true)`
+read back correctly but produced a wrong grenade launch direction in the campaign
+test; the value-type container produced the intended velocity. A readable boxed
+object is not proof of correct native argument marshalling.
+
 Check return types in the RT dump (`reframework/il2cpp_dump_rt.json.gz`) as well: `ObjectManager.getEnemyID` returns `System.Nullable<app.EnemyID>` and must be unwrapped. For identity rotations use `Quaternion.identity()`; REF's [quaternion constructor](https://cursey.github.io/reframework-book/api/types/Quaternion.html) takes `(w, x, y, z)`.
 
 Public references: [managed object field and method access](https://cursey.github.io/reframework-book/api/types/REManagedObject.html), [hook arguments and returns](https://cursey.github.io/reframework-book/api/sdk.html), [hooking shared getter/setter implementations](https://cursey.github.io/reframework-book/api/general/best-practices.html), and [available ImGui bindings](https://cursey.github.io/reframework-book/api/imgui.html).

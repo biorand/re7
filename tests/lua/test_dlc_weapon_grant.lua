@@ -1,10 +1,12 @@
 return function()
     local Weapons = require("BioRand7/dlc_weapons")
     local UI = require("BioRand7/ui")
-    local ids = { "CKnife", "Handgun_Albert_C", "Shotgun_Albert", "NumaItem072" }
-    local flags = { ["dlc-campaign-weapons"] = true, ["allow-dlc-items"] = true }
+    local ids = { "CKnife", "Handgun_Albert_C", "Shotgun_Albert", "NumaItem072", "CH9_WP002", "CH9_WP000", "CH9_WP001", "CH9_WP006",
+        "Grenadebomb", "Thermatebomb", "Stangrenadebomb", "CH9_WP003", "CH9_WP004", "CH9_WP005" }
+    local flags = { ["base-game-only"] = false, ["dlc-campaign-weapons"] = true, ["allow-dlc-items"] = true }
     local owned, boxed, paths, ready, missing = {}, {}, {}, {}, {}
     local calls, errors, infos = {}, {}, {}
+    local player_reads = 0
     local player_name, player_loaded, inventory_loaded, box_loaded, manager_loaded = "Pl0000", true, true, true, true
     local failure_id, throw = nil, false
     local player = { call = function(_, method)
@@ -40,9 +42,15 @@ return function()
         end }
     end }
     local context = {
-        config = { get = function(_, key) return flags[key] end },
+        config = { get = function(_, key, default)
+            if flags[key] == nil then return default end
+            return flags[key]
+        end },
         game = {
-            player = function() return player_loaded and player or nil end,
+            player = function()
+                player_reads = player_reads + 1
+                return player_loaded and player or nil
+            end,
             component = function(_, owner, name)
                 assert(owner == player and name == "app.Inventory")
                 return inventory_loaded and inventory or nil
@@ -77,13 +85,13 @@ return function()
     assert(weapons.pending_add and #calls == 0, "UI must only queue the grant")
     weapons:request_add_to_item_box()
     weapons:update()
-    assert(#calls == 4 and #infos == 1 and #errors == 0)
+    assert(#calls == 14 and #infos == 1 and #errors == 0)
     for i, id in ipairs(ids) do assert(calls[i] == id and boxed[id]) end
-    assert(weapons.grant_status == "Added 4 to item box; 0 already owned")
-    weapons:update(); assert(#calls == 4, "No repeated grants")
+    assert(weapons.grant_status == "Added 14 to item box; 0 already owned")
+    weapons:update(); assert(#calls == 14, "No repeated grants")
     boxed[ids[1]], owned[ids[1]] = nil, true
     weapons:request_add_to_item_box(); weapons:update()
-    assert(#calls == 4 and weapons.grant_status == "Added 0 to item box; 4 already owned")
+    assert(#calls == 14 and weapons.grant_status == "Added 0 to item box; 14 already owned")
 
     local function rejected(expected)
         owned, boxed = {}, {}
@@ -96,6 +104,12 @@ return function()
     for _, key in ipairs({ "dlc-campaign-weapons", "allow-dlc-items" }) do
         flags[key] = false; rejected("disabled"); flags[key] = true
     end
+    local reads_before_disabled_grants = player_reads
+    flags["base-game-only"] = true; rejected("disabled")
+    flags["base-game-only"] = nil; rejected("disabled")
+    assert(player_reads == reads_before_disabled_grants,
+        "Base-game grants must stop before reading game objects, even with both DLC switches enabled")
+    flags["base-game-only"] = false
     player_loaded = false; rejected("Ethan"); player_loaded = true
     player_name = "Pl1000"; rejected("Ethan"); player_name = "Pl0000"
     inventory_loaded = false; rejected("not ready"); inventory_loaded = true

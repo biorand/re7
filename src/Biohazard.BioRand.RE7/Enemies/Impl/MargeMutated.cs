@@ -37,7 +37,7 @@ internal class MargeMutated : IEnemyDefinition {
         => "prefab/character/em3600/em3600resistparameterholder.user".UserFile();
 
     public string OriginalPrefabPath
-        => $"scenes/enemy/chapter/chapter3/enemy_em3600.scn".SceneFile();
+        => BaseGameEnemyTemplate.MargeScenePath;
 
     public bool UsesEnemyGenerator => true;
 

@@ -66,6 +66,7 @@ return function()
         { "e563054b-e138-4bd7-9cc4-e6df71731d99", "Coin", 2 },
     }
     local config = {
+        ["base-game-only"] = false,
         ["biorand-seed"] = 670486,
         ["allow-dlc-items"] = true,
         ["enemy-drop-valuable-weapon"] = true,

@@ -9,6 +9,8 @@ internal class JackShears : IEnemyDefinition {
 
     public EnemyID EnemyId => EnemyID.Em8001;
 
+    public DlcType? Dlc => DlcType.Nightmare;
+
     public EnemyCategory Category => EnemyCategory.Jack;
 
     public string Name => "Jack Baker (Scissor Chainsaw)";
@@ -106,6 +108,11 @@ internal class JackShearsDirectiveModifier : IDirectiveModifier {
         => enemy.EnemyId == EnemyID.Em8001;
 
     public void Apply(IEnemyDefinition enemy, Randomizer randomizer, RandomizerLogger logger) {
+        if (!enemy.IsAllowed(randomizer)) {
+            logger.LogSkip("Nightmare Jack health settings are disabled in base-game-only mode.");
+            return;
+        }
+
         if (!enemy.ShouldRandomizeHealth(randomizer)) {
             logger.LogSkip("Boss health randomization is disabled.");
             return;

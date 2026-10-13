@@ -12,7 +12,7 @@ internal class InventoryManagementPatch(IPatchContext context) : IPatch {
         "prefab/item/resourceitemsettings_birthday.user".UserFile();
 
     public void Apply() {
-        if (!context.GetConfigOption("inventory-unrestricted-management", true)) {
+        if (!DlcContent.IsAllowed(context) || !context.GetConfigOption("inventory-unrestricted-management", true)) {
             return;
         }
 

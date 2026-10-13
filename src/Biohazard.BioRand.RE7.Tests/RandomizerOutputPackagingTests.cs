@@ -2,10 +2,30 @@ using IntelOrca.Biohazard.BioRand;
 using IntelOrca.Biohazard.REE.Package;
 using System.IO.Compression;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Biohazard.BioRand.RE7.Tests;
 
 public class RandomizerOutputPackagingTests {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void RuntimeArchivesIncludeEveryLiteralLocalLuaDependency(bool fluffy) {
+        var output = CreateOutput(new PakFileBuilder(), new PakFileBuilder(), true);
+        using var zip = new ZipArchive(new MemoryStream(fluffy ? output.GetOutputMod() : output.GetOutputZip()));
+        foreach (var name in new[] { "dlc_weapons", "dlc_weapon_player", "dlc_gauntlet", "dlc_grenade", "dlc_grenade_pool", "dlc_ch9_throwable", "dlc_ch9_pool", "dlc_ch9_item" })
+            Assert.NotNull(zip.GetEntry($"reframework/autorun/BioRand7/{name}.lua"));
+        foreach (var script in zip.Entries.Where(e => e.FullName.StartsWith("reframework/autorun/") && e.FullName.EndsWith(".lua"))) {
+            var bytes = ReadBytes(zip, script.FullName);
+            Assert.Equal(Serialization.EmbeddedData.GetFile(script.FullName), bytes);
+            foreach (Match dependency in Regex.Matches(Encoding.UTF8.GetString(bytes),
+                "\\brequire\\s*\\(\\s*[\"'](BioRand7/[^\"']+)[\"']\\s*\\)")) {
+                var path = $"reframework/autorun/{dependency.Groups[1].Value}.lua";
+                Assert.True(zip.GetEntry(path) != null, $"{script.FullName} requires missing {path}");
+            }
+        }
+    }
+
     [Theory]
     [InlineData(false, false)]
     [InlineData(false, true)]

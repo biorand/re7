@@ -246,6 +246,11 @@ public class ConfigurationDefinitionTest {
         Assert.DoesNotContain("enemy-drop-ratio-depressant", ids);
         Assert.Contains("item-drop-ratio-stimulant", ids);
         Assert.Contains("item-drop-ratio-depressant", ids);
+        foreach (var id in new[] { "ch9-wp003", "ch9-wp004" }) {
+            Assert.Contains("enemy-drop-ratio-" + id, ids);
+            Assert.Contains("item-drop-ratio-" + id, ids);
+            Assert.DoesNotContain("enemy-drop-ratio-" + id.Replace('-', '_'), ids);
+        }
         Assert.Contains("enemy-drop-valuable-repair-kit", ids);
         Assert.Contains("enemy-drop-valuable-lock-pick", ids);
         Assert.Contains("enemy-drop-valuable-birthday-skill", ids);

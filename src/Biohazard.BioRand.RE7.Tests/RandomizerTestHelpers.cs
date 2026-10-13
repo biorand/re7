@@ -1,3 +1,4 @@
+using Biohazard.BioRand.RE7.Items;
 using Enums.app.GameManager;
 using IntelOrca.Biohazard.BioRand;
 using IntelOrca.Biohazard.REE.Rsz;
@@ -7,7 +8,7 @@ namespace Biohazard.BioRand.RE7.Tests;
 
 internal static class RandomizerTestHelpers {
     public static void ConfigureSingleDropRate(RandomizerConfiguration configuration, string id, double value) {
-        configuration[$"item-drop-ratio-{id.ToLowerInvariant()}"] = value;
+        configuration[$"item-drop-ratio-{ItemDrops.GetConfigId(id)}"] = value;
     }
 
     public static Dictionary<string, app.Collision.AttackUserData> ReadAttackUserDataByRequestSet(
