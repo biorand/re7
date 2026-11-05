@@ -24,6 +24,7 @@ public class RngTests {
     }
 
     [Fact]
+    [Trait("Category", "RequiresPak")]
     public void GetRng_DoesNotCollideForAmbiguousKeyConcatenations() {
         using var left = CreateRandomizer(1);
         using var right = CreateRandomizer(12);
