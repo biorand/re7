@@ -114,6 +114,16 @@ public class DataGenCsvTests {
     }
 
     [Fact]
+    public void GetCsv_Bytes_PreservesPrimitiveRecordsWithoutHeader() {
+        Assert.Equal("1\r\n2\r\n255\r\n", GenerateCommand.GetCsv(new byte[] { 1, 2, 255 }));
+    }
+
+    [Fact]
+    public void GetCsv_EmptyBytes_DoesNotWriteHeader() {
+        Assert.Equal("", GenerateCommand.GetCsv(Array.Empty<byte>()));
+    }
+
+    [Fact]
     public void GetCsv_Strings_RejectsUnnamedRecords() {
         Assert.Throws<ArgumentException>(() => GenerateCommand.GetCsv(new[] { "via.Transform" }));
     }

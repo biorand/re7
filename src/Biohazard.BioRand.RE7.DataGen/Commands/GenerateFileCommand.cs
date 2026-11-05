@@ -53,7 +53,13 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
         using var csv = CsvWriter.Create(writer, new CsvWriterOptions{
             Quoting = CsvQuoting.WhenNeededOrWhitespace
         });
-        if (data is IEnumerable<ItemPlacement> placements)
+        if (typeof(T).IsPrimitive) {
+            foreach (var value in data) {
+                csv.WriteField(value);
+                csv.EndRecord();
+            }
+        }
+        else if (data is IEnumerable<ItemPlacement> placements)
             csv.WriteRecords(placements, new ItemPlacementCsvWriter());
         else
             CsvEnumerable.WriteCsv(data, csv);
