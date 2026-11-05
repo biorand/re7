@@ -1,9 +1,10 @@
 using Biohazard.BioRand.RE7.Extensions;
+using Biohazard.BioRand.RE7.Items;
 using CsvHelper;
+using CsvHelper.Linq;
 using Spectre.Console;
 using Spectre.Console.Cli;
 using System.ComponentModel;
-using System.Globalization;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Text;
@@ -44,10 +45,25 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
         //NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals
     };
 
-    private static string GetCsv(dynamic data) {
+    internal static string GetCsv<T>(IEnumerable<T> data) {
+        if (typeof(T) == typeof(string))
+            throw new ArgumentException("CSV records must have named columns.", nameof(data));
+
         using var writer = new StringWriterWithEncoding(Encoding.UTF8);
-        using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-        csv.WriteRecords(data);
+        using var csv = CsvWriter.Create(writer, new CsvWriterOptions{
+            Quoting = CsvQuoting.WhenNeededOrWhitespace
+        });
+        if (typeof(T).IsPrimitive) {
+            foreach (var value in data) {
+                csv.WriteField(value);
+                csv.EndRecord();
+            }
+        }
+        else if (data is IEnumerable<ItemPlacement> placements)
+            csv.WriteRecords(placements, new ItemPlacementCsvWriter());
+        else
+            CsvEnumerable.WriteCsv(data, csv);
+        csv.Flush();
         return writer.ToString();
     }
 
@@ -93,7 +109,7 @@ internal sealed class GenerateCommand : Command<GenerateSettings> {
                                          $"{(format == OutputFormat.Binary ? "" : $".{format.ToString().ToLowerInvariant()}")}";
                     object output = format switch{
                         OutputFormat.Json => JsonSerializer.Serialize(result, _serializationOptions),
-                        OutputFormat.Csv => GetCsv(result),
+                        OutputFormat.Csv => GetCsv((dynamic)result),
                         OutputFormat.Binary => result,
                         _ => throw new ArgumentException("Unknown output format!"),
                     };
