@@ -19,8 +19,8 @@
   <ItemGroup>
     <PackageReference Include="CsvHelper.Linq" Version="34.0.0" />
     <PackageReference Include="IntelOrca.Biohazard.REE" Version="1.6.0" />
-    <PackageReference Include="SkiaSharp" Version="4.154.0" />
-    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.154.0" />
+    <PackageReference Include="SkiaSharp" Version="4.155.0" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="4.155.0" />
     <PackageReference Include="Spectre.Console.Cli" Version="0.57.2" />
   </ItemGroup>
 
